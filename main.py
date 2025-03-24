@@ -64,23 +64,6 @@ async def command_help(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
     )
 
 
-async def button_click(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Handle button clicks"""
-    query = update.callback_query
-    await query.answer()  # Acknowledge the callback
-
-    if query.data == "col1_action":
-        response_text = "You clicked Column 1!"
-    elif query.data == "col2_action":
-        response_text = "You clicked Column 2!"
-    elif query.data == "row2_action":
-        response_text = "You clicked Row 2!"
-    else:
-        response_text = "Unknown action."
-
-    await query.message.reply_text(response_text)
-
-
 async def private_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     logging.info("Private message handler triggered")
 
