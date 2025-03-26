@@ -1,7 +1,6 @@
 import logging
 from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton
 from telegram.ext import filters, ApplicationBuilder, ContextTypes, CommandHandler, MessageHandler, CallbackQueryHandler
-from telegram.constants import ParseMode
 from typing import Union, List
 
 import settings
@@ -28,12 +27,18 @@ def build_menu(
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     button_list = [
-        InlineKeyboardButton("col1", callback_data="col1_action"),
-        InlineKeyboardButton("col2", callback_data="col2_action"),
-        InlineKeyboardButton("row 2", callback_data="row2_action")
+        InlineKeyboardButton("Как вступить?", callback_data="how_to_add"),
+        InlineKeyboardButton("Хочу читать Кабанчика!", callback_data="ddia"),
+        InlineKeyboardButton("Хочу читать SRE Book!", callback_data="sre_book")
     ]
-    reply_markup = InlineKeyboardMarkup(build_menu(button_list, n_cols=2))
-    await context.bot.send_message(chat_id=update.effective_chat.id, text="A two-column menu", reply_markup=reply_markup)
+    reply_markup = InlineKeyboardMarkup(build_menu(button_list, n_cols=1))
+
+    club_description = \
+        ("(не)Ленкин клуб @lenka_ne_club -- это клуб для тех, кто хочет становиться лучше как системный "
+         "(инфраструктурный) программист (в противовес продуктовой разработке). \n\n"
+         "Обсуждаем распределенные системы, базы данных, data streaming и все, что рядом находится. Фокус -- прикладные "
+         "знания, которые помогут в работе.")
+    await context.bot.send_message(chat_id=update.effective_chat.id, text=club_description, reply_markup=reply_markup)
 
 
 async def button_click(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -53,23 +58,24 @@ async def button_click(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await context.bot.send_message(response_text)
 
 
-async def info(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await context.bot.send_message(chat_id=update.effective_chat.id, text="Я бот! хочу тут показывать кнопки")
-
-
 async def command_help(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     await context.bot.send_message(
         chat_id=update.effective_chat.id,
-        text="это help"
+        text="Бот находится в стадии разработки, пожалуйста не ломайте его 🥺.\n"
+             "Если бот плохо себя ведет, пожалуйста напишите Лене @lenka_colenka.\n\n"
+             "Поддерживаемые команды:\n"
+             "/start -- вызов главного меню\n"
+             "/help -- вызов этой справки"
     )
 
 
 async def private_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     logging.info("Private message handler triggered")
-
     await context.bot.send_message(
         chat_id=update.effective_chat.id,
-        text="Я бот!! Мяу Мяу!"
+        text="Я не понимаю сообщения, только эти две команды:\n"
+             "/start -- вызов главного меню\n"
+             "/help -- вызов этой справки"
     )
 
 
@@ -77,7 +83,6 @@ if __name__ == '__main__':
     application = ApplicationBuilder().token(settings.TELEGRAM_TOKEN).build()
 
     application.add_handler(CommandHandler('start', start))
-    application.add_handler(CommandHandler('info', info))
     application.add_handler(CommandHandler('help', command_help))
     application.add_handler(MessageHandler(~filters.COMMAND, private_message))
 
