@@ -10,6 +10,13 @@ logging.basicConfig(
 )
 
 
+def get_user(update: Update):
+    if hasattr(update, "callback_query") and update.callback_query:
+        return update.callback_query.from_user
+    if hasattr(update, "message") and update.message:
+        return update.message.from_user
+
+
 def main_menu() -> InlineKeyboardMarkup:
     button_list = [
         InlineKeyboardButton("Как вступить?", callback_data="how_to_join"),
@@ -29,7 +36,7 @@ def back_menu() -> InlineKeyboardMarkup:
 
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    logging.info(f"start triggered by {update.message.from_user}")
+    logging.info(f"start triggered by {get_user(update)}")
     club_description = \
         ("(не)Ленкин клуб @lenka_ne_club — это клуб для тех, кто хочет становиться лучше как системный "
          "(инфраструктурный) программист (в противовес продуктовой разработке). \n\n"
@@ -48,7 +55,7 @@ async def button_click(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
 
     if query.data == "how_to_join":
-        logging.info(f"how_to_join triggered by {update.message.from_user}")
+        logging.info(f"how_to_join triggered by {get_user(update)}")
         response_text = ("Просто вступить в группу и написать интро про себя с хэштегом #whois — чем занимаешься, где "
                          "работаешь или учишься, где живешь, в какой активности хочешь участвовать в клубе.\n\n"
                          "Клуб держится на доверии и активном участии членов клуба. Когда ты пишешь содержательное "
@@ -63,7 +70,7 @@ async def button_click(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
 
     if query.data == "ddia":
-        logging.info(f"ddia triggered by {update.message.from_user}")
+        logging.info(f"ddia triggered by {get_user(update)}")
         response_text = (
             "Сейчас идет уже третий поток чтения \"книги с кабанчиком\" — Designing Data Intensive Applications. Третий "
             "поток начался 13-го марта 2025. Ты можешь начать читать не с начала, а с текущей главы. \n\n"
@@ -86,7 +93,7 @@ async def button_click(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
 
     if query.data == "sre_book":
-        logging.info(f"sre_book triggered by {update.message.from_user}")
+        logging.info(f"sre_book triggered by {get_user(update)}")
         response_text = (
             "⚠️SRE Book — это книга для тех, кто уже прочитал Кабанчика. Если ты еще не прочитала кабанчика, пожалуйста, "
             "не отвлекайся!! ⚠️\n\n"
@@ -109,7 +116,7 @@ async def button_click(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
 
     if query.data == "how_to_present":
-        logging.info(f"how_to_present triggered by {update.message.from_user}")
+        logging.info(f"how_to_present triggered by {get_user(update)}")
         response_text = (
             "Ура спасибо! Клуб живет за счет волонтеров, которые делают презентации, так что нам это очень кстати!\n\n"
             "Принцип заключается в том, что на обсуждение на звонках приходят только те люди, кто уже сам прочитал главу, "
@@ -136,7 +143,7 @@ async def button_click(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 async def command_help(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    logging.info(f"help triggered by {update.message.from_user}")
+    logging.info(f"help triggered by {get_user(update)}")
     await context.bot.send_message(
         chat_id=update.effective_chat.id,
         text="Бот находится в стадии разработки, пожалуйста не ломайте его 🥺.\n"
@@ -148,7 +155,7 @@ async def command_help(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
 
 
 async def private_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    logging.info(f"private message handler triggered by {update.message.from_user}")
+    logging.info(f"private message handler triggered by {get_user(update)}")
     await context.bot.send_message(
         chat_id=update.effective_chat.id,
         text="Я не понимаю сообщения, только эти две команды:\n"
