@@ -71,7 +71,7 @@ async def button_click(update: Update, context: ContextTypes.DEFAULT_TYPE):
             " она не меняется. "
             "\n\nОбсуждение и координация происходят в <a href='t.me/lenka_ne_club/7209'>этом топике</a>.")
         button_list = [
-            # InlineKeyboardButton("Хочу сделать презентацию!", callback_data="how_to_present"), todo: add how to present
+            InlineKeyboardButton("Хочу сделать презентацию!", callback_data="how_to_present"),
             InlineKeyboardButton("Назад", callback_data="back"),
         ]
         menu = [button_list[i:i + 1] for i in range(0, len(button_list), 1)]
@@ -95,6 +95,31 @@ async def button_click(update: Update, context: ContextTypes.DEFAULT_TYPE):
             "Пожалуйста записывайтесь с таблицу делать презентацию!")
         button_list = [
             InlineKeyboardButton("Все ясно!", callback_data="back"),
+        ]
+        menu = [button_list[i:i + 1] for i in range(0, len(button_list), 1)]
+        await context.bot.send_message(
+            chat_id=update.effective_chat.id,
+            text=response_text,
+            reply_markup=InlineKeyboardMarkup(menu),
+            parse_mode="HTML")
+        return
+
+    if query.data == "how_to_present":
+        response_text = (
+            "Ура спасибо! Клуб живет за счет волонтеров, которые делают презентации, так что нам это очень кстати!\n\n"
+            "Принцип заключается в том, что на обсуждение на звонках приходят только те люди, кто уже сам прочитал главу, "
+            "так что твоя презентация не должна покрывать и пересказывать всю главу. Ты можешь сосредоточиться только на "
+            "том, что особенно тебя заинтересовало!\n\n"
+            "➡️ Что если я прочитала главу, но не поняла ее полностью? Отлично, для того мы и ходим на звонки, чтобы "
+            "осудить, кто что понял, а кто что не понял. Абсолютно нормально, если в какой-то части презентации ты скажешь "
+            "'автор пишет вот это, я поняла это вот так, но не уверена, что это правильно. Как вы поняли это?'\n\n"
+            "Ценность звонков — именно в обсуждении и обмене опытом.\n\n"
+            "Когде решишься, просто найди свободный слот в расписании и запишись в "
+            "<a href='https://docs.google.com/spreadsheets/d/1qsuaSn0ZkBmldY8hVnKWe41sSgaPG8ekd83csSUh5Qk/edit?gid=0#gid=0'>таблицу</a>. "
+            "После звонка пожалуйста оставь ссылку на свои слайды, чтобы другие могли при желании к ним вернуться. "
+            "Никого спрашивать и ничего согласовывать не надо.")
+        button_list = [
+            InlineKeyboardButton("Назад", callback_data="back"),
         ]
         menu = [button_list[i:i + 1] for i in range(0, len(button_list), 1)]
         await context.bot.send_message(
