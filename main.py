@@ -55,15 +55,33 @@ async def button_click(update: Update, context: ContextTypes.DEFAULT_TYPE):
                          "/ позвать на сходку.\n\n"
                          "Интро уже состоящих в клубе людей ты можешь найти по хэштегу #whois. \n\n"
                          "Вступить ➡️ @lenka_ne_club")
-    elif query.data == "row2_action":
-        response_text = "You clicked Row 2!"
-    else:
-        response_text = "Unknown action."
+        await context.bot.send_message(
+            chat_id=update.effective_chat.id,
+            text=response_text,
+            reply_markup=back_menu())
+        return
 
-    await context.bot.send_message(
-        chat_id=update.effective_chat.id,
-        text=response_text,
-        reply_markup=back_menu())
+    if query.data == "ddia":
+        response_text = (
+            "Сейчас идет уже третий поток чтения \"книги с кабанчиком\" — Designing Data Intensive Applications. Третий "
+            "поток начался 13-го марта 2025. Ты можешь начать читать не с начала, а с текущей главы. \n\n"
+            "Чтобы узнать, какую главу обсуждаем на этой неделе, посмотри в "
+            "<a href='https://docs.google.com/spreadsheets/d/1qsuaSn0ZkBmldY8hVnKWe41sSgaPG8ekd83csSUh5Qk/edit?gid=0#gid=0'>расписании</a>.\n\n"
+            "Звонки проходят по четвергам в 18:00 по Берлину, неважно, летнее или зимнее время в Берлине. Вот "
+            "<a href='https://us06web.zoom.us/j/81466072100?pwd=DfbheF4UTwJw23idId7KlQmYlQTJZj.1'>ссылка на звонок</a>,"
+            " она не меняется. "
+            "\n\nОбсуждение и координация происходят в <a href='t.me/lenka_ne_club/7209'>этом топике</a>.")
+        button_list = [
+            # InlineKeyboardButton("Хочу сделать презентацию!", callback_data="how_to_present"), todo: add how to present
+            InlineKeyboardButton("Назад", callback_data="back"),
+        ]
+        menu = [button_list[i:i + 1] for i in range(0, len(button_list), 1)]
+        await context.bot.send_message(
+            chat_id=update.effective_chat.id,
+            text=response_text,
+            reply_markup=InlineKeyboardMarkup(menu),
+            parse_mode="HTML")
+        return
 
 
 async def command_help(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
