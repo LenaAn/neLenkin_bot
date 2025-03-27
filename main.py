@@ -83,6 +83,28 @@ async def button_click(update: Update, context: ContextTypes.DEFAULT_TYPE):
             parse_mode="HTML")
         return
 
+    if query.data == "sre_book":
+        response_text = (
+            "⚠️SRE Book — это книга для тех, кто уже прочитал Кабанчика. Если ты еще не прочитала кабанчика, пожалуйста, "
+            "не отвлекайся!! ⚠️\n\n"
+            "SRE Book — книга про принципы и практики работы Site Reliability Engineer команды в Google.\n\n"
+            "Ссылка на книгу <a href='https://sre.google/sre-book/table-of-contents/'>вот</a>. "
+            "Созвоны по вторникам в 18:00 по Белграду (даже если часы перевели, мы ориентируемся на Белград).\n\n"
+            "Вот <a href='https://docs.google.com/spreadsheets/d/1J15WCQyITeDZR64G9Ymf-pT_zSJm3m9Kvorp48ecy10/edit?gid=0#gid=0'>таблица с расписанием</a>, "
+            "вот <a href='https://us06web.zoom.us/j/89699825499?pwd=252HFSD6l5TH2GYm7qDlI3QRahZNIZ.1'>ссылка на звонок</a>, "
+            "вот <a href='t.me/lenka_ne_club/7272'>топик</a>.\n\n"
+            "Пожалуйста записывайтесь с таблицу делать презентацию!")
+        button_list = [
+            InlineKeyboardButton("Все ясно!", callback_data="back"),
+        ]
+        menu = [button_list[i:i + 1] for i in range(0, len(button_list), 1)]
+        await context.bot.send_message(
+            chat_id=update.effective_chat.id,
+            text=response_text,
+            reply_markup=InlineKeyboardMarkup(menu),
+            parse_mode="HTML")
+        return
+
 
 async def command_help(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     await context.bot.send_message(
