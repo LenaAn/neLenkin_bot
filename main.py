@@ -3,6 +3,7 @@ from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton
 from telegram.ext import filters, ApplicationBuilder, ContextTypes, CommandHandler, MessageHandler, CallbackQueryHandler
 
 import settings
+import constants
 
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -38,12 +39,19 @@ def back_menu() -> InlineKeyboardMarkup:
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     logging.info(f"start triggered by {get_user(update)}")
-    club_description = \
-        ("(не)Ленкин клуб @lenka_ne_club — это клуб для тех, кто хочет становиться лучше как системный "
-         "(инфраструктурный) программист (в противовес продуктовой разработке). \n\n"
-         "Обсуждаем распределенные системы, базы данных, data streaming и все, что рядом находится. Фокус — прикладные "
-         "знания, которые помогут в работе.")
-    await context.bot.send_message(chat_id=update.effective_chat.id, text=club_description, reply_markup=main_menu())
+    await context.bot.send_message(
+        chat_id=update.effective_chat.id,
+        text=constants.club_description,
+        reply_markup=main_menu()
+    )
+
+
+async def back_to_start(update: Update):
+    logging.info(f"back_to_start triggered by {get_user(update)}")
+    await update.callback_query.edit_message_text(
+        text=constants.club_description,
+        reply_markup=main_menu()
+    )
 
 
 async def button_click(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -52,7 +60,7 @@ async def button_click(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await query.answer()  # Acknowledge the callback
 
     if query.data == "back":
-        await start(update, context)
+        await back_to_start(update)
         return
 
     if query.data == "how_to_join":
