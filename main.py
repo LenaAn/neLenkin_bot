@@ -21,7 +21,8 @@ def main_menu() -> InlineKeyboardMarkup:
     button_list = [
         InlineKeyboardButton("Как вступить?", callback_data="how_to_join"),
         InlineKeyboardButton("Хочу читать Кабанчика!", callback_data="ddia"),
-        InlineKeyboardButton("Хочу читать SRE Book!", callback_data="sre_book")
+        InlineKeyboardButton("Хочу читать SRE Book!", callback_data="sre_book"),
+        InlineKeyboardButton("LeetCode мок-собеседования!", callback_data="mock_leetcode")
     ]
     menu = [button_list[i:i + 1] for i in range(0, len(button_list), 1)]
     return InlineKeyboardMarkup(menu)
@@ -105,7 +106,28 @@ async def button_click(update: Update, context: ContextTypes.DEFAULT_TYPE):
             "вот <a href='t.me/lenka_ne_club/7272'>топик</a>.\n\n"
             "Пожалуйста записывайтесь с таблицу делать презентацию!")
         button_list = [
-            InlineKeyboardButton("Все ясно!", callback_data="back"),
+            InlineKeyboardButton("Назад", callback_data="back"),
+        ]
+        menu = [button_list[i:i + 1] for i in range(0, len(button_list), 1)]
+        await context.bot.send_message(
+            chat_id=update.effective_chat.id,
+            text=response_text,
+            reply_markup=InlineKeyboardMarkup(menu),
+            parse_mode="HTML")
+        return
+
+    if query.data == "mock_leetcode":
+        logging.info(f"mock_leetcode triggered by {get_user(update)}")
+        response_text = (
+            "Прорешивать Leetcode — это хорошо, но на реальном собеседовании важно уметь рассказать ход решения, "
+            "иногда на английском! В клубе мы практикуемся проходить собеседования в формате, приближенном к реальности.\n\n"
+            "Каждый понедельник Лена объявляет тему этой недели. Желающие участвовать в мок-собеседованииях записываются "
+            "в таблицу и в пятницу Лена объявляет пары. Два человека из пары созваниваются в удобное для них время "
+            "(рассчитывай на полтора часа) и проводят мок-собеседование. Сначала первый партнер выступает в качестве "
+            "интервьюера, а второй в качестве кандидата решает задачу. Потом партнеры меняются местами.\n\n"
+            "Больше подробностей -- в закрепленном сообщении в чате!")
+        button_list = [
+            InlineKeyboardButton("Назад", callback_data="back"),
         ]
         menu = [button_list[i:i + 1] for i in range(0, len(button_list), 1)]
         await context.bot.send_message(
