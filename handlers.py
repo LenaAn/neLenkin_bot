@@ -18,7 +18,7 @@ async def handle_how_to_join(update: Update):
     logging.info(f"how_to_join triggered by {helpers.get_user(update)}")
     await update.callback_query.edit_message_text(
         text=constants.how_to_join_description,
-        reply_markup=helpers.back_menu())
+        reply_markup=helpers.join_menu())
     return
 
 

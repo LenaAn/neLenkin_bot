@@ -25,3 +25,12 @@ def back_menu() -> InlineKeyboardMarkup:
     ]
     menu = [button_list[i:i + 1] for i in range(0, len(button_list), 1)]
     return InlineKeyboardMarkup(menu)
+
+
+def join_menu() -> InlineKeyboardMarkup:
+    button_list = [
+        InlineKeyboardButton("Вступить", url="https://t.me/lenka_ne_club"),
+        InlineKeyboardButton("Назад", callback_data="back"),
+    ]
+    menu = [button_list[i:i + 1] for i in range(0, len(button_list), 1)]
+    return InlineKeyboardMarkup(menu)
