@@ -14,7 +14,7 @@ logging.basicConfig(
 logging.getLogger("httpx").setLevel(logging.WARNING)
 
 
-async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     logging.info(f"start triggered by {helpers.get_user(update)}")
     await context.bot.send_message(
         chat_id=update.effective_chat.id,
@@ -23,7 +23,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
 
 
-async def button_click(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def button_click(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Handle button clicks"""
     query = update.callback_query
     await query.answer()  # Acknowledge the callback
@@ -57,7 +57,7 @@ async def command_help(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
     )
 
 
-async def private_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def private_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     logging.info(f"private message handler triggered by {helpers.get_user(update)}")
     await context.bot.send_message(
         chat_id=update.effective_chat.id,

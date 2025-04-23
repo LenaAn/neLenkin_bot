@@ -1,12 +1,11 @@
 import logging
 from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton
 
-
 import constants
 import helpers
 
 
-async def handle_back_to_start(update: Update):
+async def handle_back_to_start(update: Update) -> None:
     logging.info(f"back_to_start triggered by {helpers.get_user(update)}")
     await update.callback_query.edit_message_text(
         text=constants.club_description,
@@ -14,15 +13,14 @@ async def handle_back_to_start(update: Update):
     )
 
 
-async def handle_how_to_join(update: Update):
+async def handle_how_to_join(update: Update) -> None:
     logging.info(f"how_to_join triggered by {helpers.get_user(update)}")
     await update.callback_query.edit_message_text(
         text=constants.how_to_join_description,
         reply_markup=helpers.join_menu())
-    return
 
 
-async def handle_ddia(update: Update):
+async def handle_ddia(update: Update) -> None:
     logging.info(f"ddia triggered by {helpers.get_user(update)}")
     button_list = [
         InlineKeyboardButton("Хочу сделать презентацию!", callback_data="how_to_present"),
@@ -33,15 +31,14 @@ async def handle_ddia(update: Update):
         text=constants.ddia_description,
         reply_markup=InlineKeyboardMarkup(menu),
         parse_mode="HTML")
-    return
 
 
-async def handle_back_to_ddia(update: Update):
+async def handle_back_to_ddia(update: Update) -> None:
     logging.info(f"back_to_ddia triggered by {helpers.get_user(update)}")
     await handle_ddia(update)
 
 
-async def handle_sre_book(update: Update):
+async def handle_sre_book(update: Update) -> None:
     logging.info(f"sre_book triggered by {helpers.get_user(update)}")
     button_list = [
         InlineKeyboardButton("Назад", callback_data="back"),
@@ -51,10 +48,9 @@ async def handle_sre_book(update: Update):
         text=constants.sre_book_description,
         reply_markup=InlineKeyboardMarkup(menu),
         parse_mode="HTML")
-    return
 
 
-async def handle_mock_leetcode(update: Update):
+async def handle_mock_leetcode(update: Update) -> None:
     logging.info(f"mock_leetcode triggered by {helpers.get_user(update)}")
     button_list = [
         InlineKeyboardButton("Назад", callback_data="back"),
@@ -64,10 +60,9 @@ async def handle_mock_leetcode(update: Update):
         text=constants.mock_leetcode_description,
         reply_markup=InlineKeyboardMarkup(menu),
         parse_mode="HTML")
-    return
 
 
-async def handle_how_to_present(update: Update):
+async def handle_how_to_present(update: Update) -> None:
     logging.info(f"how_to_present triggered by {helpers.get_user(update)}")
     button_list = [
         InlineKeyboardButton("Назад", callback_data="back_to_ddia"),
@@ -77,4 +72,3 @@ async def handle_how_to_present(update: Update):
         text=constants.how_to_present_description,
         reply_markup=InlineKeyboardMarkup(menu),
         parse_mode="HTML")
-    return
