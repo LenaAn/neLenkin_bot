@@ -1,9 +1,11 @@
 import logging
-from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton
+from telegram import Update
 from telegram.ext import filters, ApplicationBuilder, ContextTypes, CommandHandler, MessageHandler, CallbackQueryHandler
 
-import settings
 import constants
+import handlers
+import helpers
+import settings
 
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -11,113 +13,13 @@ logging.basicConfig(
 )
 
 
-def get_user(update: Update):
-    if hasattr(update, "callback_query") and update.callback_query:
-        return update.callback_query.from_user
-    if hasattr(update, "message") and update.message:
-        return update.message.from_user
-
-
-def main_menu() -> InlineKeyboardMarkup:
-    button_list = [
-        InlineKeyboardButton("Как вступить?", callback_data="how_to_join"),
-        InlineKeyboardButton("Хочу читать Кабанчика!", callback_data="ddia"),
-        InlineKeyboardButton("Хочу читать SRE Book!", callback_data="sre_book"),
-        InlineKeyboardButton("LeetCode мок-собеседования!", callback_data="mock_leetcode")
-    ]
-    menu = [button_list[i:i + 1] for i in range(0, len(button_list), 1)]
-    return InlineKeyboardMarkup(menu)
-
-
-def back_menu() -> InlineKeyboardMarkup:
-    button_list = [
-        InlineKeyboardButton("Назад", callback_data="back"),
-    ]
-    menu = [button_list[i:i + 1] for i in range(0, len(button_list), 1)]
-    return InlineKeyboardMarkup(menu)
-
-
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    logging.info(f"start triggered by {get_user(update)}")
+    logging.info(f"start triggered by {helpers.get_user(update)}")
     await context.bot.send_message(
         chat_id=update.effective_chat.id,
         text=constants.club_description,
-        reply_markup=main_menu()
+        reply_markup=helpers.main_menu()
     )
-
-
-async def handle_back_to_start(update: Update):
-    logging.info(f"back_to_start triggered by {get_user(update)}")
-    await update.callback_query.edit_message_text(
-        text=constants.club_description,
-        reply_markup=main_menu()
-    )
-
-
-async def handle_how_to_join(update: Update):
-    logging.info(f"how_to_join triggered by {get_user(update)}")
-    await update.callback_query.edit_message_text(
-        text=constants.how_to_join_description,
-        reply_markup=back_menu())
-    return
-
-
-async def handle_ddia(update: Update):
-    logging.info(f"ddia triggered by {get_user(update)}")
-    button_list = [
-        InlineKeyboardButton("Хочу сделать презентацию!", callback_data="how_to_present"),
-        InlineKeyboardButton("Назад", callback_data="back"),
-    ]
-    menu = [button_list[i:i + 1] for i in range(0, len(button_list), 1)]
-    await update.callback_query.edit_message_text(
-        text=constants.ddia_description,
-        reply_markup=InlineKeyboardMarkup(menu),
-        parse_mode="HTML")
-    return
-
-
-async def handle_back_to_ddia(update: Update):
-    logging.info(f"back_to_ddia triggered by {get_user(update)}")
-    await handle_ddia(update)
-
-
-async def handle_sre_book(update: Update):
-    logging.info(f"sre_book triggered by {get_user(update)}")
-    button_list = [
-        InlineKeyboardButton("Назад", callback_data="back"),
-    ]
-    menu = [button_list[i:i + 1] for i in range(0, len(button_list), 1)]
-    await update.callback_query.edit_message_text(
-        text=constants.sre_book_description,
-        reply_markup=InlineKeyboardMarkup(menu),
-        parse_mode="HTML")
-    return
-
-
-async def handle_mock_leetcode(update: Update):
-    logging.info(f"mock_leetcode triggered by {get_user(update)}")
-    button_list = [
-        InlineKeyboardButton("Назад", callback_data="back"),
-    ]
-    menu = [button_list[i:i + 1] for i in range(0, len(button_list), 1)]
-    await update.callback_query.edit_message_text(
-        text=constants.mock_leetcode_description,
-        reply_markup=InlineKeyboardMarkup(menu),
-        parse_mode="HTML")
-    return
-
-
-async def handle_how_to_present(update: Update):
-    logging.info(f"how_to_present triggered by {get_user(update)}")
-    button_list = [
-        InlineKeyboardButton("Назад", callback_data="back_to_ddia"),
-    ]
-    menu = [button_list[i:i + 1] for i in range(0, len(button_list), 1)]
-    await update.callback_query.edit_message_text(
-        text=constants.how_to_present_description,
-        reply_markup=InlineKeyboardMarkup(menu),
-        parse_mode="HTML")
-    return
 
 
 async def button_click(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -125,17 +27,17 @@ async def button_click(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()  # Acknowledge the callback
 
-    handlers = {
-        "back": handle_back_to_start,
-        "how_to_join": handle_how_to_join,
-        "ddia": handle_ddia,
-        "back_to_ddia": handle_back_to_ddia,
-        "sre_book": handle_sre_book,
-        "mock_leetcode": handle_mock_leetcode,
-        "how_to_present": handle_how_to_present,
+    handlers_dict = {
+        "back": handlers.handle_back_to_start,
+        "how_to_join": handlers.handle_how_to_join,
+        "ddia": handlers.handle_ddia,
+        "back_to_ddia": handlers.handle_back_to_ddia,
+        "sre_book": handlers.handle_sre_book,
+        "mock_leetcode": handlers.handle_mock_leetcode,
+        "how_to_present": handlers.handle_how_to_present,
     }
 
-    handler = handlers.get(query.data)
+    handler = handlers_dict.get(query.data)
     if handler:
         await handler(update)
     else:
@@ -143,7 +45,7 @@ async def button_click(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 async def command_help(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    logging.info(f"help triggered by {get_user(update)}")
+    logging.info(f"help triggered by {helpers.get_user(update)}")
     await context.bot.send_message(
         chat_id=update.effective_chat.id,
         text="Бот находится в стадии разработки, пожалуйста не ломайте его 🥺.\n"
@@ -155,7 +57,7 @@ async def command_help(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
 
 
 async def private_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    logging.info(f"private message handler triggered by {get_user(update)}")
+    logging.info(f"private message handler triggered by {helpers.get_user(update)}")
     await context.bot.send_message(
         chat_id=update.effective_chat.id,
         text="Я не понимаю сообщения, только эти две команды:\n"
