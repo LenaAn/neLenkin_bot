@@ -46,7 +46,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
 
 
-async def handle_back_to_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def handle_back_to_start(update: Update):
     logging.info(f"back_to_start triggered by {get_user(update)}")
     await update.callback_query.edit_message_text(
         text=constants.club_description,
@@ -54,71 +54,66 @@ async def handle_back_to_start(update: Update, context: ContextTypes.DEFAULT_TYP
     )
 
 
-async def handle_how_to_join(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def handle_how_to_join(update: Update):
     logging.info(f"how_to_join triggered by {get_user(update)}")
-    await context.bot.send_message(
-        chat_id=update.effective_chat.id,
+    await update.callback_query.edit_message_text(
         text=constants.how_to_join_description,
         reply_markup=back_menu())
     return
 
 
-async def handle_ddia(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def handle_ddia(update: Update):
     logging.info(f"ddia triggered by {get_user(update)}")
     button_list = [
         InlineKeyboardButton("Хочу сделать презентацию!", callback_data="how_to_present"),
         InlineKeyboardButton("Назад", callback_data="back"),
     ]
     menu = [button_list[i:i + 1] for i in range(0, len(button_list), 1)]
-    await context.bot.send_message(
-        chat_id=update.effective_chat.id,
+    await update.callback_query.edit_message_text(
         text=constants.ddia_description,
         reply_markup=InlineKeyboardMarkup(menu),
         parse_mode="HTML")
     return
 
 
-async def handle_back_to_ddia(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def handle_back_to_ddia(update: Update):
     logging.info(f"back_to_ddia triggered by {get_user(update)}")
-    await handle_ddia(update, context)
+    await handle_ddia(update)
 
 
-async def handle_sre_book(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def handle_sre_book(update: Update):
     logging.info(f"sre_book triggered by {get_user(update)}")
     button_list = [
         InlineKeyboardButton("Назад", callback_data="back"),
     ]
     menu = [button_list[i:i + 1] for i in range(0, len(button_list), 1)]
-    await context.bot.send_message(
-        chat_id=update.effective_chat.id,
+    await update.callback_query.edit_message_text(
         text=constants.sre_book_description,
         reply_markup=InlineKeyboardMarkup(menu),
         parse_mode="HTML")
     return
 
 
-async def handle_mock_leetcode(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def handle_mock_leetcode(update: Update):
     logging.info(f"mock_leetcode triggered by {get_user(update)}")
     button_list = [
         InlineKeyboardButton("Назад", callback_data="back"),
     ]
     menu = [button_list[i:i + 1] for i in range(0, len(button_list), 1)]
-    await context.bot.send_message(
-        chat_id=update.effective_chat.id,
+    await update.callback_query.edit_message_text(
         text=constants.mock_leetcode_description,
         reply_markup=InlineKeyboardMarkup(menu),
         parse_mode="HTML")
     return
 
 
-async def handle_how_to_present(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def handle_how_to_present(update: Update):
     logging.info(f"how_to_present triggered by {get_user(update)}")
     button_list = [
         InlineKeyboardButton("Назад", callback_data="back_to_ddia"),
     ]
     menu = [button_list[i:i + 1] for i in range(0, len(button_list), 1)]
-    await context.bot.send_message(
-        chat_id=update.effective_chat.id,
+    await update.callback_query.edit_message_text(
         text=constants.how_to_present_description,
         reply_markup=InlineKeyboardMarkup(menu),
         parse_mode="HTML")
@@ -142,7 +137,7 @@ async def button_click(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     handler = handlers.get(query.data)
     if handler:
-        await handler(update, context)
+        await handler(update)
     else:
         logging.warning(f"Unhandled callback query data: {query.data}")
 
