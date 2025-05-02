@@ -1,8 +1,9 @@
 import logging
-from telegram.ext import filters, ApplicationBuilder, CommandHandler, MessageHandler, CallbackQueryHandler
+from telegram.ext import filters, ApplicationBuilder, CommandHandler, ContextTypes, MessageHandler, CallbackQueryHandler
 
 import handlers
 import menu
+import notifications
 import settings
 
 logging.basicConfig(
@@ -21,4 +22,5 @@ if __name__ == '__main__':
 
     application.add_handler(CallbackQueryHandler(handlers.button_click))
 
+    application.post_init = notifications.register_leetcode_notifications
     application.run_polling()
