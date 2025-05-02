@@ -55,3 +55,8 @@ how_to_present_description = \
      "<a href='https://docs.google.com/spreadsheets/d/1qsuaSn0ZkBmldY8hVnKWe41sSgaPG8ekd83csSUh5Qk/edit?gid=0#gid=0'>таблицу</a>. "
      "После звонка пожалуйста оставь ссылку на свои слайды, чтобы другие могли при желании к ним вернуться. "
      "Никого спрашивать и ничего согласовывать не надо.")
+
+mock_leetcode_reminder = \
+ ("Запишись сегодня, чтобы на выходных пройти leetcode мок-собеседование! Завтра уже будут объявлены пары. "
+  "<a href='https://docs.google.com/spreadsheets/d/1JVp6S0a4PeR7f49T_tRQMZCmArV4yKqP6XFFab6Oxzs/edit?gid=0#gid=0'> "
+  "Таблица</a>.")

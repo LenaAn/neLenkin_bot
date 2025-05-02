@@ -1,7 +1,8 @@
-from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton
+from telegram import User, Update, InlineKeyboardMarkup, InlineKeyboardButton
+from typing import Optional
 
 
-def get_user(update: Update):
+def get_user(update: Update) -> Optional[User]:
     if hasattr(update, "callback_query") and update.callback_query:
         return update.callback_query.from_user
     if hasattr(update, "message") and update.message:
