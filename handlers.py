@@ -6,7 +6,7 @@ import constants
 import helpers
 
 
-async def button_click(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+async def button_click(update: Update, _: ContextTypes.DEFAULT_TYPE) -> None:
     """Handle button clicks"""
     query = update.callback_query
     await query.answer()  # Acknowledge the callback
