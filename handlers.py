@@ -1,8 +1,31 @@
 import logging
 from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton
+from telegram.ext import ContextTypes
 
 import constants
 import helpers
+
+
+async def button_click(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Handle button clicks"""
+    query = update.callback_query
+    await query.answer()  # Acknowledge the callback
+
+    handlers_dict = {
+        "back": handle_back_to_start,
+        "how_to_join": handle_how_to_join,
+        "ddia": handle_ddia,
+        "back_to_ddia": handle_back_to_ddia,
+        "sre_book": handle_sre_book,
+        "mock_leetcode": handle_mock_leetcode,
+        "how_to_present": handle_how_to_present,
+    }
+
+    handler = handlers_dict.get(query.data)
+    if handler:
+        await handler(update)
+    else:
+        logging.warning(f"Unhandled callback query data: {query.data}")
 
 
 async def handle_back_to_start(update: Update) -> None:
