@@ -1,21 +1,20 @@
-from sqlalchemy import create_engine, Column, DateTime, Integer, String
+from sqlalchemy import Column, BigInteger, String, JSON
 from sqlalchemy.orm import declarative_base
-import datetime
-
 
 Base = declarative_base()
 
+
 class User(Base):
-    __tablename__ = 'users'
+    __tablename__ = 'Users'
 
-    id = Column(Integer, primary_key=True)
-    telegram_id = Column(String)
-    username = Column(String)
-    first_name = Column(String)
-    last_name = Column(String)
-    joined_at = Column(DateTime, default=datetime.datetime.utcnow)
-
+    id = Column(BigInteger, primary_key=True, autoincrement=True)
+    tg_id = Column(String, nullable=False)
+    tg_username = Column(String, nullable=True)
+    first_name = Column(String, nullable=True)
+    last_name = Column(String, nullable=True)
+    date_joined = Column(JSON, nullable=True)
+    date_membership_started = Column(JSON, nullable=True)
 
     def __repr__(self):
-        return (f"User(telegram_id={self.telegram_id}, username={self.username}, first_name={self.first_name}, "
+        return (f"User(telegram_id={self.tg_id}, username={self.tg_username}, first_name={self.first_name}, "
                 f"last_name={self.last_name})")

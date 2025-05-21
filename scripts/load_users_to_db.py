@@ -4,21 +4,7 @@ import sys
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-from sqlalchemy import Column, BigInteger, String, JSON
-from sqlalchemy.orm import declarative_base
-
-Base = declarative_base()
-
-class User(Base):
-    __tablename__ = 'Users'
-
-    id = Column(BigInteger, primary_key=True, autoincrement=True)
-    tg_id = Column(String, nullable=False)
-    tg_username = Column(String, nullable=True)
-    first_name = Column(String, nullable=True)
-    last_name = Column(String, nullable=True)
-    date_joined = Column(JSON, nullable=True)
-    date_membership_started = Column(JSON, nullable=True)
+from models import User
 
 # Database connection info
 DB_USER = 'postgres'
@@ -31,8 +17,6 @@ DATABASE_URL = f'postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NA
 
 engine = create_engine(DATABASE_URL)
 Session = sessionmaker(bind=engine)
-
-Base.metadata.create_all(engine)
 
 
 def parse_user_line(line):
