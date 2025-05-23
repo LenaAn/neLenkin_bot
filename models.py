@@ -1,5 +1,7 @@
-from sqlalchemy import Column, BigInteger, String, JSON
+from sqlalchemy import Column, BigInteger, String, JSON, create_engine
 from sqlalchemy.orm import declarative_base
+
+from settings import DATABASE_URL
 
 Base = declarative_base()
 
@@ -18,3 +20,6 @@ class User(Base):
     def __repr__(self):
         return (f"User(telegram_id={self.tg_id}, username={self.tg_username}, first_name={self.first_name}, "
                 f"last_name={self.last_name})")
+
+
+engine = create_engine(DATABASE_URL)

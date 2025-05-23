@@ -3,11 +3,13 @@ import logging
 
 from dotenv import load_dotenv
 
+from sqlalchemy.orm import Session
+
 from telegram import Update
 from telegram.ext import ContextTypes
 
 import helpers
-from connect_db import get_users
+from models import User, engine
 
 
 def is_admin(callback):
@@ -30,7 +32,10 @@ def is_admin(callback):
 @is_admin
 async def get_users_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     logging.info(f"get_users handler triggered by {helpers.get_user(update)}")
-    users = get_users()
+
+    with Session(engine) as session:
+        users = session.query(User).limit(10).all()
+
     await context.bot.send_message(
         chat_id=update.effective_chat.id,
         text='\n'.join([str(user) for user in users])
