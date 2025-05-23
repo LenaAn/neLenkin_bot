@@ -22,4 +22,16 @@ class User(Base):
                 f"last_name={self.last_name})")
 
 
+class Enrollment(Base):
+    __tablename__ = 'Enrollments'
+
+    id = Column(BigInteger, primary_key=True, autoincrement=True)
+    user_id = Column(BigInteger, nullable=False)
+    course_id = Column(BigInteger, nullable=False)
+    tg_id = Column(String, nullable=False)
+
+    def __repr__(self):
+        return f"Enrollment(user_id={self.user_id}, course_id={self.course_id}, tg_id={self.tg_id}"
+
+
 engine = create_engine(DATABASE_URL)
