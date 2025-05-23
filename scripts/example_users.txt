@@ -1,0 +1,3 @@
+User(first_name='name1', id=0000000001, is_bot=False, is_premium=True, language_code='en', last_name='last_name1', username='username1')
+User(first_name='name2', id=00000002, is_bot=False, language_code='en', username='username2')
+User(first_name='name3', id=00000003, is_bot=False, language_code='ru', last_name='last_name3')

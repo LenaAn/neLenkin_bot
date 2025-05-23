@@ -1,0 +1,18 @@
+services:
+
+  db:
+    image: postgres:17
+    container_name: bot_postgres
+    restart: always
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=nelenkin_club
+    ports:
+      - 5432:5432
+
+  adminer:
+      image: adminer
+      restart: always
+      ports:
+        - 8080:8080

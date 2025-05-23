@@ -1,8 +1,7 @@
 import logging
-from telegram.ext import filters, ApplicationBuilder, CommandHandler, ContextTypes, MessageHandler, CallbackQueryHandler
+from telegram.ext import filters, ApplicationBuilder, CommandHandler, MessageHandler, CallbackQueryHandler
 
-import handlers
-import menu
+from handlers import admin_commands, handlers, menu
 import notifications
 import settings
 
@@ -18,6 +17,7 @@ if __name__ == '__main__':
 
     application.add_handler(CommandHandler('start', menu.start))
     application.add_handler(CommandHandler('help', menu.command_help))
+    application.add_handler(CommandHandler('get_users', admin_commands.get_users_handler))
     application.add_handler(MessageHandler(~filters.COMMAND, menu.private_message))
 
     application.add_handler(CallbackQueryHandler(handlers.button_click))

@@ -1,29 +1,31 @@
 import datetime
 import logging
-import os
+
+from sqlalchemy.orm import Session
 from telegram.ext import ContextTypes
 
 import constants
-from dotenv import load_dotenv
-
+from models import Enrollment, engine
 
 notifications_logger = logging.getLogger(__name__)
 notifications_logger.setLevel(logging.DEBUG)
 
 
 async def handle_leetcode_notification(context: ContextTypes.DEFAULT_TYPE):
-    # reloading chat ids because I want to change it on the fly
-    load_dotenv(override=True)
-    leetcode_chats_str = os.getenv('LEETCODE_NOTIFICATION_CHAT_IDS')
-    leetcode_notification_chat_ids = [int(chat_id) for chat_id in leetcode_chats_str.split(",")]
-    notifications_logger.debug(f"reloaded leetcode chat ids: {leetcode_notification_chat_ids}")
+    with Session(engine) as session:
+        result = session.query(Enrollment.tg_id).filter(Enrollment.course_id == 7).all()
+        leetcode_notification_chat_ids = [item[0] for item in result]
+    notifications_logger.debug(f"got leetcode chat ids from db: {leetcode_notification_chat_ids}")
 
     for chat_id in leetcode_notification_chat_ids:
         notifications_logger.info(f"handle_leetcode_notification for chat {chat_id}")
-        await context.bot.send_message(
-            chat_id=chat_id,
-            text=constants.mock_leetcode_reminder,
-            parse_mode="HTML")
+        try:
+            await context.bot.send_message(
+                chat_id=chat_id,
+                text=constants.mock_leetcode_reminder,
+                parse_mode="HTML")
+        except Exception as e:
+            notifications_logger.info(f"failed to send notification to chat {chat_id}: {e}")
 
 
 async def register_leetcode_notifications(app):
