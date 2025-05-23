@@ -5,15 +5,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 from models import User
-
-# Database connection info
-DB_USER = 'postgres'
-DB_PASSWORD = 'postgres'
-DB_HOST = 'localhost'
-DB_PORT = '5432'
-DB_NAME = 'nelenkin_club'
-
-DATABASE_URL = f'postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}'
+from settings import DATABASE_URL
 
 engine = create_engine(DATABASE_URL)
 Session = sessionmaker(bind=engine)
