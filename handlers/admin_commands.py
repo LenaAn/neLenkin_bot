@@ -34,9 +34,9 @@ async def get_users_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) 
     logging.info(f"get_users handler triggered by {helpers.get_user(update)}")
 
     with Session(engine) as session:
-        users = session.query(User).limit(10).all()
+        users_count = session.query(User).count()
 
     await context.bot.send_message(
         chat_id=update.effective_chat.id,
-        text='\n'.join([str(user) for user in users])
+        text=f"{users_count} users started the bot"
     )
