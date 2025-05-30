@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 from sqlalchemy.orm import Session
 
 from telegram import Update
-from telegram.ext import ContextTypes
+from telegram.ext import ContextTypes, ConversationHandler
 
 import helpers
 from models import User, engine
@@ -34,9 +34,92 @@ async def get_users_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) 
     logging.info(f"get_users handler triggered by {helpers.get_user(update)}")
 
     with Session(engine) as session:
-        users = session.query(User).limit(10).all()
+        users_count = session.query(User).count()
 
     await context.bot.send_message(
         chat_id=update.effective_chat.id,
-        text='\n'.join([str(user) for user in users])
+        text=f"{users_count} users started the bot"
     )
+
+
+ECHO = 1
+
+
+@is_admin
+async def start_echo(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    logging.info(f"start_echo handler triggered by {helpers.get_user(update)}")
+    await context.bot.send_message(
+        chat_id=update.effective_chat.id,
+        text=f"Send a message to echo."
+    )
+    return ECHO
+
+
+@is_admin
+async def echo_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    logging.info(f"echo_message handler triggered by {helpers.get_user(update)}")
+    await context.bot.send_message(
+        chat_id=update.effective_chat.id,
+        text=update.message.text,
+        entities=update.message.entities
+    )
+    return ConversationHandler.END
+
+
+@is_admin
+async def cancel_echo(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    logging.info(f"cancel_echo handler triggered by {helpers.get_user(update)}")
+    await context.bot.send_message(
+        chat_id=update.effective_chat.id,
+        text="Echo cancelled",
+    )
+    return ConversationHandler.END
+
+
+BROADCAST = 1
+
+
+@is_admin
+async def start_broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    logging.info(f"start_broadcast handler triggered by {helpers.get_user(update)}")
+    await context.bot.send_message(
+        chat_id=update.effective_chat.id,
+        text=f"Send a message to broadcast"
+    )
+    return BROADCAST
+
+
+@is_admin
+async def broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    logging.info(f"broadcast handler triggered by {helpers.get_user(update)}")
+
+    with Session(engine) as session:
+        users = session.query(User).all()
+        logging.info(f"got {len(users)} users from db for broadcasting")
+
+    successful_count = 0
+    fail_count = 0
+    for user in users:
+        try:
+            await context.bot.send_message(
+                chat_id=user.tg_id,
+                text=update.message.text,
+                entities=update.message.entities
+            )
+            successful_count += 1
+        except Exception as e:
+            logging.info(f"couldn't send broadcast message to {user.tg_username} {user.tg_id}: {e}")
+            fail_count += 1
+
+    logging.info(f"Successfully broadcast message to {successful_count} users, failed {fail_count} users.")
+    return ConversationHandler.END
+
+
+@is_admin
+async def cancel_broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    logging.info(f"cancel_broadcast handler triggered by {helpers.get_user(update)}")
+    await context.bot.send_message(
+        chat_id=update.effective_chat.id,
+        text="Broadcast cancelled",
+    )
+    return ConversationHandler.END
