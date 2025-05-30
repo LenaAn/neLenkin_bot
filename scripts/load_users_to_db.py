@@ -1,8 +1,13 @@
 import re
 import ast
 import sys
+import os
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy.exc import IntegrityError
+
+parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+sys.path.append(parent_dir)
 
 from models import User
 from settings import DATABASE_URL
@@ -57,15 +62,17 @@ def main(users_file: str):
                 print(f"Skipping line because tg_id missing: {line}")
                 continue
 
-            user = User(**user_data)
-
-            # Use merge to insert or update by primary key if id is provided
-            session.merge(user)
-            inserted_count += 1
-
-    session.commit()
-    session.close()
-    print(f"Users inserted/updated successfully: {inserted_count}")
+            try:
+                user = User(**user_data)
+                session.add(user)
+                session.commit()
+                inserted_count += 1
+            except IntegrityError as e:
+                session.rollback()
+                print(f"Didn't add users to db, it already exists: {e}")
+            finally:
+                print(f"Users inserted successfully: {inserted_count}")
+                session.close()
 
 
 if __name__ == '__main__':
