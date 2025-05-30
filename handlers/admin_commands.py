@@ -11,8 +11,6 @@ from telegram.ext import ContextTypes, ConversationHandler
 import helpers
 from models import User, engine
 
-ECHO = 1
-
 
 def is_admin(callback):
     async def wrapper(update: Update, context: ContextTypes.DEFAULT_TYPE, *args, **kwargs):
@@ -44,6 +42,9 @@ async def get_users_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) 
     )
 
 
+ECHO = 1
+
+
 @is_admin
 async def start_echo(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     logging.info(f"start_echo handler triggered by {helpers.get_user(update)}")
@@ -71,5 +72,54 @@ async def cancel_echo(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int
     await context.bot.send_message(
         chat_id=update.effective_chat.id,
         text="Echo cancelled",
+    )
+    return ConversationHandler.END
+
+
+BROADCAST = 1
+
+
+@is_admin
+async def start_broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    logging.info(f"start_broadcast handler triggered by {helpers.get_user(update)}")
+    await context.bot.send_message(
+        chat_id=update.effective_chat.id,
+        text=f"Send a message to broadcast"
+    )
+    return BROADCAST
+
+
+@is_admin
+async def broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    logging.info(f"broadcast handler triggered by {helpers.get_user(update)}")
+
+    with Session(engine) as session:
+        users = session.query(User).all()
+        logging.info(f"got {len(users)} users from db for broadcasting")
+
+    successful_count = 0
+    fail_count = 0
+    for user in users:
+        try:
+            await context.bot.send_message(
+                chat_id=user.tg_id,
+                text=update.message.text,
+                entities=update.message.entities
+            )
+            successful_count += 1
+        except Exception as e:
+            logging.info(f"couldn't send broadcast message to {user.tg_username} {user.tg_id}: {e}")
+            fail_count += 1
+
+    logging.info(f"Successfully broadcast message to {successful_count} users, failed {fail_count} users.")
+    return ConversationHandler.END
+
+
+@is_admin
+async def cancel_broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    logging.info(f"cancel_broadcast handler triggered by {helpers.get_user(update)}")
+    await context.bot.send_message(
+        chat_id=update.effective_chat.id,
+        text="Broadcast cancelled",
     )
     return ConversationHandler.END

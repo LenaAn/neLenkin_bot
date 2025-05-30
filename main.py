@@ -16,8 +16,7 @@ logging.getLogger("httpx").setLevel(logging.WARNING)
 if __name__ == '__main__':
     application = ApplicationBuilder().token(settings.TELEGRAM_TOKEN).build()
 
-    # todo: make sure it doesn't mess up with multiple admins
-    conv_handler = ConversationHandler(
+    echo_conv_handler = ConversationHandler(
         entry_points=[CommandHandler('echo', admin_commands.start_echo)],
         states={
             admin_commands.ECHO: [MessageHandler(filters.TEXT & ~filters.COMMAND, admin_commands.echo_message)]
@@ -25,7 +24,17 @@ if __name__ == '__main__':
         fallbacks=[CommandHandler('cancel_echo', admin_commands.cancel_echo)],
     )
 
-    application.add_handler(conv_handler)
+    # todo: make sure it doesn't mess up with multiple admins
+    broadcast_conv_handler = ConversationHandler(
+        entry_points=[CommandHandler('broadcast', admin_commands.start_broadcast)],
+        states={
+            admin_commands.BROADCAST: [MessageHandler(filters.TEXT & ~filters.COMMAND, admin_commands.broadcast)]
+        },
+        fallbacks=[CommandHandler('cancel_broadcast', admin_commands.cancel_broadcast)],
+    )
+
+    application.add_handler(echo_conv_handler)
+    application.add_handler(broadcast_conv_handler)
 
     application.add_handler(CommandHandler('start', menu.start))
     application.add_handler(CommandHandler('help', menu.command_help))
