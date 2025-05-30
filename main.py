@@ -1,5 +1,6 @@
 import logging
-from telegram.ext import filters, ApplicationBuilder, CommandHandler, MessageHandler, CallbackQueryHandler
+from telegram.ext import (filters, ApplicationBuilder, CommandHandler, ConversationHandler, MessageHandler,
+                          CallbackQueryHandler)
 
 from handlers import admin_commands, handlers, menu
 import notifications
@@ -14,6 +15,17 @@ logging.getLogger("httpx").setLevel(logging.WARNING)
 
 if __name__ == '__main__':
     application = ApplicationBuilder().token(settings.TELEGRAM_TOKEN).build()
+
+    # todo: make sure it doesn't mess up with multiple admins
+    conv_handler = ConversationHandler(
+        entry_points=[CommandHandler('echo', admin_commands.start_echo)],
+        states={
+            admin_commands.ECHO: [MessageHandler(filters.TEXT & ~filters.COMMAND, admin_commands.echo_message)]
+        },
+        fallbacks=[CommandHandler('cancel_echo', admin_commands.cancel_echo)],
+    )
+
+    application.add_handler(conv_handler)
 
     application.add_handler(CommandHandler('start', menu.start))
     application.add_handler(CommandHandler('help', menu.command_help))

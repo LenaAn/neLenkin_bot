@@ -6,10 +6,12 @@ from dotenv import load_dotenv
 from sqlalchemy.orm import Session
 
 from telegram import Update
-from telegram.ext import ContextTypes
+from telegram.ext import ContextTypes, ConversationHandler
 
 import helpers
 from models import User, engine
+
+ECHO = 1
 
 
 def is_admin(callback):
@@ -40,3 +42,34 @@ async def get_users_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) 
         chat_id=update.effective_chat.id,
         text=f"{users_count} users started the bot"
     )
+
+
+@is_admin
+async def start_echo(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    logging.info(f"start_echo handler triggered by {helpers.get_user(update)}")
+    await context.bot.send_message(
+        chat_id=update.effective_chat.id,
+        text=f"Send a message to echo."
+    )
+    return ECHO
+
+
+@is_admin
+async def echo_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    logging.info(f"echo_message handler triggered by {helpers.get_user(update)}")
+    await context.bot.send_message(
+        chat_id=update.effective_chat.id,
+        text=update.message.text,
+        entities=update.message.entities
+    )
+    return ConversationHandler.END
+
+
+@is_admin
+async def cancel_echo(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    logging.info(f"cancel_echo handler triggered by {helpers.get_user(update)}")
+    await context.bot.send_message(
+        chat_id=update.effective_chat.id,
+        text="Echo cancelled",
+    )
+    return ConversationHandler.END
