@@ -19,6 +19,8 @@ async def button_click(update: Update, _: ContextTypes.DEFAULT_TYPE) -> None:
         "sre_book": handle_sre_book,
         "mock_leetcode": handle_mock_leetcode,
         "how_to_present": handle_how_to_present,
+        "leetcode_enroll": handle_leetcode_enroll,
+        "leetcode_unenroll": handle_leetcode_unenroll,
     }
 
     handler = handlers_dict.get(query.data)
@@ -75,7 +77,10 @@ async def handle_sre_book(update: Update) -> None:
 
 async def handle_mock_leetcode(update: Update) -> None:
     logging.info(f"mock_leetcode triggered by {helpers.get_user(update)}")
+    # todo:
+    # if user is enrolled, show "Перестать получать уведомления", otherwise show "Хочу получать уведомления!"
     button_list = [
+        InlineKeyboardButton("Хочу участвовать!", callback_data="leetcode_enroll"),
         InlineKeyboardButton("Назад", callback_data="back"),
     ]
     menu = [button_list[i:i + 1] for i in range(0, len(button_list), 1)]
@@ -83,6 +88,25 @@ async def handle_mock_leetcode(update: Update) -> None:
         text=constants.mock_leetcode_description,
         reply_markup=InlineKeyboardMarkup(menu),
         parse_mode="HTML")
+
+
+async def handle_leetcode_enroll(update: Update) -> None:
+    logging.info(f"leetcode_enroll handled by {helpers.get_user(update)}")
+    button_list = [
+        InlineKeyboardButton("Я передумала, отписаться", callback_data="leetcode_unenroll"),
+        InlineKeyboardButton("Назад", callback_data="back"),
+    ]
+    menu = [button_list[i:i + 1] for i in range(0, len(button_list), 1)]
+    await update.callback_query.edit_message_text(
+        text=constants.leetcode_enroll_description,
+        reply_markup=InlineKeyboardMarkup(menu),
+        parse_mode="HTML"
+    )
+
+
+async def handle_leetcode_unenroll(update: Update) -> None:
+    logging.info(f"leetcode_unenroll handled by {helpers.get_user(update)}")
+    await handle_mock_leetcode(update)
 
 
 async def handle_how_to_present(update: Update) -> None:
