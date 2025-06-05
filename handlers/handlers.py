@@ -1,6 +1,7 @@
 import logging
 
 from sqlalchemy import exists, select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update, User
@@ -120,10 +121,26 @@ async def handle_mock_leetcode(update: Update) -> None:
 
 
 async def handle_leetcode_enroll(update: Update) -> None:
-    logging.info(f"leetcode_enroll handled by {helpers.get_user(update)}")
-    # todo: actually store user in enrollments table
+    tg_user = helpers.get_user(update)
+    logging.info(f"leetcode_enroll handled by {tg_user}")
+
+    with Session(models.engine) as session:
+        enrollment = models.Enrollment(
+            course_id=7,  # todo: dirty hard-code
+            tg_id=tg_user.id
+        )
+        session.add(enrollment)
+        try:
+            session.commit()
+            logging.info(f"Add user enrollment to Leetcode to db: {tg_user}")
+        except IntegrityError as e:
+            session.rollback()
+            logging.info(f"Didn't add user {tg_user.username} enrollment to Leetcode to db: {e}")
+        except Exception as e:
+            session.rollback()
+            logging.warning(f"Couldn't add user enrollment to Leetcode: {e}")
     button_list = [
-        InlineKeyboardButton("Я передумала, отписаться", callback_data="leetcode_unenroll"),
+        InlineKeyboardButton("Перестать получать уведомления", callback_data="leetcode_unenroll"),
         InlineKeyboardButton("Назад", callback_data="back"),
     ]
     menu = [button_list[i:i + 1] for i in range(0, len(button_list), 1)]
