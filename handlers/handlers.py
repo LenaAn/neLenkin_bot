@@ -4,6 +4,7 @@ from telegram.ext import ContextTypes
 
 import constants
 import helpers
+import settings
 
 
 async def button_click(update: Update, _: ContextTypes.DEFAULT_TYPE) -> None:
@@ -119,3 +120,19 @@ async def handle_how_to_present(update: Update) -> None:
         text=constants.how_to_present_description,
         reply_markup=InlineKeyboardMarkup(menu),
         parse_mode="HTML")
+
+
+async def error_handler(update: object, context: ContextTypes.DEFAULT_TYPE) -> None:
+    if not isinstance(update, Update):
+        logging.info(f"error by not even update: {update}, exc_info=context.error")
+    else:
+        logging.info(f"error triggered by {helpers.get_user(update)}", exc_info=context.error)
+        await context.bot.send_message(
+            chat_id=update.effective_chat.id,
+            text=constants.error_description,
+            parse_mode="HTML")
+
+        await context.bot.send_message(
+            chat_id=settings.ADMIN_CHAT_ID,
+            text=f"error triggered by {helpers.get_user(update)}: {context.error}",
+            parse_mode="HTML")

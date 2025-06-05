@@ -43,5 +43,7 @@ if __name__ == '__main__':
 
     application.add_handler(CallbackQueryHandler(handlers.button_click))
 
+    application.add_error_handler(handlers.error_handler)
+
     application.post_init = notifications.register_leetcode_notifications
     application.run_polling()
