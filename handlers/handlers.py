@@ -152,8 +152,20 @@ async def handle_leetcode_enroll(update: Update) -> None:
 
 
 async def handle_leetcode_unenroll(update: Update) -> None:
-    logging.info(f"leetcode_unenroll handled by {helpers.get_user(update)}")
-    # todo: actually delete user from enrollments table
+    tg_user = helpers.get_user(update)
+    logging.info(f"leetcode_unenroll handled by {tg_user}")
+
+    with Session(models.engine) as session:
+        try:
+            session.query(models.Enrollment).filter(
+                (models.Enrollment.tg_id == str(tg_user.id)) & (models.Enrollment.course_id == 7)).delete()
+            session.commit()
+            logging.info(f"Deleted user enrollment to Leetcode from db: {tg_user}")
+        except Exception as e:
+            session.rollback()
+            logging.error(f"Couldn't delete user enrollment to Leetcode: {e}")
+            raise e  # to propagate it to error handler
+
     button_list = [
         InlineKeyboardButton("Назад", callback_data="back"),
     ]
@@ -178,6 +190,7 @@ async def handle_how_to_present(update: Update) -> None:
 
 
 async def error_handler(update: object, context: ContextTypes.DEFAULT_TYPE) -> None:
+    # todo: ignore "Message is not modified" and "Query is too old" errors?
     if not isinstance(update, Update):
         logging.info(f"error by not even update: {update}, exc_info=context.error")
     else:
