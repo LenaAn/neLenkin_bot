@@ -26,7 +26,7 @@ class Enrollment(Base):
     __tablename__ = 'Enrollments'
 
     id = Column(BigInteger, primary_key=True, autoincrement=True)
-    user_id = Column(BigInteger, nullable=False)
+    user_id = Column(BigInteger, nullable=True)
     course_id = Column(BigInteger, nullable=False)
     tg_id = Column(String, nullable=False)
 
