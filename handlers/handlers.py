@@ -24,6 +24,8 @@ async def button_click(update: Update, _: ContextTypes.DEFAULT_TYPE) -> None:
         "ddia": handle_ddia,
         "back_to_ddia": handle_back_to_ddia,
         "sre_book": handle_sre_book,
+        "sre_enroll": handle_sre_enroll,
+        "sre_unenroll": handle_sre_unenroll,
         "mock_leetcode": handle_mock_leetcode,
         "how_to_present": handle_how_to_present,
         "leetcode_enroll": handle_leetcode_enroll,
@@ -73,6 +75,7 @@ async def handle_back_to_ddia(update: Update) -> None:
 async def handle_sre_book(update: Update) -> None:
     logging.info(f"sre_book triggered by {helpers.get_user(update)}")
     button_list = [
+        InlineKeyboardButton("Хочу участвовать!", callback_data="sre_enroll"),
         InlineKeyboardButton("Назад", callback_data="back"),
     ]
     menu = [button_list[i:i + 1] for i in range(0, len(button_list), 1)]
@@ -187,6 +190,18 @@ async def handle_leetcode_enroll(update: Update) -> None:
 
 async def handle_leetcode_unenroll(update: Update) -> None:
     await handle_unenroll(update, constants.leetcode_course_id, constants.leetcode_unenroll_description)
+
+
+async def handle_sre_enroll(update: Update) -> None:
+    await handle_enroll(
+        update,
+        constants.sre_course_id,
+        "sre_unenroll",
+        constants.sre_enroll_description)
+
+
+async def handle_sre_unenroll(update: Update) -> None:
+    await handle_unenroll(update, constants.sre_course_id, constants.sre_unenroll_description)
 
 
 async def handle_how_to_present(update: Update) -> None:

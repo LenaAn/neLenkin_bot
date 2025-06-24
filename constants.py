@@ -22,16 +22,20 @@ ddia_description = \
      "она не меняется. \n\nОбсуждение и координация происходят в <a href='t.me/lenka_ne_club/7209'>этом топике</a>.")
 
 sre_book_description = \
-    ("⚠️SRE Book — это книга для тех, кто уже прочитал Кабанчика. Если ты еще не прочитала кабанчика, пожалуйста, "
-     "не отвлекайся!! ⚠️\n\n"
-     "SRE Book — книга про принципы и практики работы Site Reliability Engineer команды в Google.\n\n"
-     "Ссылка на книгу <a href='https://sre.google/sre-book/table-of-contents/'>вот</a>. "
-     "Созвоны по вторникам в 18:00 по Белграду (даже если часы перевели, мы ориентируемся на Белград).\n\n"
-     "Вот <a href='https://docs.google.com/spreadsheets/d/1J15WCQyITeDZR64G9Ymf-pT_zSJm3m9Kvorp48ecy10/edit?gid=0#gid=0'> "
-     "таблица с расписанием</a>, "
-     "вот <a href='https://us06web.zoom.us/j/89699825499?pwd=252HFSD6l5TH2GYm7qDlI3QRahZNIZ.1'>ссылка на звонок</a>, "
-     "вот <a href='t.me/lenka_ne_club/7272'>топик</a>.\n\n"
-     "Пожалуйста записывайтесь с таблицу делать презентацию!")
+    ("SRE Book — книга про принципы и практики работы Site Reliability Engineer команды в Google. Книга является "
+     "сборником эссе от разных авторов, поэтому присоединиться к нам можно в любой момент. "
+     "Ссылка на книгу <a href='https://sre.google/sre-book/table-of-contents/'>вот</a>.\n\n"
+     "Больше подробностей — <a href='t.me/lenka_ne_club/7272'>в группе</a>. Следить за расписанием можно "
+     "<a href='https://docs.google.com/spreadsheets/d/1J15WCQyITeDZR64G9Ymf-pT_zSJm3m9Kvorp48ecy10/edit?gid=0#gid=0'>в этой таблице</a>.")
+
+sre_book_cta_description = \
+    "Нажми кнопку \"Хочу участвовать\", и бот будет присылать тебе ссылку на Zoom звонок за пять минут до звонка!"
+
+sre_enroll_description = \
+    ("Бот будет присылать тебе напоминание с ссылкой на Zoom звонок за пять минут до звонка!\n\n"
+     "Звонок проходит каждый вторник в 18:00 по Белграду.")
+
+sre_unenroll_description = "Бот больше не будет присылать тебе напоминания о SRE book"
 
 mock_leetcode_description = \
     ("Прорешивать Leetcode — это хорошо, но на реальном собеседовании важно уметь рассказать ход решения, "
