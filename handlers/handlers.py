@@ -24,6 +24,8 @@ async def button_click(update: Update, _: ContextTypes.DEFAULT_TYPE) -> None:
         "ddia": handle_ddia,
         "back_to_ddia": handle_back_to_ddia,
         "sre_book": handle_sre_book,
+        "sre_enroll": handle_sre_enroll,
+        "sre_unenroll": handle_sre_unenroll,
         "mock_leetcode": handle_mock_leetcode,
         "how_to_present": handle_how_to_present,
         "leetcode_enroll": handle_leetcode_enroll,
@@ -70,100 +72,103 @@ async def handle_back_to_ddia(update: Update) -> None:
     await handle_ddia(update)
 
 
-async def handle_sre_book(update: Update) -> None:
-    logging.info(f"sre_book triggered by {helpers.get_user(update)}")
-    button_list = [
-        InlineKeyboardButton("Назад", callback_data="back"),
-    ]
-    menu = [button_list[i:i + 1] for i in range(0, len(button_list), 1)]
-    await update.callback_query.edit_message_text(
-        text=constants.sre_book_description,
-        reply_markup=InlineKeyboardMarkup(menu),
-        parse_mode="HTML")
-
-
-def user_is_enrolled_in_leetcode(tg_user: User) -> bool:
+def user_is_enrolled(tg_user: User, course_id: int) -> bool:
     with Session(models.engine) as session:
         users_exists = session.scalar(
-            select(exists().where((models.Enrollment.tg_id == str(tg_user.id)) & (models.Enrollment.course_id == 7)))
+            select(exists().where(
+                (models.Enrollment.tg_id == str(tg_user.id)) & (models.Enrollment.course_id == course_id))
+            )
         )
     if users_exists:
-        logging.info(f"user is already enrolled in Leetcode Mocks: {tg_user}")
+        logging.info(f"user is already enrolled in course {course_id}: {tg_user}")
     else:
-        logging.info(f"user is not already enrolled in Leetcode Mocks: {tg_user}")
+        logging.info(f"user is not already enrolled in course {course_id}: {tg_user}")
     return users_exists
 
 
-async def handle_mock_leetcode(update: Update) -> None:
+async def handle_course_info(update: Update, course_id: int, course_description: str, enroll_description: str,
+                             cta_description: str, enroll_callback: str, unenroll_callback: str) -> None:
     tg_user = helpers.get_user(update)
-    logging.info(f"mock_leetcode triggered by {tg_user}")
+    logging.info(f"handle_course_info for course {course_id} triggered by {tg_user}")
 
-    if user_is_enrolled_in_leetcode(tg_user):
+    if user_is_enrolled(tg_user, course_id):
         button_list = [
-            InlineKeyboardButton("Перестать получать уведомления", callback_data="leetcode_unenroll"),
+            InlineKeyboardButton("Перестать получать уведомления", callback_data=unenroll_callback),
             InlineKeyboardButton("Назад", callback_data="back"),
         ]
         menu = [button_list[i:i + 1] for i in range(0, len(button_list), 1)]
         await update.callback_query.edit_message_text(
-            text=constants.mock_leetcode_description + "\n\n" + constants.leetcode_enroll_description,
+            text=course_description + "\n\n" + enroll_description,
             reply_markup=InlineKeyboardMarkup(menu),
             parse_mode="HTML")
     else:
         button_list = [
-            InlineKeyboardButton("Хочу участвовать!", callback_data="leetcode_enroll"),
+            InlineKeyboardButton("Хочу участвовать!", callback_data=enroll_callback),
             InlineKeyboardButton("Назад", callback_data="back"),
         ]
         menu = [button_list[i:i + 1] for i in range(0, len(button_list), 1)]
         await update.callback_query.edit_message_text(
-            text=constants.mock_leetcode_description + "\n\n" + constants.leetcode_cta_description,
+            text=course_description + "\n\n" + cta_description,
             reply_markup=InlineKeyboardMarkup(menu),
             parse_mode="HTML")
 
 
-async def handle_leetcode_enroll(update: Update) -> None:
+async def handle_mock_leetcode(update: Update) -> None:
+    await handle_course_info(update, constants.leetcode_course_id, constants.mock_leetcode_description,
+                             constants.leetcode_enroll_description, constants.leetcode_cta_description,
+                             "leetcode_enroll", "leetcode_unenroll")
+
+
+async def handle_sre_book(update: Update) -> None:
+    await handle_course_info(update, constants.sre_course_id, constants.sre_book_description,
+                             constants.sre_enroll_description, constants.sre_book_cta_description,
+                             "sre_enroll", "sre_unenroll")
+
+
+async def handle_enroll(update: Update, course_id: int, unenroll_callback_data: str, enroll_description: str) -> None:
     tg_user = helpers.get_user(update)
-    logging.info(f"leetcode_enroll handled by {tg_user}")
+    logging.info(f"enroll for course {course_id} handled by {tg_user}")
 
     with Session(models.engine) as session:
         enrollment = models.Enrollment(
-            course_id=7,  # todo: dirty hard-code
+            course_id=course_id,
             tg_id=tg_user.id
         )
         session.add(enrollment)
         try:
             session.commit()
-            logging.info(f"Add user enrollment to Leetcode to db: {tg_user}")
+            logging.info(f"Add user enrollment to course {course_id} to db: {tg_user}")
         except IntegrityError as e:
             session.rollback()
-            logging.info(f"Didn't add user {tg_user.username} enrollment to Leetcode to db: {e}")
+            logging.info(f"Didn't add user {tg_user.username} enrollment to course {course_id} to db: {e}")
         except Exception as e:
             session.rollback()
-            logging.warning(f"Couldn't add user enrollment to Leetcode: {e}")
+            logging.warning(f"Couldn't add user enrollment to course {course_id}: {e}")
     button_list = [
-        InlineKeyboardButton("Перестать получать уведомления", callback_data="leetcode_unenroll"),
+        InlineKeyboardButton("Перестать получать уведомления", callback_data=unenroll_callback_data),
         InlineKeyboardButton("Назад", callback_data="back"),
     ]
     menu = [button_list[i:i + 1] for i in range(0, len(button_list), 1)]
     await update.callback_query.edit_message_text(
-        text=constants.leetcode_enroll_description,
+        text=enroll_description,
         reply_markup=InlineKeyboardMarkup(menu),
         parse_mode="HTML"
     )
 
 
-async def handle_leetcode_unenroll(update: Update) -> None:
+async def handle_unenroll(update: Update, course_id: int, unenroll_description: str) -> None:
     tg_user = helpers.get_user(update)
-    logging.info(f"leetcode_unenroll handled by {tg_user}")
+    logging.info(f"unenroll for course {course_id} handled by {tg_user}")
 
     with Session(models.engine) as session:
         try:
             session.query(models.Enrollment).filter(
-                (models.Enrollment.tg_id == str(tg_user.id)) & (models.Enrollment.course_id == 7)).delete()
+                (models.Enrollment.tg_id == str(tg_user.id)) & (models.Enrollment.course_id == course_id)).delete()
             session.commit()
-            logging.info(f"Deleted user enrollment to Leetcode from db: {tg_user}")
+            logging.info(f"Deleted user enrollment to course {course_id} from db: {tg_user}")
         except Exception as e:
             session.rollback()
-            logging.error(f"Couldn't delete user enrollment to Leetcode: {e}")
+            logging.error(f"Couldn't delete user enrollment to course {course_id}: {e}")
             raise e  # to propagate it to error handler
 
     button_list = [
@@ -171,10 +176,34 @@ async def handle_leetcode_unenroll(update: Update) -> None:
     ]
     menu = [button_list[i:i + 1] for i in range(0, len(button_list), 1)]
     await update.callback_query.edit_message_text(
-        text=constants.leetcode_unenroll_description,
+        text=unenroll_description,
         reply_markup=InlineKeyboardMarkup(menu),
         parse_mode="HTML"
     )
+
+
+async def handle_leetcode_enroll(update: Update) -> None:
+    await handle_enroll(
+        update,
+        constants.leetcode_course_id,
+        "leetcode_unenroll",
+        constants.leetcode_enroll_description)
+
+
+async def handle_leetcode_unenroll(update: Update) -> None:
+    await handle_unenroll(update, constants.leetcode_course_id, constants.leetcode_unenroll_description)
+
+
+async def handle_sre_enroll(update: Update) -> None:
+    await handle_enroll(
+        update,
+        constants.sre_course_id,
+        "sre_unenroll",
+        constants.sre_enroll_description)
+
+
+async def handle_sre_unenroll(update: Update) -> None:
+    await handle_unenroll(update, constants.sre_course_id, constants.sre_unenroll_description)
 
 
 async def handle_how_to_present(update: Update) -> None:
