@@ -85,15 +85,17 @@ async def handle_sre_book(update: Update) -> None:
         parse_mode="HTML")
 
 
-def user_is_enrolled_in_leetcode(tg_user: User) -> bool:
+def user_is_enrolled(tg_user: User, course_id: int) -> bool:
     with Session(models.engine) as session:
         users_exists = session.scalar(
-            select(exists().where((models.Enrollment.tg_id == str(tg_user.id)) & (models.Enrollment.course_id == 7)))
+            select(exists().where(
+                (models.Enrollment.tg_id == str(tg_user.id)) & (models.Enrollment.course_id == course_id))
+            )
         )
     if users_exists:
-        logging.info(f"user is already enrolled in Leetcode Mocks: {tg_user}")
+        logging.info(f"user is already enrolled in course {course_id}: {tg_user}")
     else:
-        logging.info(f"user is not already enrolled in Leetcode Mocks: {tg_user}")
+        logging.info(f"user is not already enrolled in course {course_id}: {tg_user}")
     return users_exists
 
 
@@ -101,7 +103,7 @@ async def handle_mock_leetcode(update: Update) -> None:
     tg_user = helpers.get_user(update)
     logging.info(f"mock_leetcode triggered by {tg_user}")
 
-    if user_is_enrolled_in_leetcode(tg_user):
+    if user_is_enrolled(tg_user, constants.leetcode_course_id):
         button_list = [
             InlineKeyboardButton("Перестать получать уведомления", callback_data="leetcode_unenroll"),
             InlineKeyboardButton("Назад", callback_data="back"),
