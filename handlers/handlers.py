@@ -120,50 +120,50 @@ async def handle_mock_leetcode(update: Update) -> None:
             parse_mode="HTML")
 
 
-async def handle_leetcode_enroll(update: Update) -> None:
+async def handle_enroll(update: Update, course_id: int, unenroll_callback_data: str, enroll_description: str) -> None:
     tg_user = helpers.get_user(update)
-    logging.info(f"leetcode_enroll handled by {tg_user}")
+    logging.info(f"enroll for course {course_id} handled by {tg_user}")
 
     with Session(models.engine) as session:
         enrollment = models.Enrollment(
-            course_id=7,  # todo: dirty hard-code
+            course_id=course_id,
             tg_id=tg_user.id
         )
         session.add(enrollment)
         try:
             session.commit()
-            logging.info(f"Add user enrollment to Leetcode to db: {tg_user}")
+            logging.info(f"Add user enrollment to course {course_id} to db: {tg_user}")
         except IntegrityError as e:
             session.rollback()
-            logging.info(f"Didn't add user {tg_user.username} enrollment to Leetcode to db: {e}")
+            logging.info(f"Didn't add user {tg_user.username} enrollment to course {course_id} to db: {e}")
         except Exception as e:
             session.rollback()
-            logging.warning(f"Couldn't add user enrollment to Leetcode: {e}")
+            logging.warning(f"Couldn't add user enrollment to course {course_id}: {e}")
     button_list = [
-        InlineKeyboardButton("Перестать получать уведомления", callback_data="leetcode_unenroll"),
+        InlineKeyboardButton("Перестать получать уведомления", callback_data=unenroll_callback_data),
         InlineKeyboardButton("Назад", callback_data="back"),
     ]
     menu = [button_list[i:i + 1] for i in range(0, len(button_list), 1)]
     await update.callback_query.edit_message_text(
-        text=constants.leetcode_enroll_description,
+        text=enroll_description,
         reply_markup=InlineKeyboardMarkup(menu),
         parse_mode="HTML"
     )
 
 
-async def handle_leetcode_unenroll(update: Update) -> None:
+async def handle_unenroll(update: Update, course_id: int, unenroll_description: str) -> None:
     tg_user = helpers.get_user(update)
-    logging.info(f"leetcode_unenroll handled by {tg_user}")
+    logging.info(f"unenroll for course {course_id} handled by {tg_user}")
 
     with Session(models.engine) as session:
         try:
             session.query(models.Enrollment).filter(
-                (models.Enrollment.tg_id == str(tg_user.id)) & (models.Enrollment.course_id == 7)).delete()
+                (models.Enrollment.tg_id == str(tg_user.id)) & (models.Enrollment.course_id == course_id)).delete()
             session.commit()
-            logging.info(f"Deleted user enrollment to Leetcode from db: {tg_user}")
+            logging.info(f"Deleted user enrollment to course {course_id} from db: {tg_user}")
         except Exception as e:
             session.rollback()
-            logging.error(f"Couldn't delete user enrollment to Leetcode: {e}")
+            logging.error(f"Couldn't delete user enrollment to course {course_id}: {e}")
             raise e  # to propagate it to error handler
 
     button_list = [
@@ -171,10 +171,22 @@ async def handle_leetcode_unenroll(update: Update) -> None:
     ]
     menu = [button_list[i:i + 1] for i in range(0, len(button_list), 1)]
     await update.callback_query.edit_message_text(
-        text=constants.leetcode_unenroll_description,
+        text=unenroll_description,
         reply_markup=InlineKeyboardMarkup(menu),
         parse_mode="HTML"
     )
+
+
+async def handle_leetcode_enroll(update: Update) -> None:
+    await handle_enroll(
+        update,
+        constants.leetcode_course_id,
+        "leetcode_unenroll",
+        constants.leetcode_enroll_description)
+
+
+async def handle_leetcode_unenroll(update: Update) -> None:
+    await handle_unenroll(update, constants.leetcode_course_id, constants.leetcode_unenroll_description)
 
 
 async def handle_how_to_present(update: Update) -> None:
