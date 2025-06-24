@@ -72,19 +72,6 @@ async def handle_back_to_ddia(update: Update) -> None:
     await handle_ddia(update)
 
 
-async def handle_sre_book(update: Update) -> None:
-    logging.info(f"sre_book triggered by {helpers.get_user(update)}")
-    button_list = [
-        InlineKeyboardButton("Хочу участвовать!", callback_data="sre_enroll"),
-        InlineKeyboardButton("Назад", callback_data="back"),
-    ]
-    menu = [button_list[i:i + 1] for i in range(0, len(button_list), 1)]
-    await update.callback_query.edit_message_text(
-        text=constants.sre_book_description,
-        reply_markup=InlineKeyboardMarkup(menu),
-        parse_mode="HTML")
-
-
 def user_is_enrolled(tg_user: User, course_id: int) -> bool:
     with Session(models.engine) as session:
         users_exists = session.scalar(
@@ -99,30 +86,43 @@ def user_is_enrolled(tg_user: User, course_id: int) -> bool:
     return users_exists
 
 
-async def handle_mock_leetcode(update: Update) -> None:
+async def handle_course_info(update: Update, course_id: int, course_description: str, enroll_description: str,
+                             cta_description: str, enroll_callback: str, unenroll_callback: str) -> None:
     tg_user = helpers.get_user(update)
-    logging.info(f"mock_leetcode triggered by {tg_user}")
+    logging.info(f"handle_course_info for course {course_id} triggered by {tg_user}")
 
-    if user_is_enrolled(tg_user, constants.leetcode_course_id):
+    if user_is_enrolled(tg_user, course_id):
         button_list = [
-            InlineKeyboardButton("Перестать получать уведомления", callback_data="leetcode_unenroll"),
+            InlineKeyboardButton("Перестать получать уведомления", callback_data=unenroll_callback),
             InlineKeyboardButton("Назад", callback_data="back"),
         ]
         menu = [button_list[i:i + 1] for i in range(0, len(button_list), 1)]
         await update.callback_query.edit_message_text(
-            text=constants.mock_leetcode_description + "\n\n" + constants.leetcode_enroll_description,
+            text=course_description + "\n\n" + enroll_description,
             reply_markup=InlineKeyboardMarkup(menu),
             parse_mode="HTML")
     else:
         button_list = [
-            InlineKeyboardButton("Хочу участвовать!", callback_data="leetcode_enroll"),
+            InlineKeyboardButton("Хочу участвовать!", callback_data=enroll_callback),
             InlineKeyboardButton("Назад", callback_data="back"),
         ]
         menu = [button_list[i:i + 1] for i in range(0, len(button_list), 1)]
         await update.callback_query.edit_message_text(
-            text=constants.mock_leetcode_description + "\n\n" + constants.leetcode_cta_description,
+            text=course_description + "\n\n" + cta_description,
             reply_markup=InlineKeyboardMarkup(menu),
             parse_mode="HTML")
+
+
+async def handle_mock_leetcode(update: Update) -> None:
+    await handle_course_info(update, constants.leetcode_course_id, constants.mock_leetcode_description,
+                             constants.leetcode_enroll_description, constants.leetcode_cta_description,
+                             "leetcode_enroll", "leetcode_unenroll")
+
+
+async def handle_sre_book(update: Update) -> None:
+    await handle_course_info(update, constants.sre_course_id, constants.sre_book_description,
+                             constants.sre_enroll_description, constants.sre_book_cta_description,
+                             "sre_enroll", "sre_unenroll")
 
 
 async def handle_enroll(update: Update, course_id: int, unenroll_callback_data: str, enroll_description: str) -> None:
