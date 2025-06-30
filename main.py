@@ -38,12 +38,21 @@ if __name__ == '__main__':
         states={
             admin_commands.BROADCAST: [MessageHandler(filters.TEXT & ~filters.COMMAND, admin_commands.leetcode_broadcast)]
         },
-        fallbacks=[CommandHandler('cancel_leetocode_broadcast', admin_commands.cancel_leetcode_broadcast)],
+        fallbacks=[CommandHandler('cancel_broadcast', admin_commands.cancel_broadcast)],
+    )
+
+    sre_broadcast_conv_handler = ConversationHandler(
+        entry_points=[CommandHandler('sre_broadcast', admin_commands.start_sre_broadcast)],
+        states={
+            admin_commands.BROADCAST: [MessageHandler(filters.TEXT & ~filters.COMMAND, admin_commands.sre_broadcast)]
+        },
+        fallbacks=[CommandHandler('cancel_broadcast', admin_commands.cancel_broadcast)],
     )
 
     application.add_handler(echo_conv_handler)
     application.add_handler(broadcast_conv_handler)
     application.add_handler(leetcode_broadcast_conv_handler)
+    application.add_handler(sre_broadcast_conv_handler)
 
     application.add_handler(CommandHandler('start', menu.start))
     application.add_handler(CommandHandler('help', menu.command_help))
