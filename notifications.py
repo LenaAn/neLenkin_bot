@@ -24,7 +24,7 @@ async def handle_notification(context: ContextTypes.DEFAULT_TYPE):
     with Session(engine) as session:
         result = session.query(Enrollment.tg_id).filter(Enrollment.course_id == course_id).all()
         notification_chat_ids = [item[0] for item in result]
-    notifications_logger.debug(f"handling notifications for course {course_id}, "
+    notifications_logger.debug(f"handling {constants.id_to_course[course_id]} notification, "
                                f"got {len(notification_chat_ids)} chat ids")
 
     successful_count = 0
@@ -41,8 +41,8 @@ async def handle_notification(context: ContextTypes.DEFAULT_TYPE):
             notifications_logger.info(f"failed to send notification to chat {chat_id}: {e}")
             fail_count += 1
 
-    logging.info(f"Successfully sent notifications for course {course_id} to {successful_count} users, "
-                 f"failed {fail_count} users.")
+    logging.info(f"Successfully sent {constants.id_to_course[course_id]} notification to {successful_count} users,"
+                 f" failed {fail_count} users.")
 
     load_dotenv(override=True)
     admin_chat_id = int(os.getenv('ADMIN_CHAT_ID'))
@@ -50,7 +50,7 @@ async def handle_notification(context: ContextTypes.DEFAULT_TYPE):
 
     await context.bot.send_message(
         chat_id=admin_chat_id,
-        text=f"Successfully sent notifications for course {course_id} to {successful_count} users, "
+        text=f"Successfully sent {constants.id_to_course[course_id]} notifications to {successful_count} users, "
              f"failed {fail_count} users."
     )
 

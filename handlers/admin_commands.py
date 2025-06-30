@@ -96,7 +96,7 @@ async def broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
 
     with Session(engine) as session:
         users = session.query(User).all()
-        logging.info(f"got {len(users)} users from db for broadcasting")
+        logging.info(f"got {len(users)} users from db for broadcast")
 
     successful_count = 0
     fail_count = 0
@@ -126,11 +126,12 @@ async def cancel_broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE) -
     return ConversationHandler.END
 
 
-async def do_broadcast_course(update: Update, context: ContextTypes.DEFAULT_TYPE, course_id) -> int:
+async def do_broadcast_course(update: Update, context: ContextTypes.DEFAULT_TYPE, course_id: int) -> int:
+    logging.info(f"{constants.id_to_course[course_id]}_broadcast handler triggered by {helpers.get_user(update)}")
     with Session(engine) as session:
         course_enrollments = session.query(Enrollment.tg_id).filter(Enrollment.course_id == course_id).all()
         tg_ids = [tg_id for (tg_id,) in course_enrollments]
-        logging.info(f"got {len(tg_ids)} users from db for broadcasting for course {course_id}")
+        logging.info(f"got {len(tg_ids)} users from db for {constants.id_to_course[course_id]} broadcast")
 
     successful_count = 0
     fail_count = 0
@@ -143,13 +144,15 @@ async def do_broadcast_course(update: Update, context: ContextTypes.DEFAULT_TYPE
             )
             successful_count += 1
         except Exception as e:
-            logging.info(f"couldn't send broadcast for course {course_id} message to {tg_id}: {e}")
+            logging.info(f"couldn't send {constants.id_to_course[course_id]} broadcast message to {tg_id}: {e}")
             fail_count += 1
 
-    logging.info(f"Successfully broadcast for course {course_id} to {successful_count} users, failed {fail_count} users.")
+    logging.info(f"Successfully {constants.id_to_course[course_id]} broadcast to {successful_count} users, "
+                 f"failed {fail_count} users.")
     await context.bot.send_message(
         chat_id=update.effective_chat.id,
-        text=f"Successfully broadcast for course {course_id} to {successful_count} users, failed {fail_count} users."
+        text=f"Successfully {constants.id_to_course[course_id]} broadcast to {successful_count} users, "
+             f"failed {fail_count} users."
     )
     return ConversationHandler.END
 
@@ -169,7 +172,6 @@ async def start_leetcode_broadcast(update: Update, context: ContextTypes.DEFAULT
 
 @is_admin
 async def leetcode_broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    logging.info(f"leetcode_broadcast handler triggered by {helpers.get_user(update)}")
     return await do_broadcast_course(update, context, constants.leetcode_course_id)
 
 
@@ -188,5 +190,4 @@ async def start_sre_broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE
 
 @is_admin
 async def sre_broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    logging.info(f"sre_broadcast handler triggered by {helpers.get_user(update)}")
     return await do_broadcast_course(update, context, constants.sre_course_id)

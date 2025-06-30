@@ -80,16 +80,16 @@ def user_is_enrolled(tg_user: User, course_id: int) -> bool:
             )
         )
     if users_exists:
-        logging.info(f"user is already enrolled in course {course_id}: {tg_user}")
+        logging.info(f"user is already enrolled in {constants.id_to_course[course_id]}: {tg_user}")
     else:
-        logging.info(f"user is not already enrolled in course {course_id}: {tg_user}")
+        logging.info(f"user is not already enrolled in {constants.id_to_course[course_id]}: {tg_user}")
     return users_exists
 
 
 async def handle_course_info(update: Update, course_id: int, course_description: str, enroll_description: str,
                              cta_description: str, enroll_callback: str, unenroll_callback: str) -> None:
     tg_user = helpers.get_user(update)
-    logging.info(f"handle_course_info for course {course_id} triggered by {tg_user}")
+    logging.info(f"handle_course_info for {constants.id_to_course[course_id]} triggered by {tg_user}")
 
     if user_is_enrolled(tg_user, course_id):
         button_list = [
@@ -127,7 +127,7 @@ async def handle_sre_book(update: Update) -> None:
 
 async def handle_enroll(update: Update, course_id: int, unenroll_callback_data: str, enroll_description: str) -> None:
     tg_user = helpers.get_user(update)
-    logging.info(f"enroll for course {course_id} handled by {tg_user}")
+    logging.info(f"enroll for {constants.id_to_course[course_id]} handled by {tg_user}")
 
     with Session(models.engine) as session:
         enrollment = models.Enrollment(
@@ -137,13 +137,13 @@ async def handle_enroll(update: Update, course_id: int, unenroll_callback_data: 
         session.add(enrollment)
         try:
             session.commit()
-            logging.info(f"Add user enrollment to course {course_id} to db: {tg_user}")
+            logging.info(f"Add user enrollment to {constants.id_to_course[course_id]} to db: {tg_user}")
         except IntegrityError as e:
             session.rollback()
-            logging.info(f"Didn't add user {tg_user.username} enrollment to course {course_id} to db: {e}")
+            logging.info(f"Didn't add user {tg_user.username} enrollment to {constants.id_to_course[course_id]} to db: {e}")
         except Exception as e:
             session.rollback()
-            logging.warning(f"Couldn't add user enrollment to course {course_id}: {e}")
+            logging.warning(f"Couldn't add user enrollment to {constants.id_to_course[course_id]}: {e}")
     button_list = [
         InlineKeyboardButton("Перестать получать уведомления", callback_data=unenroll_callback_data),
         InlineKeyboardButton("Назад", callback_data="back"),
@@ -158,17 +158,17 @@ async def handle_enroll(update: Update, course_id: int, unenroll_callback_data: 
 
 async def handle_unenroll(update: Update, course_id: int, unenroll_description: str) -> None:
     tg_user = helpers.get_user(update)
-    logging.info(f"unenroll for course {course_id} handled by {tg_user}")
+    logging.info(f"unenroll for {constants.id_to_course[course_id]} handled by {tg_user}")
 
     with Session(models.engine) as session:
         try:
             session.query(models.Enrollment).filter(
                 (models.Enrollment.tg_id == str(tg_user.id)) & (models.Enrollment.course_id == course_id)).delete()
             session.commit()
-            logging.info(f"Deleted user enrollment to course {course_id} from db: {tg_user}")
+            logging.info(f"Deleted user enrollment to {constants.id_to_course[course_id]} from db: {tg_user}")
         except Exception as e:
             session.rollback()
-            logging.error(f"Couldn't delete user enrollment to course {course_id}: {e}")
+            logging.error(f"Couldn't delete user enrollment to {constants.id_to_course[course_id]}: {e}")
             raise e  # to propagate it to error handler
 
     button_list = [
