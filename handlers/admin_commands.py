@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 from telegram import Update
 from telegram.ext import ContextTypes, ConversationHandler
 
+import constants
 import helpers
 from models import Enrollment, User, engine
 
@@ -128,6 +129,34 @@ async def cancel_broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE) -
 LEETCODE_BROADCAST = 1
 
 
+async def do_broadcast_course(update: Update, context: ContextTypes.DEFAULT_TYPE, course_id) -> int:
+    with Session(engine) as session:
+        course_enrollments = session.query(Enrollment.tg_id).filter(Enrollment.course_id == course_id).all()
+        tg_ids = [tg_id for (tg_id,) in course_enrollments]
+        logging.info(f"got {len(tg_ids)} users from db for broadcasting for course {course_id}")
+
+    successful_count = 0
+    fail_count = 0
+    for tg_id in tg_ids:
+        try:
+            await context.bot.send_message(
+                chat_id=tg_id,
+                text=update.message.text,
+                entities=update.message.entities
+            )
+            successful_count += 1
+        except Exception as e:
+            logging.info(f"couldn't send broadcast for course {course_id} message to {tg_id}: {e}")
+            fail_count += 1
+
+    logging.info(f"Successfully broadcast for course {course_id} to {successful_count} users, failed {fail_count} users.")
+    await context.bot.send_message(
+        chat_id=update.effective_chat.id,
+        text=f"Successfully broadcast for course {course_id} to {successful_count} users, failed {fail_count} users."
+    )
+    return ConversationHandler.END
+
+
 @is_admin
 async def start_leetcode_broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     logging.info(f"start_leetcode_broadcast handler triggered by {helpers.get_user(update)}")
@@ -141,39 +170,4 @@ async def start_leetcode_broadcast(update: Update, context: ContextTypes.DEFAULT
 @is_admin
 async def leetcode_broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     logging.info(f"leetcode_broadcast handler triggered by {helpers.get_user(update)}")
-
-    with Session(engine) as session:
-        leetcode_enrollments = session.query(Enrollment.tg_id).filter(Enrollment.course_id == 7).all()
-        tg_ids = [tg_id for (tg_id,) in leetcode_enrollments]
-        logging.info(f"got {len(tg_ids)} users from db for leetcode broadcasting")
-
-    successful_count = 0
-    fail_count = 0
-    for tg_id in tg_ids:
-        try:
-            await context.bot.send_message(
-                chat_id=tg_id,
-                text=update.message.text,
-                entities=update.message.entities
-            )
-            successful_count += 1
-        except Exception as e:
-            logging.info(f"couldn't send leetcode broadcast message to {tg_id}: {e}")
-            fail_count += 1
-
-    logging.info(f"Successfully broadcast leetcode message to {successful_count} users, failed {fail_count} users.")
-    await context.bot.send_message(
-        chat_id=update.effective_chat.id,
-        text=f"Successfully broadcast leetcode message to {successful_count} users, failed {fail_count} users."
-    )
-    return ConversationHandler.END
-
-
-@is_admin
-async def cancel_leetcode_broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    logging.info(f"cancel_leetcode_broadcast handler triggered by {helpers.get_user(update)}")
-    await context.bot.send_message(
-        chat_id=update.effective_chat.id,
-        text="Leetcode broadcast cancelled",
-    )
-    return ConversationHandler.END
+    return await do_broadcast_course(update, context, constants.leetcode_course_id)

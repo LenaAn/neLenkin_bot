@@ -38,7 +38,7 @@ if __name__ == '__main__':
         states={
             admin_commands.BROADCAST: [MessageHandler(filters.TEXT & ~filters.COMMAND, admin_commands.leetcode_broadcast)]
         },
-        fallbacks=[CommandHandler('cancel_leetocode_broadcast', admin_commands.cancel_leetcode_broadcast)],
+        fallbacks=[CommandHandler('cancel_broadcast', admin_commands.cancel_broadcast)],
     )
 
     application.add_handler(echo_conv_handler)
