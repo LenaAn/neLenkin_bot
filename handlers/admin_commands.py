@@ -126,9 +126,6 @@ async def cancel_broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE) -
     return ConversationHandler.END
 
 
-LEETCODE_BROADCAST = 1
-
-
 async def do_broadcast_course(update: Update, context: ContextTypes.DEFAULT_TYPE, course_id) -> int:
     with Session(engine) as session:
         course_enrollments = session.query(Enrollment.tg_id).filter(Enrollment.course_id == course_id).all()
@@ -157,6 +154,9 @@ async def do_broadcast_course(update: Update, context: ContextTypes.DEFAULT_TYPE
     return ConversationHandler.END
 
 
+LEETCODE_BROADCAST = 1
+
+
 @is_admin
 async def start_leetcode_broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     logging.info(f"start_leetcode_broadcast handler triggered by {helpers.get_user(update)}")
@@ -171,3 +171,22 @@ async def start_leetcode_broadcast(update: Update, context: ContextTypes.DEFAULT
 async def leetcode_broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     logging.info(f"leetcode_broadcast handler triggered by {helpers.get_user(update)}")
     return await do_broadcast_course(update, context, constants.leetcode_course_id)
+
+
+SRE_BROADCAST = 1
+
+
+@is_admin
+async def start_sre_broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    logging.info(f"start_sre_broadcast handler triggered by {helpers.get_user(update)}")
+    await context.bot.send_message(
+        chat_id=update.effective_chat.id,
+        text=f"Send a message to broadcast to SRE users"
+    )
+    return SRE_BROADCAST
+
+
+@is_admin
+async def sre_broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    logging.info(f"sre_broadcast handler triggered by {helpers.get_user(update)}")
+    return await do_broadcast_course(update, context, constants.sre_course_id)
