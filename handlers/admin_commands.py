@@ -80,7 +80,8 @@ async def get_sre_users_handler(update: Update, context: ContextTypes.DEFAULT_TY
 ECHO = 1
 
 
-@is_admin
+# todo: now `is_sre_admin` means "root admin OR SRE admin", while `is_admin`means "only root admin". Rethink it
+@is_sre_admin
 async def start_echo(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     logging.info(f"start_echo handler triggered by {helpers.get_user(update)}")
     await context.bot.send_message(
@@ -90,7 +91,7 @@ async def start_echo(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     return ECHO
 
 
-@is_admin
+@is_sre_admin
 async def echo_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     logging.info(f"echo_message handler triggered by {helpers.get_user(update)}")
     await context.bot.send_message(
@@ -101,7 +102,7 @@ async def echo_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> in
     return ConversationHandler.END
 
 
-@is_admin
+@is_sre_admin
 async def cancel_echo(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     logging.info(f"cancel_echo handler triggered by {helpers.get_user(update)}")
     await context.bot.send_message(
@@ -150,7 +151,7 @@ async def broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     return ConversationHandler.END
 
 
-@is_admin
+@is_sre_admin
 async def cancel_broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     logging.info(f"cancel_broadcast handler triggered by {helpers.get_user(update)}")
     await context.bot.send_message(
@@ -212,7 +213,7 @@ async def leetcode_broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE)
 SRE_BROADCAST = 1
 
 
-@is_admin
+@is_sre_admin
 async def start_sre_broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     logging.info(f"start_sre_broadcast handler triggered by {helpers.get_user(update)}")
     await context.bot.send_message(
@@ -222,6 +223,6 @@ async def start_sre_broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE
     return SRE_BROADCAST
 
 
-@is_admin
+@is_sre_admin
 async def sre_broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     return await do_broadcast_course(update, context, constants.sre_course_id)
