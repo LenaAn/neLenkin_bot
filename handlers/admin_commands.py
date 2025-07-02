@@ -30,6 +30,27 @@ def is_admin(callback):
     return wrapper
 
 
+def is_sre_admin(callback):
+    async def wrapper(update: Update, context: ContextTypes.DEFAULT_TYPE, *args, **kwargs):
+        # reloading admin chat is because I want to change it on the fly
+        load_dotenv(override=True)
+        sre_chat_ids = set()
+        if os.getenv('ADMIN_CHAT_ID'):
+            sre_chat_ids.add(int(os.getenv('ADMIN_CHAT_ID')))
+        if os.getenv('SRE_ADMIN_CHAT_ID'):
+            sre_chat_ids.add(int(os.getenv('SRE_ADMIN_CHAT_ID')))
+        logging.debug(f"reloaded admin chat ids")
+
+        if update.effective_chat.id not in sre_chat_ids:
+            logging.info(f"is_sre_admin check triggered by {helpers.get_user(update)}, user IS NOT an SRE moderator")
+            await update.effective_chat.send_message("❌ Для этого действия нужно быть админом")
+            return None
+        logging.info(f"is_sre_admin check triggered by {helpers.get_user(update)}, user IS a moderator")
+        return await callback(update, context, *args, **kwargs)
+
+    return wrapper
+
+
 @is_admin
 async def get_users_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     logging.info(f"get_users handler triggered by {helpers.get_user(update)}")
@@ -40,6 +61,19 @@ async def get_users_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) 
     await context.bot.send_message(
         chat_id=update.effective_chat.id,
         text=f"{users_count} users started the bot"
+    )
+
+
+@is_sre_admin
+async def get_sre_users_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    logging.info(f"get_sre_users handler triggered by {helpers.get_user(update)}")
+
+    with Session(engine) as session:
+        sre_users_count = session.query(Enrollment.tg_id).filter(Enrollment.course_id == constants.sre_course_id).count()
+
+    await context.bot.send_message(
+        chat_id=update.effective_chat.id,
+        text=f"{sre_users_count} users are enrolled in SRE"
     )
 
 
