@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 from sqlalchemy.orm import Session
 
 from telegram import Update
-from telegram.ext import ContextTypes, ConversationHandler
+from telegram.ext import CommandHandler, ContextTypes, ConversationHandler, MessageHandler, filters
 
 import constants
 import helpers
@@ -69,7 +69,8 @@ async def get_sre_users_handler(update: Update, context: ContextTypes.DEFAULT_TY
     logging.info(f"get_sre_users handler triggered by {helpers.get_user(update)}")
 
     with Session(engine) as session:
-        sre_users_count = session.query(Enrollment.tg_id).filter(Enrollment.course_id == constants.sre_course_id).count()
+        sre_users_count = session.query(Enrollment.tg_id).filter(
+            Enrollment.course_id == constants.sre_course_id).count()
 
     await context.bot.send_message(
         chat_id=update.effective_chat.id,
@@ -110,6 +111,13 @@ async def cancel_echo(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int
         text="Echo cancelled",
     )
     return ConversationHandler.END
+
+
+echo_conv_handler = ConversationHandler(
+    entry_points=[CommandHandler('echo', start_echo)],
+    states={ECHO: [MessageHandler(filters.TEXT & ~filters.COMMAND, echo_message)]},
+    fallbacks=[CommandHandler('cancel_echo', cancel_echo)],
+)
 
 
 BROADCAST = 1
@@ -161,6 +169,14 @@ async def cancel_broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE) -
     return ConversationHandler.END
 
 
+# todo: make sure it doesn't mess up with multiple admins
+broadcast_conv_handler = ConversationHandler(
+    entry_points=[CommandHandler('broadcast', start_broadcast)],
+    states={BROADCAST: [MessageHandler(filters.TEXT & ~filters.COMMAND, broadcast)]},
+    fallbacks=[CommandHandler('cancel_broadcast', cancel_broadcast)],
+)
+
+
 async def do_broadcast_course(update: Update, context: ContextTypes.DEFAULT_TYPE, course_id: int) -> int:
     logging.info(f"{constants.id_to_course[course_id]}_broadcast handler triggered by {helpers.get_user(update)}")
     with Session(engine) as session:
@@ -210,6 +226,13 @@ async def leetcode_broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE)
     return await do_broadcast_course(update, context, constants.leetcode_course_id)
 
 
+leetcode_broadcast_conv_handler = ConversationHandler(
+    entry_points=[CommandHandler('leetcode_broadcast', start_leetcode_broadcast)],
+    states={BROADCAST: [MessageHandler(filters.TEXT & ~filters.COMMAND, leetcode_broadcast)]},
+    fallbacks=[CommandHandler('cancel_broadcast', cancel_broadcast)],
+)
+
+
 SRE_BROADCAST = 1
 
 
@@ -226,3 +249,10 @@ async def start_sre_broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE
 @is_sre_admin
 async def sre_broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     return await do_broadcast_course(update, context, constants.sre_course_id)
+
+
+sre_broadcast_conv_handler = ConversationHandler(
+    entry_points=[CommandHandler('sre_broadcast', start_sre_broadcast)],
+    states={BROADCAST: [MessageHandler(filters.TEXT & ~filters.COMMAND, sre_broadcast)]},
+    fallbacks=[CommandHandler('cancel_broadcast', cancel_broadcast)],
+)
