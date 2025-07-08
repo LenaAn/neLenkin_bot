@@ -19,6 +19,7 @@ if __name__ == '__main__':
     application.add_handler(admin_commands.broadcast_conv_handler)
     application.add_handler(admin_commands.leetcode_broadcast_conv_handler)
     application.add_handler(admin_commands.sre_broadcast_conv_handler)
+    application.add_handler(admin_commands.leetcode_new_topic_broadcast)
 
     application.add_handler(CommandHandler('start', menu.start))
     application.add_handler(CommandHandler('help', menu.command_help))

@@ -241,6 +241,34 @@ leetcode_broadcast_conv_handler = ConversationHandler(
     fallbacks=[CommandHandler('cancel_broadcast', cancel_broadcast)],
 )
 
+LEETCODE_NEW_TOPIC = 1
+
+
+@is_admin
+async def start_leetcode_new_topic_broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    logging.info(f"start_leetcode_new_topic_broadcast handler triggered by {helpers.get_user(update)}")
+    await context.bot.send_message(
+        chat_id=update.effective_chat.id,
+        text=f"Send the new topic for Leetcode"
+    )
+    return LEETCODE_NEW_TOPIC
+
+
+@is_admin
+async def leetcode_new_topic_broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    button_list = [
+        InlineKeyboardButton("Записаться на моки!", callback_data="leetcode_register"),
+    ]
+    menu = [button_list[i:i + 1] for i in range(0, len(button_list), 1)]
+
+    return await do_broadcast_course(update, context, constants.leetcode_course_id, InlineKeyboardMarkup(menu))
+
+
+leetcode_new_topic_broadcast = ConversationHandler(
+    entry_points=[CommandHandler('leetcode_new_topic', start_leetcode_new_topic_broadcast)],
+    states={LEETCODE_NEW_TOPIC: [MessageHandler(filters.TEXT & ~filters.COMMAND, leetcode_new_topic_broadcast)]},
+    fallbacks=[CommandHandler('cancel_broadcast', cancel_broadcast)],
+)
 
 SRE_BROADCAST = 1
 
