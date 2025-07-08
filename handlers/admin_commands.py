@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 
 from sqlalchemy.orm import Session
 
-from telegram import Update
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update, User
 from telegram.ext import CommandHandler, ContextTypes, ConversationHandler, MessageHandler, filters
 
 import constants
@@ -93,12 +93,15 @@ async def start_echo(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
 
 
 @is_sre_admin
-async def echo_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+async def echo_message(update: Update, context: ContextTypes.DEFAULT_TYPE, reply_markup: InlineKeyboardMarkup = None)\
+        -> int:
     logging.info(f"echo_message handler triggered by {helpers.get_user(update)}")
     await context.bot.send_message(
         chat_id=update.effective_chat.id,
         text=update.message.text,
-        entities=update.message.entities
+        entities=update.message.entities,
+        reply_markup=reply_markup,
+        parse_mode="HTML"
     )
     return ConversationHandler.END
 
@@ -134,7 +137,8 @@ async def start_broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
 
 
 @is_admin
-async def broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+async def broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE, reply_markup: InlineKeyboardMarkup = None)\
+        -> int:
     logging.info(f"broadcast handler triggered by {helpers.get_user(update)}")
 
     with Session(engine) as session:
@@ -148,7 +152,9 @@ async def broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
             await context.bot.send_message(
                 chat_id=user.tg_id,
                 text=update.message.text,
-                entities=update.message.entities
+                entities=update.message.entities,
+                reply_markup=reply_markup,
+                parse_mode="HTML"
             )
             successful_count += 1
         except Exception as e:
@@ -177,7 +183,8 @@ broadcast_conv_handler = ConversationHandler(
 )
 
 
-async def do_broadcast_course(update: Update, context: ContextTypes.DEFAULT_TYPE, course_id: int) -> int:
+async def do_broadcast_course(update: Update, context: ContextTypes.DEFAULT_TYPE, course_id: int,
+                              reply_markup: InlineKeyboardMarkup = None) -> int:
     logging.info(f"{constants.id_to_course[course_id]}_broadcast handler triggered by {helpers.get_user(update)}")
     with Session(engine) as session:
         course_enrollments = session.query(Enrollment.tg_id).filter(Enrollment.course_id == course_id).all()
@@ -191,7 +198,9 @@ async def do_broadcast_course(update: Update, context: ContextTypes.DEFAULT_TYPE
             await context.bot.send_message(
                 chat_id=tg_id,
                 text=update.message.text,
-                entities=update.message.entities
+                entities=update.message.entities,
+                reply_markup=reply_markup,
+                parse_mode="HTML"
             )
             successful_count += 1
         except Exception as e:
