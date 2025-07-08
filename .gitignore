@@ -2,3 +2,6 @@
 
 .env
 data
+
+# everything i want to store locally
+*.local.*
