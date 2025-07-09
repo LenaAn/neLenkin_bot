@@ -15,11 +15,15 @@ logging.getLogger("httpx").setLevel(logging.WARNING)
 if __name__ == '__main__':
     application = ApplicationBuilder().token(settings.TELEGRAM_TOKEN).build()
 
+    # conversation handlers
     application.add_handler(admin_commands.echo_conv_handler)
     application.add_handler(admin_commands.broadcast_conv_handler)
     application.add_handler(admin_commands.leetcode_broadcast_conv_handler)
     application.add_handler(admin_commands.sre_broadcast_conv_handler)
     application.add_handler(admin_commands.leetcode_new_topic_broadcast)
+    application.add_handler(handlers.leetcode_register_handler)
+
+    application.add_handler(CommandHandler('cancel_leetcode_register', handlers.cancel_leetcode_register))
 
     application.add_handler(CommandHandler('start', menu.start))
     application.add_handler(CommandHandler('help', menu.command_help))
