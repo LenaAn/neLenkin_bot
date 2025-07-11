@@ -30,16 +30,6 @@ dmypy.json
 
 # Cython debug symbols
 cython_debug/
-.vscode/launch.json
-.vscode/settings.json
-.vscode/launch.json
-.vscode/tasks.json
-.vscode/settings.json
-.vscode/launch.json
-service/tests/unit/.DS_Store
-service/tests/unit/src/.DS_Store
-.vscode/launch.json
-.vscode/settings.json
 
 #OS
 .DS_Store
