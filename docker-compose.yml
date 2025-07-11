@@ -12,6 +12,7 @@ services:
       - 5432:5432
     volumes:
       - pgsdata:/var/lib/postgresql/data
+      - ./pg_data:/var/lib/bot_pg_data
 
   adminer:
     image: adminer

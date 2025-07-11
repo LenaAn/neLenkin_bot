@@ -1,5 +1,54 @@
-.idea
+# pycache
+__pycache__
 
+# db
+.db
+
+# env
 .env
-data
 .venv
+
+# vscode
+.vscode
+
+# Rope project settings
+.ropeproject
+
+# mkdocs documentation
+/site
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Pyre type checker
+.pyre/
+
+# pytype static type analyzer
+.pytype/
+
+# Cython debug symbols
+cython_debug/
+.vscode/launch.json
+.vscode/settings.json
+.vscode/launch.json
+.vscode/tasks.json
+.vscode/settings.json
+.vscode/launch.json
+service/tests/unit/.DS_Store
+service/tests/unit/src/.DS_Store
+.vscode/launch.json
+.vscode/settings.json
+
+#OS
+.DS_Store
+
+# mypy
+.mypy_cache
+
+# ruff
+.ruff_cache
+
+poetry.toml
+.idea
