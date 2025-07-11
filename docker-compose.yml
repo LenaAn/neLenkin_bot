@@ -1,7 +1,7 @@
 services:
 
   db:
-    image: postgres:17
+    image: postgres:17.5-alpine3.22
     container_name: bot_postgres
     restart: always
     environment:
