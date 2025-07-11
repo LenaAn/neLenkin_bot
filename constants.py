@@ -84,3 +84,10 @@ leetcode_course_id: int = 7
 sre_course_id: int = 8
 
 id_to_course = {7: "Leetcode", 8: "SRE"}
+
+leetcode_register_ask_timeslots = ("В какое время можешь созвониться? Время указано по Москве."
+                                   "\n\nВыбери хотя бы три слота.")
+
+
+leetcode_register_timeslots = ['Пятница 21:00', 'Суббота 13:00', 'Суббота 21:00', 'Воскресенье 13:00',
+                               'Воскресенье 21:00']
