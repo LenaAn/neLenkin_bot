@@ -42,3 +42,8 @@ cython_debug/
 
 poetry.toml
 .idea
+
+data
+
+# everything i want to store locally
+*.local.*
