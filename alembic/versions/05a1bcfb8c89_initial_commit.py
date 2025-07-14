@@ -25,7 +25,8 @@ def upgrade() -> None:
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('contribution_type_name', sa.Text(), nullable=False),
     sa.Column('contribution_type_description', sa.Text(), nullable=True),
-    sa.PrimaryKeyConstraint('id', name='Contribution_type_pkey')
+    sa.PrimaryKeyConstraint('id', name='Contribution_type_pkey'),
+    if_not_exists=True
     )
     op.create_table('Contributions',
     sa.Column('id', sa.Integer(), nullable=False),
@@ -33,7 +34,8 @@ def upgrade() -> None:
     sa.Column('course_id', sa.Integer(), nullable=False),
     sa.Column('contribution_type_id', sa.Integer(), nullable=False),
     sa.Column('date', sa.Date(), nullable=False),
-    sa.PrimaryKeyConstraint('id', name='Contributions_pkey')
+    sa.PrimaryKeyConstraint('id', name='Contributions_pkey'),
+    if_not_exists=True
     )
     op.create_table('Course',
     sa.Column('id', sa.Integer(), nullable=False),
@@ -41,14 +43,16 @@ def upgrade() -> None:
     sa.Column('description', sa.Text(), nullable=True),
     sa.Column('date_start', sa.Date(), nullable=True),
     sa.Column('date_end', sa.Date(), nullable=True),
-    sa.PrimaryKeyConstraint('id', name='Course_pkey')
+    sa.PrimaryKeyConstraint('id', name='Course_pkey'),
+    if_not_exists=True
     )
     op.create_table('Enrollments',
     sa.Column('id', sa.BigInteger(), autoincrement=True, nullable=False),
     sa.Column('user_id', sa.BigInteger(), nullable=True),
     sa.Column('course_id', sa.BigInteger(), nullable=False),
     sa.Column('tg_id', sa.String(), nullable=False),
-    sa.PrimaryKeyConstraint('id')
+    sa.PrimaryKeyConstraint('id'),
+    if_not_exists=True
     )
     op.create_table('Membership_granted',
     sa.Column('id', sa.Integer(), nullable=False),
@@ -57,7 +61,8 @@ def upgrade() -> None:
     sa.Column('days_granted', sa.Integer(), nullable=False),
     sa.Column('reason_id', sa.Integer(), nullable=False),
     sa.Column('contribution_id', sa.Integer(), nullable=True),
-    sa.PrimaryKeyConstraint('id', name='Membership_granted_pkey')
+    sa.PrimaryKeyConstraint('id', name='Membership_granted_pkey'),
+    if_not_exists=True
     )
     op.create_table('Users',
     sa.Column('id', sa.BigInteger(), autoincrement=True, nullable=False),
@@ -67,7 +72,8 @@ def upgrade() -> None:
     sa.Column('last_name', sa.String(), nullable=True),
     sa.Column('date_joined', sa.JSON(), nullable=True),
     sa.Column('date_membership_started', sa.JSON(), nullable=True),
-    sa.PrimaryKeyConstraint('id')
+    sa.PrimaryKeyConstraint('id'),
+    if_not_exists=True
     )
     # ### end Alembic commands ###
 
