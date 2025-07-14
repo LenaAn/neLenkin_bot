@@ -246,7 +246,8 @@ async def start_leetcode_register(update: Update, context: ContextTypes.DEFAULT_
     logging.info(f"start_leetcode_register handler triggered by {helpers.get_user(update)}")
     await context.bot.send_message(
         chat_id=update.effective_chat.id,
-        text=f"Пришли ссылку на задачу, которую ты будешь спрашивать как интервьюер"
+        text=f"Пришли ссылку на задачу, которую ты будешь спрашивать как интервьюер.\n\n"
+             f"Пример: https://leetcode.com/problems/two-sum/description/"
     )
     return LEETCODE_FIRST_PROBLEM
 
@@ -257,7 +258,8 @@ async def leetcode_first_problem(update: Update, context: ContextTypes.DEFAULT_T
     context.user_data["first_problem"] = update.message.text
     await context.bot.send_message(
         chat_id=update.effective_chat.id,
-        text=f"Отлично! Теперь пришли ссылку на запасную задачу, на случай, если партнер уже решал основную задачу"
+        text=f"Отлично! Теперь пришли ссылку на запасную задачу, на случай, если партнер уже решал основную задачу.\n\n"
+             f"Пример: https://leetcode.com/problems/two-sum/description/"
     )
     return LEETCODE_SECOND_PROBLEM
 
@@ -329,7 +331,8 @@ async def leetcode_timeslot_handler(update: Update, context: ContextTypes.DEFAUL
         else:
             await context.bot.send_message(
                 chat_id=update.effective_chat.id,
-                text=f"На каком языке программирования будешь решать задачу?"
+                text=f"На каком языке программирования будешь решать задачу?\n\n"
+                     f"Пример: Python"
             )
             return LEETCODE_PROGRAMMING_LANGUAGE
 
