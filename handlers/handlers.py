@@ -37,7 +37,7 @@ async def button_click(update: Update, _: ContextTypes.DEFAULT_TYPE) -> None:
     if handler:
         await handler(update)
     else:
-        logging.warning(f"Unhandled callback query data: {query.data}")
+        logging.warning(f"Unhandled callback query data: {query.data} by {helpers.get_user(update)}")
 
 
 async def handle_back_to_start(update: Update) -> None:
@@ -424,5 +424,6 @@ leetcode_register_handler = ConversationHandler(
         LEETCODE_ENGLISH: [CallbackQueryHandler(leetcode_english, "^leetcode_english")]
     },
     fallbacks=[CommandHandler('leetcode_register', start_leetcode_register),
+               CallbackQueryHandler(start_leetcode_register, '^leetcode_register$'),
                CommandHandler('cancel_leetcode_register', cancel_leetcode_register)],
 )
