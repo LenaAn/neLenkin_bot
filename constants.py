@@ -60,9 +60,7 @@ how_to_present_description = \
      "Никого спрашивать и ничего согласовывать не надо.")
 
 mock_leetcode_reminder = \
- ("Запишись сегодня, чтобы на выходных пройти leetcode мок-собеседование! Завтра уже будут объявлены пары. "
-  "<a href='https://docs.google.com/spreadsheets/d/1JVp6S0a4PeR7f49T_tRQMZCmArV4yKqP6XFFab6Oxzs/edit?gid=0#gid=0'> "
-  "Таблица</a>.")
+    "Запишись сегодня, чтобы на выходных пройти leetcode мок-собеседование! Завтра уже будут объявлены пары"
 
 sre_reminder = \
  ("SRE book cозвон через 5 минут! "
