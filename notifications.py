@@ -4,6 +4,7 @@ import os
 from dotenv import load_dotenv
 
 from sqlalchemy.orm import Session
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ContextTypes
 
 import constants
@@ -21,6 +22,7 @@ async def register_notifications(application):
 async def handle_notification(context: ContextTypes.DEFAULT_TYPE):
     course_id: int = context.job.data["course_id"]
     message: str = context.job.data["message"]
+    menu: InlineKeyboardMarkup = context.job.data["menu"] if "menu" in context.job.data else None
     with Session(engine) as session:
         result = session.query(Enrollment.tg_id).filter(Enrollment.course_id == course_id).all()
         notification_chat_ids = [item[0] for item in result]
@@ -35,7 +37,8 @@ async def handle_notification(context: ContextTypes.DEFAULT_TYPE):
             await context.bot.send_message(
                 chat_id=chat_id,
                 text=message,
-                parse_mode="HTML")
+                parse_mode="HTML",
+                reply_markup=menu)
             successful_count += 1
         except Exception as e:
             notifications_logger.info(f"failed to send notification to chat {chat_id}: {e}")
@@ -61,7 +64,11 @@ async def register_leetcode_notifications(app):
         time=datetime.time(hour=15, minute=6, tzinfo=datetime.timezone.utc),  # 5:06 PM Belgrade time in Summer
         days=(4,),  # 0 = Sunday, ..., 4 = Thursday
         name=f"leetcode_notification",
-        data={"course_id": constants.leetcode_course_id, "message": constants.mock_leetcode_reminder}
+        data={
+            "course_id": constants.leetcode_course_id,
+            "message": constants.mock_leetcode_reminder,
+            "menu": InlineKeyboardMarkup([[InlineKeyboardButton("Записаться на моки!", callback_data="leetcode_register")]])
+        }
     )
 
 
