@@ -6,12 +6,26 @@ from telegram.ext import (CallbackQueryHandler, CommandHandler, ContextTypes, Co
 
 import constants
 import helpers
+import models
 
-
-LEETCODE_FIRST_PROBLEM, LEETCODE_SECOND_PROBLEM, LEETCODE_TIMESLOTS, LEETCODE_PROGRAMMING_LANGUAGE, LEETCODE_ENGLISH =\
+LEETCODE_FIRST_PROBLEM, LEETCODE_SECOND_PROBLEM, LEETCODE_TIMESLOTS, LEETCODE_PROGRAMMING_LANGUAGE, LEETCODE_ENGLISH = \
     range(5)
 
 
+def is_leetcode_on(callback):
+    async def wrapper(update: Update, context: ContextTypes.DEFAULT_TYPE, *args, **kwargs):
+        if not models.leetcode_status_on:
+            logging.info(f"is_leetcode_on check triggered by {helpers.get_user(update)}, leetcode is OFF")
+            await update.effective_chat.send_message(
+                "❌ Запись на эти выходные уже закрыта. Подожди понедельника, когда объявят тему новой недели")
+            return None
+        logging.info(f"is_leetcode_on check triggered by {helpers.get_user(update)}, leetcode is ON")
+        return await callback(update, context, *args, **kwargs)
+
+    return wrapper
+
+
+@is_leetcode_on
 async def start_leetcode_register(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     if update.callback_query:
         await update.callback_query.answer()
@@ -24,6 +38,7 @@ async def start_leetcode_register(update: Update, context: ContextTypes.DEFAULT_
     return LEETCODE_FIRST_PROBLEM
 
 
+@is_leetcode_on
 async def leetcode_first_problem(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     logging.info(f"leetcode_first_problem handler triggered by {helpers.get_user(update)}, first problem is "
                  f"{update.message.text}")
@@ -50,6 +65,7 @@ def create_timeslots(_: Update, context: ContextTypes.DEFAULT_TYPE):
     return button_list
 
 
+@is_leetcode_on
 async def leetcode_second_problem(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     logging.info(f"leetcode_second_problem handler triggered by {helpers.get_user(update)}, "
                  f"user data = {context.user_data}, second problem is {update.message.text}")
@@ -77,6 +93,7 @@ async def edit_timeslots(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
     return LEETCODE_TIMESLOTS
 
 
+@is_leetcode_on
 async def leetcode_timeslot_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     logging.info(f"leetcode_timeslot_handler handler triggered by {helpers.get_user(update)}, "
                  f"user data = {context.user_data}, update = {update.callback_query.data}")
@@ -109,6 +126,7 @@ async def leetcode_timeslot_handler(update: Update, context: ContextTypes.DEFAUL
             return LEETCODE_PROGRAMMING_LANGUAGE
 
 
+@is_leetcode_on
 async def leetcode_programming_language(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     logging.info(f"leetcode_programming_language handler triggered by {helpers.get_user(update)}, "
                  f"user data = {context.user_data}, programming language = {update.message.text}")
@@ -128,6 +146,7 @@ async def leetcode_programming_language(update: Update, context: ContextTypes.DE
     return LEETCODE_ENGLISH
 
 
+@is_leetcode_on
 async def leetcode_english(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     await update.callback_query.answer()  # Acknowledge the callback
     logging.info(f"leetcode_english handler triggered by {helpers.get_user(update)}, user data = {context.user_data}, "
@@ -183,8 +202,6 @@ async def cancel_leetcode_register(update: Update, context: ContextTypes.DEFAULT
 
 leetcode_register_handler = ConversationHandler(
     entry_points=[
-        # todo: leetcode_register should work only after announcing topic on monday till Thursday evening, other time
-        # it should say "wait"
         CommandHandler('leetcode_register', start_leetcode_register),
         CallbackQueryHandler(start_leetcode_register, '^leetcode_register$')
     ],

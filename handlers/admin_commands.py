@@ -308,6 +308,8 @@ async def leetcode_on(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
 
 @is_admin
 async def leetcode_off(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    # todo: user may be in the middle of leetcode_register_handler. When leetcode status is turned off, the conversation
+    #  should start from start for every user
     logging.info(f"leetcode_off handler triggered by {helpers.get_user(update)}")
     models.leetcode_status_on = False
 
