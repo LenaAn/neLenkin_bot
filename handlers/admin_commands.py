@@ -293,3 +293,25 @@ sre_broadcast_conv_handler = ConversationHandler(
     states={BROADCAST: [MessageHandler(filters.TEXT & ~filters.COMMAND, sre_broadcast)]},
     fallbacks=[CommandHandler('cancel_broadcast', cancel_broadcast)],
 )
+
+
+@is_admin
+async def leetcode_on(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    logging.info(f"leetcode_on handler triggered by {helpers.get_user(update)}")
+    models.leetcode_status_on = True
+
+    await context.bot.send_message(
+        chat_id=update.effective_chat.id,
+        text="leetcode is ON" if models.leetcode_status_on else "leetcode is OFF"
+    )
+
+
+@is_admin
+async def leetcode_off(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    logging.info(f"leetcode_off handler triggered by {helpers.get_user(update)}")
+    models.leetcode_status_on = False
+
+    await context.bot.send_message(
+        chat_id=update.effective_chat.id,
+        text="leetcode is ON" if models.leetcode_status_on else "leetcode is OFF"
+    )
