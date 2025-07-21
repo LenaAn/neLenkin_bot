@@ -1,5 +1,6 @@
 import logging
-from telegram.ext import (filters, ApplicationBuilder, CommandHandler, MessageHandler, CallbackQueryHandler)
+from telegram.ext import (filters, ApplicationBuilder, CommandHandler, MessageHandler, CallbackQueryHandler,
+                          PicklePersistence)
 
 from handlers import admin_commands, handlers, menu, leetcode_mock_handlers
 import notifications
@@ -12,7 +13,8 @@ logging.basicConfig(
 logging.getLogger("httpx").setLevel(logging.WARNING)
 
 if __name__ == '__main__':
-    application = ApplicationBuilder().token(settings.TELEGRAM_TOKEN).build()
+    persistence = PicklePersistence(filepath="nelenkin_bot_pickle")
+    application = ApplicationBuilder().token(settings.TELEGRAM_TOKEN).persistence(persistence).build()
 
     # conversation handlers
     application.add_handler(admin_commands.echo_conv_handler)

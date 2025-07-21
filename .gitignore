@@ -3,5 +3,8 @@
 .env
 data
 
+#pickle persistance for conversation handlers
+nelenkin_bot_pickle
+
 # everything i want to store locally
 *.local.*
