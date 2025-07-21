@@ -1,7 +1,7 @@
 import logging
 from telegram.ext import (filters, ApplicationBuilder, CommandHandler, MessageHandler, CallbackQueryHandler)
 
-from handlers import admin_commands, handlers, menu
+from handlers import admin_commands, handlers, menu, leetcode_mock_handlers
 import notifications
 import settings
 
@@ -10,7 +10,6 @@ logging.basicConfig(
     level=logging.INFO
 )
 logging.getLogger("httpx").setLevel(logging.WARNING)
-
 
 if __name__ == '__main__':
     application = ApplicationBuilder().token(settings.TELEGRAM_TOKEN).build()
@@ -21,9 +20,9 @@ if __name__ == '__main__':
     application.add_handler(admin_commands.leetcode_broadcast_conv_handler)
     application.add_handler(admin_commands.sre_broadcast_conv_handler)
     application.add_handler(admin_commands.leetcode_new_topic_broadcast)
-    application.add_handler(handlers.leetcode_register_handler)
+    application.add_handler(leetcode_mock_handlers.leetcode_register_handler)
 
-    application.add_handler(CommandHandler('cancel_leetcode_register', handlers.cancel_leetcode_register))
+    application.add_handler(CommandHandler('cancel_leetcode_register', leetcode_mock_handlers.cancel_leetcode_register))
 
     application.add_handler(CommandHandler('start', menu.start))
     application.add_handler(CommandHandler('help', menu.command_help))
