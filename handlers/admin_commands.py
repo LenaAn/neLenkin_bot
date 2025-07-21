@@ -10,7 +10,7 @@ from telegram.ext import CommandHandler, ContextTypes, ConversationHandler, Mess
 
 import constants
 import helpers
-from models import Enrollment, User, engine
+import models
 
 
 def is_admin(callback):
@@ -55,8 +55,8 @@ def is_sre_admin(callback):
 async def get_users_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     logging.info(f"get_users handler triggered by {helpers.get_user(update)}")
 
-    with Session(engine) as session:
-        users_count = session.query(User).count()
+    with Session(models.engine) as session:
+        users_count = session.query(models.User).count()
 
     await context.bot.send_message(
         chat_id=update.effective_chat.id,
@@ -68,9 +68,9 @@ async def get_users_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) 
 async def get_sre_users_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     logging.info(f"get_sre_users handler triggered by {helpers.get_user(update)}")
 
-    with Session(engine) as session:
-        sre_users_count = session.query(Enrollment.tg_id).filter(
-            Enrollment.course_id == constants.sre_course_id).count()
+    with Session(models.engine) as session:
+        sre_users_count = session.query(models.Enrollment.tg_id).filter(
+            models.Enrollment.course_id == constants.sre_course_id).count()
 
     await context.bot.send_message(
         chat_id=update.effective_chat.id,
@@ -93,7 +93,7 @@ async def start_echo(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
 
 
 @is_sre_admin
-async def echo_message(update: Update, context: ContextTypes.DEFAULT_TYPE, reply_markup: InlineKeyboardMarkup = None)\
+async def echo_message(update: Update, context: ContextTypes.DEFAULT_TYPE, reply_markup: InlineKeyboardMarkup = None) \
         -> int:
     logging.info(f"echo_message handler triggered by {helpers.get_user(update)}")
     await context.bot.send_message(
@@ -122,7 +122,6 @@ echo_conv_handler = ConversationHandler(
     fallbacks=[CommandHandler('cancel_echo', cancel_echo)],
 )
 
-
 BROADCAST = 1
 
 
@@ -137,12 +136,12 @@ async def start_broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
 
 
 @is_admin
-async def broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE, reply_markup: InlineKeyboardMarkup = None)\
+async def broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE, reply_markup: InlineKeyboardMarkup = None) \
         -> int:
     logging.info(f"broadcast handler triggered by {helpers.get_user(update)}")
 
-    with Session(engine) as session:
-        users = session.query(User).all()
+    with Session(models.engine) as session:
+        users = session.query(models.User).all()
         logging.info(f"got {len(users)} users from db for broadcast")
 
     successful_count = 0
@@ -186,8 +185,9 @@ broadcast_conv_handler = ConversationHandler(
 async def do_broadcast_course(update: Update, context: ContextTypes.DEFAULT_TYPE, course_id: int,
                               reply_markup: InlineKeyboardMarkup = None) -> int:
     logging.info(f"{constants.id_to_course[course_id]}_broadcast handler triggered by {helpers.get_user(update)}")
-    with Session(engine) as session:
-        course_enrollments = session.query(Enrollment.tg_id).filter(Enrollment.course_id == course_id).all()
+    with Session(models.engine) as session:
+        course_enrollments = session.query(models.Enrollment.tg_id).filter(
+            models.Enrollment.course_id == course_id).all()
         tg_ids = [tg_id for (tg_id,) in course_enrollments]
         logging.info(f"got {len(tg_ids)} users from db for {constants.id_to_course[course_id]} broadcast")
 
