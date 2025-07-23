@@ -26,6 +26,8 @@ async def button_click(update: Update, _: ContextTypes.DEFAULT_TYPE) -> None:
         "sre_book": handle_sre_book,
         "sre_enroll": handle_sre_enroll,
         "sre_unenroll": handle_sre_unenroll,
+        "ddia_enroll": handle_ddia_enroll,
+        "ddia_unenroll": handle_ddia_unenroll,
         "mock_leetcode": handle_mock_leetcode,
         "how_to_present": handle_how_to_present,
         "leetcode_enroll": handle_leetcode_enroll,
@@ -56,15 +58,9 @@ async def handle_how_to_join(update: Update) -> None:
 
 async def handle_ddia(update: Update) -> None:
     logging.info(f"ddia triggered by {helpers.get_user(update)}")
-    button_list = [
-        InlineKeyboardButton("Хочу сделать презентацию!", callback_data="how_to_present"),
-        InlineKeyboardButton("Назад", callback_data="back"),
-    ]
-    menu = [button_list[i:i + 1] for i in range(0, len(button_list), 1)]
-    await update.callback_query.edit_message_text(
-        text=constants.ddia_description,
-        reply_markup=InlineKeyboardMarkup(menu),
-        parse_mode="HTML")
+    await handle_course_info(update, constants.ddia_4_course_id, constants.ddia_description,
+                             constants.ddia_enroll_description, constants.ddia_cta_description,
+                             "ddia_enroll", "ddia_unenroll")
 
 
 async def handle_back_to_ddia(update: Update) -> None:
@@ -205,6 +201,18 @@ async def handle_sre_enroll(update: Update) -> None:
 
 async def handle_sre_unenroll(update: Update) -> None:
     await handle_unenroll(update, constants.sre_course_id, constants.sre_unenroll_description)
+
+
+async def handle_ddia_enroll(update: Update) -> None:
+    await handle_enroll(
+        update,
+        constants.ddia_4_course_id,
+        "ddia_unenroll",
+        constants.ddia_enroll_description)
+
+
+async def handle_ddia_unenroll(update: Update) -> None:
+    await handle_unenroll(update, constants.ddia_4_course_id, constants.ddia_unenroll_description)
 
 
 async def handle_how_to_present(update: Update) -> None:
