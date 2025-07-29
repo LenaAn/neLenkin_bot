@@ -1,7 +1,8 @@
 import os
 
 # todo: get them programmatically
-users = [0, 4, 5, 7, 10, 11, 13]
+users = [0, 3, 4, 6, 7, 10, 11, 16, 18, 21]
+number_of_users = 22
 
 graph = set()
 for i in range(len(users)):
@@ -19,7 +20,7 @@ with open('edges_to_delete.txt', 'r') as f:
 print(f"after deletion len(graph) = {len(graph)}")
 
 with open('graph_for_week_n', 'w') as f:
-    f.write(f"14 {len(graph)}\n")
+    f.write(f"{number_of_users} {len(graph)}\n")
     for (a, b) in graph:
         f.write(f"{a} {b}\n")
 
