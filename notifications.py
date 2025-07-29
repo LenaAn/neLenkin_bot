@@ -8,7 +8,8 @@ from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ContextTypes
 
 import constants
-from models import Enrollment, engine, sre_notification_on
+import models
+from models import Enrollment, engine
 
 notifications_logger = logging.getLogger(__name__)
 notifications_logger.setLevel(logging.DEBUG)
@@ -73,7 +74,10 @@ async def register_leetcode_notifications(app):
 
 
 async def handle_sre_notification(context: ContextTypes.DEFAULT_TYPE):
-    if sre_notification_on:
+    # todo: we need more nice way of working with feature flags
+    # you can't do `from models import sre_notification_on` and use just `sre_notification_on` here
+    # because when you import variable from module, it creates a local copy
+    if models.sre_notification_on:
         await handle_notification(context)
     else:
         logging.info("SRE notification is turned off, skipping sending SRE notifications")

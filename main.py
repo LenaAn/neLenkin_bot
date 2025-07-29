@@ -32,6 +32,8 @@ if __name__ == '__main__':
     application.add_handler(CommandHandler('get_sre_users', admin_commands.get_sre_users_handler))
     application.add_handler(CommandHandler('leetcode_on', admin_commands.leetcode_on))
     application.add_handler(CommandHandler('leetcode_off', admin_commands.leetcode_off))
+    application.add_handler(CommandHandler('sre_notification_on', admin_commands.sre_notification_on))
+    application.add_handler(CommandHandler('sre_notification_off', admin_commands.sre_notification_off))
     application.add_handler(MessageHandler(~filters.COMMAND, menu.private_message))
 
     application.add_handler(CallbackQueryHandler(handlers.button_click))
