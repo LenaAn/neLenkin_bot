@@ -36,3 +36,4 @@ class Enrollment(Base):
 
 engine = create_engine(DATABASE_URL)
 leetcode_status_on = True
+sre_notification_on = True

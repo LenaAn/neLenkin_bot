@@ -8,7 +8,7 @@ from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ContextTypes
 
 import constants
-from models import Enrollment, engine
+from models import Enrollment, engine, sre_notification_on
 
 notifications_logger = logging.getLogger(__name__)
 notifications_logger.setLevel(logging.DEBUG)
@@ -72,9 +72,16 @@ async def register_leetcode_notifications(app):
     )
 
 
+async def handle_sre_notification(context: ContextTypes.DEFAULT_TYPE):
+    if sre_notification_on:
+        await handle_notification(context)
+    else:
+        logging.info("SRE notification is turned off, skipping sending SRE notifications")
+
+
 async def register_sre_notifications(app):
     app.job_queue.run_daily(
-        callback=handle_notification,
+        callback=handle_sre_notification,
         time=datetime.time(hour=15, minute=55, tzinfo=datetime.timezone.utc),  # 5:55 PM Belgrade time in Summer
         days=(2,),  # 0 = Sunday, 2 = Tuesday
         name=f"sre_notification",
