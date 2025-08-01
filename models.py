@@ -1,5 +1,6 @@
-from sqlalchemy import Column, BigInteger, String, JSON, create_engine
 from sqlalchemy.orm import declarative_base
+import sqlalchemy
+from sqlalchemy import Column, create_engine
 
 from settings import DATABASE_URL
 
@@ -9,29 +10,45 @@ Base = declarative_base()
 class User(Base):
     __tablename__ = 'Users'
 
-    id = Column(BigInteger, primary_key=True, autoincrement=True)
-    tg_id = Column(String, nullable=False)
-    tg_username = Column(String, nullable=True)
-    first_name = Column(String, nullable=True)
-    last_name = Column(String, nullable=True)
-    date_joined = Column(JSON, nullable=True)
-    date_membership_started = Column(JSON, nullable=True)
+    id = Column(sqlalchemy.BigInteger, primary_key=True, autoincrement=True)
+    tg_id = Column(sqlalchemy.Text, nullable=False)
+    tg_username = Column(sqlalchemy.Text, nullable=True)
+    first_name = Column(sqlalchemy.Text, nullable=True)
+    last_name = Column(sqlalchemy.Text, nullable=True)
+    date_joined = Column(sqlalchemy.JSON, nullable=True)
+    date_membership_started = Column(sqlalchemy.JSON, nullable=True)
 
     def __repr__(self):
-        return (f"User(telegram_id={self.tg_id}, username={self.tg_username}, first_name={self.first_name}, "
-                f"last_name={self.last_name})")
+        return f"User(username={self.tg_username}, telegram_id={self.tg_id})"
 
 
 class Enrollment(Base):
     __tablename__ = 'Enrollments'
 
-    id = Column(BigInteger, primary_key=True, autoincrement=True)
-    user_id = Column(BigInteger, nullable=True)
-    course_id = Column(BigInteger, nullable=False)
-    tg_id = Column(String, nullable=False)
+    id = Column(sqlalchemy.BigInteger, primary_key=True, autoincrement=True)
+    user_id = Column(sqlalchemy.BigInteger, nullable=True)
+    course_id = Column(sqlalchemy.BigInteger, nullable=False)
+    tg_id = Column(sqlalchemy.Text, nullable=False)
+
+    __table_args__ = (
+        sqlalchemy.UniqueConstraint('tg_id', 'course_id', name='Unique_tg_id_per_course'),
+    )
 
     def __repr__(self):
         return f"Enrollment(user_id={self.user_id}, course_id={self.course_id}, tg_id={self.tg_id}"
+
+
+class Course(Base):
+    __tablename__ = 'Course'
+
+    id = Column(sqlalchemy.Integer, primary_key=True, autoincrement=True)
+    name = Column(sqlalchemy.Text, nullable=False)
+    description = Column(sqlalchemy.Text, nullable=True)
+    date_start = Column(sqlalchemy.Date, nullable=True)
+    date_end = Column(sqlalchemy.Date, nullable=True)
+
+    def __repr__(self):
+        return f"Course(id={self.id}, name={self.name}"
 
 
 engine = create_engine(DATABASE_URL)
