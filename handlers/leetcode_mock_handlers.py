@@ -59,7 +59,7 @@ def create_timeslots(_: Update, context: ContextTypes.DEFAULT_TYPE):
             InlineKeyboardButton(f"{checked}{option}", callback_data=f"leetcode_timeslot_{i}")
         ])
 
-    if len(context.user_data["selected_timeslots"]) >= 3:
+    if len(context.user_data["selected_timeslots"]) > 0:
         button_list.append([InlineKeyboardButton("➡️ Продолжить", callback_data="leetcode_timeslot_continue")])
 
     return button_list
