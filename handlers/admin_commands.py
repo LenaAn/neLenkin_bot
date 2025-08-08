@@ -33,6 +33,30 @@ def is_admin(callback):
     return wrapper
 
 
+def is_any_curator(callback):
+    async def wrapper(update: Update, context: ContextTypes.DEFAULT_TYPE, *args, **kwargs):
+        logging.info(f"is_any_curator triggered by {helpers.get_user(update)}")
+
+        if is_admin_id(update.effective_chat.id):
+            logging.info(f"{helpers.get_user(update)} is admin so has power of curator")
+            return await callback(update, context, *args, **kwargs)
+
+        with Session(models.engine) as session:
+            course_curator_tg_id = session.query(models.Course.curator_tg_id).all()
+            course_curator_tg_id = [result[0] for result in course_curator_tg_id]  # smthng like [None, None, '1111111']
+        logging.info(f"course_curator_tg_id is {course_curator_tg_id}")
+
+        if str(update.effective_chat.id) in course_curator_tg_id:
+            logging.info(f"{helpers.get_user(update)} IS a curator")
+            return await callback(update, context, *args, **kwargs)
+
+        logging.info(f"{helpers.get_user(update)} IS NOT a curator")
+        await update.effective_chat.send_message("❌ Для этого действия нужно быть куратором какого-нибудь потока")
+        return None
+
+    return wrapper
+
+
 def is_curator(course_id: int):
     def is_curator_for_course(callback):
         async def wrapper(update: Update, context: ContextTypes.DEFAULT_TYPE, *args, **kwargs):
@@ -109,7 +133,7 @@ ECHO = 1
 
 
 # todo: now `is_sre_admin` means "root admin OR SRE admin", while `is_admin`means "only root admin". Rethink it
-@is_curator(constants.sre_course_id)
+@is_any_curator
 async def start_echo(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     logging.info(f"start_echo handler triggered by {helpers.get_user(update)}")
     await context.bot.send_message(
@@ -119,7 +143,7 @@ async def start_echo(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     return ECHO
 
 
-@is_curator(constants.sre_course_id)
+@is_any_curator
 async def echo_message(update: Update, context: ContextTypes.DEFAULT_TYPE, reply_markup: InlineKeyboardMarkup = None) \
         -> int:
     logging.info(f"echo_message handler triggered by {helpers.get_user(update)}")
@@ -133,7 +157,7 @@ async def echo_message(update: Update, context: ContextTypes.DEFAULT_TYPE, reply
     return ConversationHandler.END
 
 
-@is_curator(constants.sre_course_id)
+@is_any_curator
 async def cancel_echo(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     logging.info(f"cancel_echo handler triggered by {helpers.get_user(update)}")
     await context.bot.send_message(
@@ -191,7 +215,7 @@ async def broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE, reply_ma
     return ConversationHandler.END
 
 
-@is_curator(constants.sre_course_id)
+@is_any_curator
 async def cancel_broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     logging.info(f"cancel_broadcast handler triggered by {helpers.get_user(update)}")
     await context.bot.send_message(
