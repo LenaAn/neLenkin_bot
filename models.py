@@ -18,6 +18,10 @@ class User(Base):
     date_joined = Column(sqlalchemy.JSON, nullable=True)
     date_membership_started = Column(sqlalchemy.JSON, nullable=True)
 
+    __table_args__ = (
+        sqlalchemy.UniqueConstraint('tg_id', name='Users_unique_tg_id'),
+    )
+
     def __repr__(self):
         return f"User(username={self.tg_username}, telegram_id={self.tg_id})"
 
@@ -46,6 +50,7 @@ class Course(Base):
     description = Column(sqlalchemy.Text, nullable=True)
     date_start = Column(sqlalchemy.Date, nullable=True)
     date_end = Column(sqlalchemy.Date, nullable=True)
+    curator_tg_id = Column(sqlalchemy.Text, nullable=True)
 
     def __repr__(self):
         return f"Course(id={self.id}, name={self.name}"
