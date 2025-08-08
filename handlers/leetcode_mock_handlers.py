@@ -15,11 +15,11 @@ LEETCODE_FIRST_PROBLEM, LEETCODE_SECOND_PROBLEM, LEETCODE_TIMESLOTS, LEETCODE_PR
 def is_leetcode_on(callback):
     async def wrapper(update: Update, context: ContextTypes.DEFAULT_TYPE, *args, **kwargs):
         if not models.leetcode_status_on:
-            logging.info(f"is_leetcode_on check triggered by {helpers.get_user(update)}, leetcode is OFF")
+            logging.info(f"is_leetcode_on check triggered by {helpers.repr_user_from_update(update)}, leetcode is OFF")
             await update.effective_chat.send_message(
                 "❌ Запись на эти выходные уже закрыта. Подожди понедельника, когда объявят тему новой недели")
             return None
-        logging.info(f"is_leetcode_on check triggered by {helpers.get_user(update)}, leetcode is ON")
+        logging.info(f"is_leetcode_on check triggered by {helpers.repr_user_from_update(update)}, leetcode is ON")
         return await callback(update, context, *args, **kwargs)
 
     return wrapper
@@ -29,7 +29,7 @@ def is_leetcode_on(callback):
 async def start_leetcode_register(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     if update.callback_query:
         await update.callback_query.answer()
-    logging.info(f"start_leetcode_register handler triggered by {helpers.get_user(update)}")
+    logging.info(f"start_leetcode_register handler triggered by {helpers.repr_user_from_update(update)}")
     await context.bot.send_message(
         chat_id=update.effective_chat.id,
         text=f"Пришли ссылку на задачу, которую ты будешь спрашивать как интервьюер.\n\n"
@@ -40,8 +40,8 @@ async def start_leetcode_register(update: Update, context: ContextTypes.DEFAULT_
 
 @is_leetcode_on
 async def leetcode_first_problem(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    logging.info(f"leetcode_first_problem handler triggered by {helpers.get_user(update)}, first problem is "
-                 f"{update.message.text}")
+    logging.info(f"leetcode_first_problem handler triggered by {helpers.repr_user_from_update(update)}, first problem "
+                 f"is {update.message.text}")
     context.user_data["first_problem"] = update.message.text
     await context.bot.send_message(
         chat_id=update.effective_chat.id,
@@ -67,7 +67,7 @@ def create_timeslots(_: Update, context: ContextTypes.DEFAULT_TYPE):
 
 @is_leetcode_on
 async def leetcode_second_problem(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    logging.info(f"leetcode_second_problem handler triggered by {helpers.get_user(update)}, "
+    logging.info(f"leetcode_second_problem handler triggered by {helpers.repr_user_from_update(update)}, "
                  f"user data = {context.user_data}, second problem is {update.message.text}")
     context.user_data["second_problem"] = update.message.text
 
@@ -83,8 +83,8 @@ async def leetcode_second_problem(update: Update, context: ContextTypes.DEFAULT_
 
 
 async def edit_timeslots(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    logging.info(f"edit_timeslots handler triggered by {helpers.get_user(update)}, user data = {context.user_data}, "
-                 f"update = {update.callback_query.data}")
+    logging.info(f"edit_timeslots handler triggered by {helpers.repr_user_from_update(update)}, "
+                 f"user data = {context.user_data}, update = {update.callback_query.data}")
 
     await update.callback_query.edit_message_text(
         text=constants.leetcode_register_ask_timeslots,
@@ -95,14 +95,14 @@ async def edit_timeslots(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
 
 @is_leetcode_on
 async def leetcode_timeslot_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    logging.info(f"leetcode_timeslot_handler handler triggered by {helpers.get_user(update)}, "
+    logging.info(f"leetcode_timeslot_handler handler triggered by {helpers.repr_user_from_update(update)}, "
                  f"user data = {context.user_data}, update = {update.callback_query.data}")
     # save info about timeslots
     query = update.callback_query
     await query.answer()  # Acknowledge the callback
 
     if not query.data.startswith("leetcode_timeslot_"):
-        raise ValueError(f"Unexpected callback, data={query.data}, user={helpers.get_user(update)}")
+        raise ValueError(f"Unexpected callback, data={query.data}, user={helpers.repr_user_from_update(update)}")
 
     arg = query.data.split("_")[-1]
     if arg.isnumeric():
@@ -116,7 +116,7 @@ async def leetcode_timeslot_handler(update: Update, context: ContextTypes.DEFAUL
         logging.info(f"user continued in timeslots, selected_timeslots timeslots = "
                      f"{context.user_data['selected_timeslots']}, arg={arg}")
         if arg != "continue":
-            raise ValueError(f"Unexpected callback, data={query.data}, user={helpers.get_user(update)}")
+            raise ValueError(f"Unexpected callback, data={query.data}, user={helpers.repr_user_from_update(update)}")
         else:
             await context.bot.send_message(
                 chat_id=update.effective_chat.id,
@@ -128,7 +128,7 @@ async def leetcode_timeslot_handler(update: Update, context: ContextTypes.DEFAUL
 
 @is_leetcode_on
 async def leetcode_programming_language(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    logging.info(f"leetcode_programming_language handler triggered by {helpers.get_user(update)}, "
+    logging.info(f"leetcode_programming_language handler triggered by {helpers.repr_user_from_update(update)}, "
                  f"user data = {context.user_data}, programming language = {update.message.text}")
     context.user_data["leetcode_programming_language"] = update.message.text
 
@@ -149,14 +149,15 @@ async def leetcode_programming_language(update: Update, context: ContextTypes.DE
 @is_leetcode_on
 async def leetcode_english(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     await update.callback_query.answer()  # Acknowledge the callback
-    logging.info(f"leetcode_english handler triggered by {helpers.get_user(update)}, user data = {context.user_data}, "
-                 f"english_choice = {update.callback_query.data}")
+    logging.info(f"leetcode_english handler triggered by {helpers.repr_user_from_update(update)}, "
+                 f"user data = {context.user_data}, english_choice = {update.callback_query.data}")
     if update.callback_query.data == "leetcode_english_yes":
         context.user_data["leetcode_english"] = True
     elif update.callback_query.data == "leetcode_english_no":
         context.user_data["leetcode_english"] = False
     else:
-        raise ValueError(f"Unexpected callback_data = {update.callback_query.data} by {helpers.get_user(update)}")
+        raise ValueError(f"Unexpected callback_data = {update.callback_query.data} "
+                         f"by {helpers.repr_user_from_update(update)}")
 
     english_string = 'Мок будет на английском, если партнер тоже может на англиском, иначе на русском' \
         if context.user_data['leetcode_english'] else 'Мок будет на русском языке'
@@ -182,7 +183,7 @@ async def leetcode_english(update: Update, context: ContextTypes.DEFAULT_TYPE) -
 
 
 async def cancel_leetcode_register(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    logging.info(f"cancel_leetcode_register handler triggered by {helpers.get_user(update)}")
+    logging.info(f"cancel_leetcode_register handler triggered by {helpers.repr_user_from_update(update)}")
     if "first_problem" in context.user_data:
         del context.user_data["first_problem"]
     if "second_problem" in context.user_data:

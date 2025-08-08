@@ -9,6 +9,17 @@ def get_user(update: Update) -> Optional[User]:
         return update.message.from_user
 
 
+def repr_user(user: Optional[User]) -> str:
+    if not user:
+        return "Unknown user"
+    else:
+        return f"User(username={user.username}, id={user.id})"
+
+
+def repr_user_from_update(update: Update) -> str:
+    return repr_user(get_user(update))
+
+
 def main_menu() -> InlineKeyboardMarkup:
     button_list = [
         InlineKeyboardButton("Как вступить?", callback_data="how_to_join"),
