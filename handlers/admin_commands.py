@@ -91,6 +91,20 @@ async def get_sre_users_handler(update: Update, context: ContextTypes.DEFAULT_TY
     )
 
 
+@is_curator(constants.ddia_4_course_id)
+async def get_ddia_users_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    logging.info(f"get_ddia_users_handler handler triggered by {helpers.get_user(update)}")
+
+    with Session(models.engine) as session:
+        ddia_users_count = session.query(models.Enrollment.tg_id).filter(
+            models.Enrollment.course_id == constants.ddia_4_course_id).count()
+
+    await context.bot.send_message(
+        chat_id=update.effective_chat.id,
+        text=f"{ddia_users_count} users are enrolled in DDIA"
+    )
+
+
 ECHO = 1
 
 
