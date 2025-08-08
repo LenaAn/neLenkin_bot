@@ -346,6 +346,31 @@ sre_broadcast_conv_handler = ConversationHandler(
 )
 
 
+DDIA_BROADCAST = 1
+
+
+@is_curator(constants.ddia_4_course_id)
+async def start_ddia_broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    logging.info(f"start_ddia_broadcast handler triggered by {helpers.get_user(update)}")
+    await context.bot.send_message(
+        chat_id=update.effective_chat.id,
+        text=f"Send a message to broadcast to DDIA users"
+    )
+    return DDIA_BROADCAST
+
+
+@is_curator(constants.ddia_4_course_id)
+async def ddia_broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    return await do_broadcast_course(update, context, constants.ddia_4_course_id)
+
+
+ddia_broadcast_conv_handler = ConversationHandler(
+    entry_points=[CommandHandler('ddia_broadcast', start_ddia_broadcast)],
+    states={BROADCAST: [MessageHandler(filters.TEXT & ~filters.COMMAND, ddia_broadcast)]},
+    fallbacks=[CommandHandler('cancel_broadcast', cancel_broadcast)],
+)
+
+
 @is_admin
 async def leetcode_on(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     logging.info(f"leetcode_on handler triggered by {helpers.get_user(update)}")
