@@ -24,9 +24,9 @@ def is_admin_id(tg_id: int) -> bool:
 def is_admin(callback):
     async def wrapper(update: Update, context: ContextTypes.DEFAULT_TYPE, *args, **kwargs):
         if is_admin_id(update.effective_chat.id):
-            logging.info(f"is_admin check triggered by {helpers.get_user(update)}, user IS a admin")
+            logging.info(f"is_admin check triggered by {helpers.repr_user_from_update(update)}, user IS a admin")
             return await callback(update, context, *args, **kwargs)
-        logging.info(f"is_admin check triggered by {helpers.get_user(update)}, user IS NOT a admin")
+        logging.info(f"is_admin check triggered by {helpers.repr_user_from_update(update)}, user IS NOT a admin")
         await update.effective_chat.send_message("❌ Для этого действия нужно быть админом")
         return None
 
@@ -35,10 +35,10 @@ def is_admin(callback):
 
 def is_any_curator(callback):
     async def wrapper(update: Update, context: ContextTypes.DEFAULT_TYPE, *args, **kwargs):
-        logging.info(f"is_any_curator triggered by {helpers.get_user(update)}")
+        logging.info(f"is_any_curator triggered by {helpers.repr_user_from_update(update)}")
 
         if is_admin_id(update.effective_chat.id):
-            logging.info(f"{helpers.get_user(update)} is admin so has power of curator")
+            logging.info(f"{helpers.repr_user_from_update(update)} is admin so has power of curator")
             return await callback(update, context, *args, **kwargs)
 
         with Session(models.engine) as session:
@@ -47,10 +47,10 @@ def is_any_curator(callback):
         logging.info(f"course_curator_tg_id is {course_curator_tg_id}")
 
         if str(update.effective_chat.id) in course_curator_tg_id:
-            logging.info(f"{helpers.get_user(update)} IS a curator")
+            logging.info(f"{helpers.repr_user_from_update(update)} IS a curator")
             return await callback(update, context, *args, **kwargs)
 
-        logging.info(f"{helpers.get_user(update)} IS NOT a curator")
+        logging.info(f"{helpers.repr_user_from_update(update)} IS NOT a curator")
         await update.effective_chat.send_message("❌ Для этого действия нужно быть куратором какого-нибудь потока")
         return None
 
@@ -60,11 +60,11 @@ def is_any_curator(callback):
 def is_curator(course_id: int):
     def is_curator_for_course(callback):
         async def wrapper(update: Update, context: ContextTypes.DEFAULT_TYPE, *args, **kwargs):
-            logging.info(f"is_curator_for_course triggered by {helpers.get_user(update)} for "
+            logging.info(f"is_curator_for_course triggered by {helpers.repr_user_from_update(update)} for "
                          f"{constants.id_to_course[course_id]}")
 
             if is_admin_id(update.effective_chat.id):
-                logging.info(f"{helpers.get_user(update)} is admin so has power of curator")
+                logging.info(f"{helpers.repr_user_from_update(update)} is admin so has power of curator")
                 return await callback(update, context, *args, **kwargs)
 
             with Session(models.engine) as session:
@@ -76,10 +76,12 @@ def is_curator(course_id: int):
                 return None
 
             if str(update.effective_chat.id) in course_curator_tg_id[0]:
-                logging.info(f"{helpers.get_user(update)} IS a curator for {constants.id_to_course[course_id]}")
+                logging.info(f"{helpers.repr_user_from_update(update)} IS a curator for "
+                             f"{constants.id_to_course[course_id]}")
                 return await callback(update, context, *args, **kwargs)
 
-            logging.info(f"{helpers.get_user(update)} IS NOT a curator for {constants.id_to_course[course_id]}")
+            logging.info(f"{helpers.repr_user_from_update(update)} IS NOT a curator for "
+                         f"{constants.id_to_course[course_id]}")
             await update.effective_chat.send_message("❌ Для этого действия нужно быть куратором потока")
             return None
 
@@ -90,7 +92,7 @@ def is_curator(course_id: int):
 
 @is_admin
 async def get_users_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    logging.info(f"get_users handler triggered by {helpers.get_user(update)}")
+    logging.info(f"get_users handler triggered by {helpers.repr_user_from_update(update)}")
 
     with Session(models.engine) as session:
         users_count = session.query(models.User).count()
@@ -103,7 +105,7 @@ async def get_users_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) 
 
 @is_curator(constants.sre_course_id)
 async def get_sre_users_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    logging.info(f"get_sre_users handler triggered by {helpers.get_user(update)}")
+    logging.info(f"get_sre_users handler triggered by {helpers.repr_user_from_update(update)}")
 
     with Session(models.engine) as session:
         sre_users_count = session.query(models.Enrollment.tg_id).filter(
@@ -117,7 +119,7 @@ async def get_sre_users_handler(update: Update, context: ContextTypes.DEFAULT_TY
 
 @is_curator(constants.ddia_4_course_id)
 async def get_ddia_users_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    logging.info(f"get_ddia_users_handler handler triggered by {helpers.get_user(update)}")
+    logging.info(f"get_ddia_users_handler handler triggered by {helpers.repr_user_from_update(update)}")
 
     with Session(models.engine) as session:
         ddia_users_count = session.query(models.Enrollment.tg_id).filter(
@@ -135,7 +137,7 @@ ECHO = 1
 # todo: now `is_sre_admin` means "root admin OR SRE admin", while `is_admin`means "only root admin". Rethink it
 @is_any_curator
 async def start_echo(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    logging.info(f"start_echo handler triggered by {helpers.get_user(update)}")
+    logging.info(f"start_echo handler triggered by {helpers.repr_user_from_update(update)}")
     await context.bot.send_message(
         chat_id=update.effective_chat.id,
         text=f"Send a message to echo."
@@ -146,7 +148,7 @@ async def start_echo(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
 @is_any_curator
 async def echo_message(update: Update, context: ContextTypes.DEFAULT_TYPE, reply_markup: InlineKeyboardMarkup = None) \
         -> int:
-    logging.info(f"echo_message handler triggered by {helpers.get_user(update)}")
+    logging.info(f"echo_message handler triggered by {helpers.repr_user_from_update(update)}")
     await context.bot.send_message(
         chat_id=update.effective_chat.id,
         text=update.message.text,
@@ -159,7 +161,7 @@ async def echo_message(update: Update, context: ContextTypes.DEFAULT_TYPE, reply
 
 @is_any_curator
 async def cancel_echo(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    logging.info(f"cancel_echo handler triggered by {helpers.get_user(update)}")
+    logging.info(f"cancel_echo handler triggered by {helpers.repr_user_from_update(update)}")
     await context.bot.send_message(
         chat_id=update.effective_chat.id,
         text="Echo cancelled",
@@ -178,7 +180,7 @@ BROADCAST = 1
 
 @is_admin
 async def start_broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    logging.info(f"start_broadcast handler triggered by {helpers.get_user(update)}")
+    logging.info(f"start_broadcast handler triggered by {helpers.repr_user_from_update(update)}")
     await context.bot.send_message(
         chat_id=update.effective_chat.id,
         text=f"Send a message to broadcast"
@@ -189,7 +191,7 @@ async def start_broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
 @is_admin
 async def broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE, reply_markup: InlineKeyboardMarkup = None) \
         -> int:
-    logging.info(f"broadcast handler triggered by {helpers.get_user(update)}")
+    logging.info(f"broadcast handler triggered by {helpers.repr_user_from_update(update)}")
 
     with Session(models.engine) as session:
         users = session.query(models.User).all()
@@ -217,7 +219,7 @@ async def broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE, reply_ma
 
 @is_any_curator
 async def cancel_broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    logging.info(f"cancel_broadcast handler triggered by {helpers.get_user(update)}")
+    logging.info(f"cancel_broadcast handler triggered by {helpers.repr_user_from_update(update)}")
     await context.bot.send_message(
         chat_id=update.effective_chat.id,
         text="Broadcast cancelled",
@@ -235,7 +237,8 @@ broadcast_conv_handler = ConversationHandler(
 
 async def do_broadcast_course(update: Update, context: ContextTypes.DEFAULT_TYPE, course_id: int,
                               reply_markup: InlineKeyboardMarkup = None) -> int:
-    logging.info(f"{constants.id_to_course[course_id]}_broadcast handler triggered by {helpers.get_user(update)}")
+    logging.info(f"{constants.id_to_course[course_id]}_broadcast handler triggered by "
+                 f"{helpers.repr_user_from_update(update)}")
     with Session(models.engine) as session:
         course_enrollments = session.query(models.Enrollment.tg_id).filter(
             models.Enrollment.course_id == course_id).all()
@@ -273,7 +276,7 @@ LEETCODE_BROADCAST = 1
 
 @is_admin
 async def start_leetcode_broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    logging.info(f"start_leetcode_broadcast handler triggered by {helpers.get_user(update)}")
+    logging.info(f"start_leetcode_broadcast handler triggered by {helpers.repr_user_from_update(update)}")
     await context.bot.send_message(
         chat_id=update.effective_chat.id,
         text=f"Send a message to broadcast to Leetcode users"
@@ -297,7 +300,7 @@ LEETCODE_NEW_TOPIC = 1
 
 @is_admin
 async def start_leetcode_new_topic_broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    logging.info(f"start_leetcode_new_topic_broadcast handler triggered by {helpers.get_user(update)}")
+    logging.info(f"start_leetcode_new_topic_broadcast handler triggered by {helpers.repr_user_from_update(update)}")
     await context.bot.send_message(
         chat_id=update.effective_chat.id,
         text=f"Send the new topic for Leetcode"
@@ -326,7 +329,7 @@ SRE_BROADCAST = 1
 
 @is_curator(constants.sre_course_id)
 async def start_sre_broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    logging.info(f"start_sre_broadcast handler triggered by {helpers.get_user(update)}")
+    logging.info(f"start_sre_broadcast handler triggered by {helpers.repr_user_from_update(update)}")
     await context.bot.send_message(
         chat_id=update.effective_chat.id,
         text=f"Send a message to broadcast to SRE users"
@@ -345,13 +348,12 @@ sre_broadcast_conv_handler = ConversationHandler(
     fallbacks=[CommandHandler('cancel_broadcast', cancel_broadcast)],
 )
 
-
 DDIA_BROADCAST = 1
 
 
 @is_curator(constants.ddia_4_course_id)
 async def start_ddia_broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    logging.info(f"start_ddia_broadcast handler triggered by {helpers.get_user(update)}")
+    logging.info(f"start_ddia_broadcast handler triggered by {helpers.repr_user_from_update(update)}")
     await context.bot.send_message(
         chat_id=update.effective_chat.id,
         text=f"Send a message to broadcast to DDIA users"
@@ -373,7 +375,7 @@ ddia_broadcast_conv_handler = ConversationHandler(
 
 @is_admin
 async def leetcode_on(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    logging.info(f"leetcode_on handler triggered by {helpers.get_user(update)}")
+    logging.info(f"leetcode_on handler triggered by {helpers.repr_user_from_update(update)}")
     models.leetcode_status_on = True
 
     await context.bot.send_message(
@@ -386,7 +388,7 @@ async def leetcode_on(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
 async def leetcode_off(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     # todo: user may be in the middle of leetcode_register_handler. When leetcode status is turned off, the conversation
     #  should start from start for every user
-    logging.info(f"leetcode_off handler triggered by {helpers.get_user(update)}")
+    logging.info(f"leetcode_off handler triggered by {helpers.repr_user_from_update(update)}")
     models.leetcode_status_on = False
 
     await context.bot.send_message(
@@ -397,7 +399,7 @@ async def leetcode_off(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
 
 @is_curator(constants.sre_course_id)
 async def sre_notification_on(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    logging.info(f"sre_notification_on handler triggered by {helpers.get_user(update)}")
+    logging.info(f"sre_notification_on handler triggered by {helpers.repr_user_from_update(update)}")
     models.sre_notification_on = True
 
     await context.bot.send_message(
@@ -408,7 +410,7 @@ async def sre_notification_on(update: Update, context: ContextTypes.DEFAULT_TYPE
 
 @is_curator(constants.sre_course_id)
 async def sre_notification_off(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    logging.info(f"sre_notification_off handler triggered by {helpers.get_user(update)}")
+    logging.info(f"sre_notification_off handler triggered by {helpers.repr_user_from_update(update)}")
     models.sre_notification_on = False
 
     await context.bot.send_message(

@@ -11,13 +11,13 @@ from models import User, engine
 
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    tg_user = helpers.get_user(update)
-    logging.info(f"start triggered by {tg_user}")
+    logging.info(f"start triggered by {helpers.repr_user_from_update(update)}")
     await context.bot.send_message(
         chat_id=update.effective_chat.id,
         text=constants.club_description,
         reply_markup=helpers.main_menu()
     )
+    tg_user = helpers.get_user(update)
     with Session(engine) as session:
         user = User(
             tg_id=tg_user.id,
@@ -38,7 +38,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 
 
 async def command_help(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    logging.info(f"help triggered by {helpers.get_user(update)}")
+    logging.info(f"help triggered by {helpers.repr_user_from_update(update)}")
     await context.bot.send_message(
         chat_id=update.effective_chat.id,
         text="Бот находится в стадии разработки, пожалуйста не ломайте его 🥺.\n"
@@ -50,7 +50,7 @@ async def command_help(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
 
 
 async def private_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    logging.info(f"private message handler triggered by {helpers.get_user(update)}")
+    logging.info(f"private message handler triggered by {helpers.repr_user_from_update(update)}")
     await context.bot.send_message(
         chat_id=update.effective_chat.id,
         text="Я не понимаю сообщения, только эти две команды:\n"

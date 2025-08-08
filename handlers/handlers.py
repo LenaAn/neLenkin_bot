@@ -38,11 +38,11 @@ async def button_click(update: Update, _: ContextTypes.DEFAULT_TYPE) -> None:
     if handler:
         await handler(update)
     else:
-        logging.warning(f"Unhandled callback query data: {query.data} by {helpers.get_user(update)}")
+        logging.warning(f"Unhandled callback query data: {query.data} by {helpers.repr_user_from_update(update)}")
 
 
 async def handle_back_to_start(update: Update) -> None:
-    logging.info(f"back_to_start triggered by {helpers.get_user(update)}")
+    logging.info(f"back_to_start triggered by {helpers.repr_user_from_update(update)}")
     await update.callback_query.edit_message_text(
         text=constants.club_description,
         reply_markup=helpers.main_menu()
@@ -50,21 +50,21 @@ async def handle_back_to_start(update: Update) -> None:
 
 
 async def handle_how_to_join(update: Update) -> None:
-    logging.info(f"how_to_join triggered by {helpers.get_user(update)}")
+    logging.info(f"how_to_join triggered by {helpers.repr_user_from_update(update)}")
     await update.callback_query.edit_message_text(
         text=constants.how_to_join_description,
         reply_markup=helpers.join_menu())
 
 
 async def handle_ddia(update: Update) -> None:
-    logging.info(f"ddia triggered by {helpers.get_user(update)}")
+    logging.info(f"ddia triggered by {helpers.repr_user_from_update(update)}")
     await handle_course_info(update, constants.ddia_4_course_id, constants.ddia_description,
                              constants.ddia_enroll_description, constants.ddia_cta_description,
                              "ddia_enroll", "ddia_unenroll")
 
 
 async def handle_back_to_ddia(update: Update) -> None:
-    logging.info(f"back_to_ddia triggered by {helpers.get_user(update)}")
+    logging.info(f"back_to_ddia triggered by {helpers.repr_user_from_update(update)}")
     await handle_ddia(update)
 
 
@@ -76,17 +76,19 @@ def user_is_enrolled(tg_user: User, course_id: int) -> bool:
             )
         )
     if users_exists:
-        logging.info(f"user is already enrolled in {constants.id_to_course[course_id]}: {tg_user}")
+        logging.info(f"user is already enrolled in {constants.id_to_course[course_id]}: {helpers.repr_user(tg_user)}")
     else:
-        logging.info(f"user is not already enrolled in {constants.id_to_course[course_id]}: {tg_user}")
+        logging.info(
+            f"user is not already enrolled in {constants.id_to_course[course_id]}: {helpers.repr_user(tg_user)}")
     return users_exists
 
 
 async def handle_course_info(update: Update, course_id: int, course_description: str, enroll_description: str,
                              cta_description: str, enroll_callback: str, unenroll_callback: str) -> None:
-    tg_user = helpers.get_user(update)
-    logging.info(f"handle_course_info for {constants.id_to_course[course_id]} triggered by {tg_user}")
+    logging.info(f"handle_course_info for {constants.id_to_course[course_id]} triggered by "
+                 f"{helpers.repr_user_from_update(update)}")
 
+    tg_user = helpers.get_user(update)
     if user_is_enrolled(tg_user, course_id):
         button_list = [
             InlineKeyboardButton("Перестать получать уведомления", callback_data=unenroll_callback),
@@ -122,9 +124,9 @@ async def handle_sre_book(update: Update) -> None:
 
 
 async def handle_enroll(update: Update, course_id: int, unenroll_callback_data: str, enroll_description: str) -> None:
-    tg_user = helpers.get_user(update)
-    logging.info(f"enroll for {constants.id_to_course[course_id]} handled by {tg_user}")
+    logging.info(f"enroll for {constants.id_to_course[course_id]} handled by {helpers.repr_user_from_update(update)}")
 
+    tg_user = helpers.get_user(update)
     with Session(models.engine) as session:
         enrollment = models.Enrollment(
             course_id=course_id,
@@ -133,11 +135,12 @@ async def handle_enroll(update: Update, course_id: int, unenroll_callback_data: 
         session.add(enrollment)
         try:
             session.commit()
-            logging.info(f"Add user enrollment to {constants.id_to_course[course_id]} to db: {tg_user}")
+            logging.info(f"Add user enrollment to {constants.id_to_course[course_id]} to db: "
+                         f"{helpers.repr_user(tg_user)}")
         except IntegrityError as e:
             session.rollback()
-            logging.info(
-                f"Didn't add user {tg_user.username} enrollment to {constants.id_to_course[course_id]} to db: {e}")
+            logging.info(f"Didn't add user {helpers.repr_user(tg_user)} enrollment to "
+                         f"{constants.id_to_course[course_id]} to db: {e}")
         except Exception as e:
             session.rollback()
             logging.warning(f"Couldn't add user enrollment to {constants.id_to_course[course_id]}: {e}")
@@ -154,15 +157,16 @@ async def handle_enroll(update: Update, course_id: int, unenroll_callback_data: 
 
 
 async def handle_unenroll(update: Update, course_id: int, unenroll_description: str) -> None:
-    tg_user = helpers.get_user(update)
-    logging.info(f"unenroll for {constants.id_to_course[course_id]} handled by {tg_user}")
+    logging.info(f"unenroll for {constants.id_to_course[course_id]} handled by {helpers.repr_user_from_update(update)}")
 
+    tg_user = helpers.get_user(update)
     with Session(models.engine) as session:
         try:
             session.query(models.Enrollment).filter(
                 (models.Enrollment.tg_id == str(tg_user.id)) & (models.Enrollment.course_id == course_id)).delete()
             session.commit()
-            logging.info(f"Deleted user enrollment to {constants.id_to_course[course_id]} from db: {tg_user}")
+            logging.info(f"Deleted user enrollment to {constants.id_to_course[course_id]} from db: "
+                         f"{helpers.repr_user(tg_user)}")
         except Exception as e:
             session.rollback()
             logging.error(f"Couldn't delete user enrollment to {constants.id_to_course[course_id]}: {e}")
@@ -216,7 +220,7 @@ async def handle_ddia_unenroll(update: Update) -> None:
 
 
 async def handle_how_to_present(update: Update) -> None:
-    logging.info(f"how_to_present triggered by {helpers.get_user(update)}")
+    logging.info(f"how_to_present triggered by {helpers.repr_user_from_update(update)}")
     button_list = [
         InlineKeyboardButton("Назад", callback_data="back_to_ddia"),
     ]
@@ -232,7 +236,7 @@ async def error_handler(update: object, context: ContextTypes.DEFAULT_TYPE) -> N
     if not isinstance(update, Update):
         logging.info(f"error with invalid update", exc_info=context.error)
     else:
-        logging.info(f"error triggered by {helpers.get_user(update)}", exc_info=context.error)
+        logging.info(f"error triggered by {helpers.repr_user_from_update(update)}", exc_info=context.error)
         await context.bot.send_message(
             chat_id=update.effective_chat.id,
             text=constants.error_description,
@@ -240,5 +244,5 @@ async def error_handler(update: object, context: ContextTypes.DEFAULT_TYPE) -> N
 
         await context.bot.send_message(
             chat_id=settings.ADMIN_CHAT_ID,
-            text=f"error triggered by {helpers.get_user(update)}: {context.error}",
+            text=f"error triggered by {helpers.repr_user_from_update(update)}: {context.error}",
             parse_mode="HTML")
