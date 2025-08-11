@@ -56,6 +56,21 @@ class Course(Base):
         return f"Course(id={self.id}, name={self.name}"
 
 
+# supposed to be short-lived (couple of months data)
+# one message is scheduled in a week per course
+# at what time the message is sent in defined in code
+class ScheduledPartMessages(Base):
+    __tablename__ = 'ScheduledPartMessages'
+
+    id = Column(sqlalchemy.Integer, primary_key=True, autoincrement=True)
+    week_number = Column(sqlalchemy.Integer, nullable=False)
+    course_id = Column(sqlalchemy.Integer, nullable=False)
+    text = Column(sqlalchemy.Text, nullable=False)
+    __table_args__ = (
+        sqlalchemy.UniqueConstraint('week_number', 'course_id', name='Unique_message_per_week_and_course'),
+    )
+
+
 engine = create_engine(DATABASE_URL)
 
 # todo: these are essentially feature flags, but are not persisted across restarts. Need a nicer way to work with
