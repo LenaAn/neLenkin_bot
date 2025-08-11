@@ -4,12 +4,13 @@ import os
 from dotenv import load_dotenv
 
 from sqlalchemy.orm import Session
+from sqlalchemy.exc import NoResultFound
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ContextTypes
 
 import constants
 import models
-from models import Enrollment, engine
+from models import Enrollment, ScheduledPartMessages, engine
 
 notifications_logger = logging.getLogger(__name__)
 notifications_logger.setLevel(logging.DEBUG)
@@ -18,6 +19,7 @@ notifications_logger.setLevel(logging.DEBUG)
 async def register_notifications(application):
     await register_leetcode_notifications(application)
     await register_sre_notifications(application)
+    await register_ddia_notifications(application)
 
 
 async def handle_notification(context: ContextTypes.DEFAULT_TYPE):
@@ -83,6 +85,34 @@ async def handle_sre_notification(context: ContextTypes.DEFAULT_TYPE):
         logging.info("SRE notification is turned off, skipping sending SRE notifications")
 
 
+async def handle_ddia_notification(context: ContextTypes.DEFAULT_TYPE):
+    course_id: int = context.job.data["course_id"]
+    current_week: int = datetime.date.today().isocalendar().week
+    with (Session(engine) as session):
+        try:
+            call_link = session.query(ScheduledPartMessages.text) \
+                .filter(
+                    (ScheduledPartMessages.course_id == course_id) &
+                    (ScheduledPartMessages.week_number == current_week)) \
+                .one()[0]
+        except NoResultFound as e:
+            load_dotenv(override=True)
+            admin_chat_id = int(os.getenv('ADMIN_CHAT_ID'))
+            logging.debug(f"reloaded admin chat id: {admin_chat_id}")
+
+            await context.bot.send_message(
+                chat_id=admin_chat_id,
+                text=f"Zoom link for DDIA not found for today!"
+            )
+            logging.error('Zoom link for DDIA not found for today!', exc_info=e)
+            return
+
+        print(f'call_link is {call_link}')
+
+    context.job.data["message"] = f"Обсуждаем Designing Data-Intensive Applications через 5 минут!\n\n{call_link}"
+    await handle_notification(context)
+
+
 async def register_sre_notifications(app):
     app.job_queue.run_daily(
         callback=handle_sre_notification,
@@ -90,4 +120,14 @@ async def register_sre_notifications(app):
         days=(2,),  # 0 = Sunday, 2 = Tuesday
         name=f"sre_notification",
         data={"course_id": constants.sre_course_id, "message": constants.sre_reminder}
+    )
+
+
+async def register_ddia_notifications(app):
+    app.job_queue.run_daily(
+        callback=handle_ddia_notification,
+        time=datetime.time(hour=15, minute=53, tzinfo=datetime.timezone.utc),  # 5:53 PM Belgrade time in Summer
+        days=(4,),  # 0 = Sunday, 4 = Thursday
+        name=f"ddia_notification",
+        data={"course_id": constants.ddia_4_course_id}
     )
