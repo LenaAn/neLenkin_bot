@@ -1,6 +1,7 @@
 import datetime
 import logging
 
+from sqlalchemy import delete
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import Session
 
@@ -222,6 +223,33 @@ async def leetcode_english(update: Update, context: ContextTypes.DEFAULT_TYPE) -
 
 async def cancel_leetcode_register(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     logging.info(f"cancel_leetcode_register handler triggered by {helpers.repr_user_from_update(update)}")
+    with Session(models.engine) as session:
+        stmt = (
+            delete(models.MockSignUp)
+            .where(
+                models.MockSignUp.tg_id == str(helpers.get_user(update).id),
+                models.MockSignUp.week_number == datetime.date.today().isocalendar().week
+            )
+        )
+        session.execute(stmt)
+        try:
+            session.commit()
+            logging.info(f"Deleted mockSignUp by {helpers.repr_user_from_update(update)}")
+        except Exception as e:
+            session.rollback()
+            logging.warning(f"Couldn't delete mockSignUp by {helpers.repr_user_from_update(update)}")
+            await context.bot.send_message(
+                chat_id=settings.ADMIN_CHAT_ID,
+                text=f"Couldn't delete mock sign up by {helpers.repr_user_from_update(update)}, {e}",
+                parse_mode="HTML")
+
+            await context.bot.send_message(
+                chat_id=update.effective_chat.id,
+                text=f"Что-то пошло не так. Я уже оповестил Ленку",
+                parse_mode="HTML"
+            )
+            return ConversationHandler.END
+
     if "first_problem" in context.user_data:
         del context.user_data["first_problem"]
     if "second_problem" in context.user_data:
@@ -235,7 +263,7 @@ async def cancel_leetcode_register(update: Update, context: ContextTypes.DEFAULT
 
     await context.bot.send_message(
         chat_id=update.effective_chat.id,
-        text="Ты не будешь участвовать в мок-собеседовании на этой неделе")
+        text="Хорошо! Ты не будешь участвовать в мок-собеседовании на этой неделе")
     return ConversationHandler.END
 
 
