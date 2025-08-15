@@ -71,6 +71,26 @@ class ScheduledPartMessages(Base):
     )
 
 
+class MockSignUp(Base):
+    __tablename__ = 'MockSignUp'
+
+    id = Column(sqlalchemy.Integer, primary_key=True, autoincrement=True)
+    # week when user signs up. Sign-ups are allowed from Monday morning to Thursday evening
+    week_number = Column(sqlalchemy.Integer, nullable=False)
+    # some users don't have username
+    tg_username = Column(sqlalchemy.Text, nullable=True)
+    tg_id = Column(sqlalchemy.Text, nullable=False)
+    first_problem = Column(sqlalchemy.Text, nullable=False)
+    second_problem = Column(sqlalchemy.Text, nullable=False)
+    selected_timeslots = Column(sqlalchemy.JSON, nullable=False)
+    programming_language = Column(sqlalchemy.Text, nullable=False)
+    english_choice = Column(sqlalchemy.Boolean, nullable=False)
+
+    __table_args__ = (
+        sqlalchemy.UniqueConstraint('week_number', 'tg_id', name='One_record_per_user_per_week'),
+    )
+
+
 engine = create_engine(DATABASE_URL)
 
 # todo: these are essentially feature flags, but are not persisted across restarts. Need a nicer way to work with
