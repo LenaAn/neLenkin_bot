@@ -1,4 +1,9 @@
+import datetime
 import logging
+
+from sqlalchemy import delete
+from sqlalchemy.dialects.postgresql import insert
+from sqlalchemy.orm import Session
 
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.ext import (CallbackQueryHandler, CommandHandler, ContextTypes, ConversationHandler, MessageHandler,
@@ -7,6 +12,7 @@ from telegram.ext import (CallbackQueryHandler, CommandHandler, ContextTypes, Co
 import constants
 import helpers
 import models
+import settings
 
 LEETCODE_FIRST_PROBLEM, LEETCODE_SECOND_PROBLEM, LEETCODE_TIMESLOTS, LEETCODE_PROGRAMMING_LANGUAGE, LEETCODE_ENGLISH = \
     range(5)
@@ -159,11 +165,45 @@ async def leetcode_english(update: Update, context: ContextTypes.DEFAULT_TYPE) -
         raise ValueError(f"Unexpected callback_data = {update.callback_query.data} "
                          f"by {helpers.repr_user_from_update(update)}")
 
+    with Session(models.engine) as session:
+        mock_signup = {
+            "week_number": datetime.date.today().isocalendar().week,
+            "tg_username": helpers.get_user(update).username,
+            "tg_id": helpers.get_user(update).id,
+            "first_problem": context.user_data['first_problem'],
+            "second_problem": context.user_data['second_problem'],
+            "selected_timeslots": list(context.user_data['selected_timeslots']),
+            "programming_language": context.user_data['leetcode_programming_language'],
+            "english_choice": context.user_data['leetcode_english'],
+        }
+        insert_stmt = insert(models.MockSignUp).values(**mock_signup)
+        do_update_stmt = insert_stmt.on_conflict_do_update(
+            constraint='One_record_per_user_per_week',
+            set_=mock_signup
+        )
+        session.execute(do_update_stmt)
+        try:
+            session.commit()
+            logging.info(f"Added new mockSignUp by {helpers.repr_user_from_update(update)} to db")
+        except Exception as e:
+            session.rollback()
+            logging.warning(f"Couldn't add new mockSignUp: {e}")
+            await context.bot.send_message(
+                chat_id=update.effective_chat.id,
+                text=f"Не удалось записать тебя на моки. Попробуй заново или напиши @lenka_colenka",
+                parse_mode="HTML"
+            )
+            return ConversationHandler.END
+
+    await context.bot.send_message(
+        chat_id=settings.ADMIN_CHAT_ID,
+        text=f"Sign up to leetcode mocks: {helpers.repr_user_from_update(update)}",
+        parse_mode="HTML")
+
     english_string = 'Мок будет на английском, если партнер тоже может на англиском, иначе на русском' \
         if context.user_data['leetcode_english'] else 'Мок будет на русском языке'
     timeslots_string = ", ".join(
         [constants.leetcode_register_timeslots[i] for i in context.user_data['selected_timeslots']])
-
     await context.bot.send_message(
         chat_id=update.effective_chat.id,
         text=f"<b>Твой выбор</b>\n\n"
@@ -178,12 +218,38 @@ async def leetcode_english(update: Update, context: ContextTypes.DEFAULT_TYPE) -
              f" @lenka_colenka",
         parse_mode="HTML"
     )
-    # todo: save to db
     return ConversationHandler.END
 
 
 async def cancel_leetcode_register(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     logging.info(f"cancel_leetcode_register handler triggered by {helpers.repr_user_from_update(update)}")
+    with Session(models.engine) as session:
+        stmt = (
+            delete(models.MockSignUp)
+            .where(
+                models.MockSignUp.tg_id == str(helpers.get_user(update).id),
+                models.MockSignUp.week_number == datetime.date.today().isocalendar().week
+            )
+        )
+        session.execute(stmt)
+        try:
+            session.commit()
+            logging.info(f"Deleted mockSignUp by {helpers.repr_user_from_update(update)}")
+        except Exception as e:
+            session.rollback()
+            logging.warning(f"Couldn't delete mockSignUp by {helpers.repr_user_from_update(update)}")
+            await context.bot.send_message(
+                chat_id=settings.ADMIN_CHAT_ID,
+                text=f"Couldn't delete mock sign up by {helpers.repr_user_from_update(update)}, {e}",
+                parse_mode="HTML")
+
+            await context.bot.send_message(
+                chat_id=update.effective_chat.id,
+                text=f"Что-то пошло не так. Я уже оповестил Ленку",
+                parse_mode="HTML"
+            )
+            return ConversationHandler.END
+
     if "first_problem" in context.user_data:
         del context.user_data["first_problem"]
     if "second_problem" in context.user_data:
@@ -197,7 +263,7 @@ async def cancel_leetcode_register(update: Update, context: ContextTypes.DEFAULT
 
     await context.bot.send_message(
         chat_id=update.effective_chat.id,
-        text="Ты не будешь участвовать в мок-собеседовании на этой неделе")
+        text="Хорошо! Ты не будешь участвовать в мок-собеседовании на этой неделе")
     return ConversationHandler.END
 
 
