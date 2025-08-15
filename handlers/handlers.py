@@ -236,7 +236,7 @@ async def error_handler(update: object, context: ContextTypes.DEFAULT_TYPE) -> N
     if not isinstance(update, Update):
         logging.info(f"error with invalid update", exc_info=context.error)
     else:
-        logging.info(f"error triggered by {helpers.get_user(update)}", exc_info=context.error)
+        logging.info(f"error triggered by {update}", exc_info=context.error)
         try:
             await context.bot.send_message(
                 chat_id=update.effective_chat.id,
