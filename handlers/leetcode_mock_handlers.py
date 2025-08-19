@@ -218,6 +218,7 @@ async def leetcode_english(update: Update, context: ContextTypes.DEFAULT_TYPE) -
              f" @lenka_colenka",
         parse_mode="HTML"
     )
+    clear_state(context)
     return ConversationHandler.END
 
 
@@ -250,6 +251,15 @@ async def cancel_leetcode_register(update: Update, context: ContextTypes.DEFAULT
             )
             return ConversationHandler.END
 
+    clear_state(context)
+
+    await context.bot.send_message(
+        chat_id=update.effective_chat.id,
+        text="Хорошо! Ты не будешь участвовать в мок-собеседовании на этой неделе")
+    return ConversationHandler.END
+
+
+def clear_state(context: ContextTypes.DEFAULT_TYPE) -> None:
     if "first_problem" in context.user_data:
         del context.user_data["first_problem"]
     if "second_problem" in context.user_data:
@@ -260,11 +270,6 @@ async def cancel_leetcode_register(update: Update, context: ContextTypes.DEFAULT
         del context.user_data["leetcode_programming_language"]
     if "leetcode_english" in context.user_data:
         del context.user_data["leetcode_english"]
-
-    await context.bot.send_message(
-        chat_id=update.effective_chat.id,
-        text="Хорошо! Ты не будешь участвовать в мок-собеседовании на этой неделе")
-    return ConversationHandler.END
 
 
 leetcode_register_handler = ConversationHandler(
