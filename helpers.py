@@ -22,13 +22,13 @@ def repr_user_from_update(update: Update) -> str:
 
 def main_menu() -> InlineKeyboardMarkup:
     button_list = [
-        InlineKeyboardButton("Как вступить?", callback_data="how_to_join"),
-        InlineKeyboardButton("Хочу читать Кабанчика!", callback_data="ddia"),
-        InlineKeyboardButton("Хочу читать SRE Book!", callback_data="sre_book"),
-        InlineKeyboardButton("LeetCode мок-собеседования!", callback_data="mock_leetcode")
+        [InlineKeyboardButton("Как вступить?", callback_data="how_to_join")],
+        [InlineKeyboardButton("Хочу читать Кабанчика!", callback_data="ddia")],
+        [InlineKeyboardButton("Хочу читать SRE Book!", callback_data="sre_book")],
+        [InlineKeyboardButton("Решать LeetCode!", callback_data="leetcode_grind")],
+        [InlineKeyboardButton("LeetCode мок-собеседования!", callback_data="mock_leetcode")]
     ]
-    menu = [button_list[i:i + 1] for i in range(0, len(button_list), 1)]
-    return InlineKeyboardMarkup(menu)
+    return InlineKeyboardMarkup(button_list)
 
 
 def back_menu() -> InlineKeyboardMarkup:
