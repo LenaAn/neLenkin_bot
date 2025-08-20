@@ -18,6 +18,7 @@ async def button_click(update: Update, _: ContextTypes.DEFAULT_TYPE) -> None:
     query = update.callback_query
     await query.answer()  # Acknowledge the callback
 
+    # todo: refactor so enrolling new course doesn't involve writing new code
     handlers_dict = {
         "back": handle_back_to_start,
         "how_to_join": handle_how_to_join,
@@ -29,9 +30,13 @@ async def button_click(update: Update, _: ContextTypes.DEFAULT_TYPE) -> None:
         "ddia_enroll": handle_ddia_enroll,
         "ddia_unenroll": handle_ddia_unenroll,
         "mock_leetcode": handle_mock_leetcode,
+        "leetcode_grind": handle_leetcode_grind,
+        "leetcode_grind_enroll": handle_leetcode_grind_enroll,
+        "leetcode_grind_unenroll": handle_leetcode_grind_unenroll,
         "how_to_present": handle_how_to_present,
         "leetcode_enroll": handle_leetcode_enroll,
         "leetcode_unenroll": handle_leetcode_unenroll,
+
     }
 
     handler = handlers_dict.get(query.data)
@@ -117,6 +122,12 @@ async def handle_mock_leetcode(update: Update) -> None:
                              "leetcode_enroll", "leetcode_unenroll")
 
 
+async def handle_leetcode_grind(update: Update) -> None:
+    await handle_course_info(update, constants.leetcode_grind_course_id, constants.leetcode_grind_description,
+                             constants.leetcode_grind_enroll_description, constants.leetcode_grind_cta_description,
+                             "leetcode_grind_enroll", "leetcode_grind_unenroll")
+
+
 async def handle_sre_book(update: Update) -> None:
     await handle_course_info(update, constants.sre_course_id, constants.sre_book_description,
                              constants.sre_enroll_description, constants.sre_book_cta_description,
@@ -193,6 +204,18 @@ async def handle_leetcode_enroll(update: Update) -> None:
 
 async def handle_leetcode_unenroll(update: Update) -> None:
     await handle_unenroll(update, constants.leetcode_course_id, constants.leetcode_unenroll_description)
+
+
+async def handle_leetcode_grind_enroll(update: Update) -> None:
+    await handle_enroll(
+        update,
+        constants.leetcode_grind_course_id,
+        "leetcode_grind_unenroll",
+        constants.leetcode_grind_enroll_description)
+
+
+async def handle_leetcode_grind_unenroll(update: Update) -> None:
+    await handle_unenroll(update, constants.leetcode_grind_course_id, constants.leetcode_grind_enroll_description)
 
 
 async def handle_sre_enroll(update: Update) -> None:
