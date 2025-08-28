@@ -20,6 +20,7 @@ async def register_notifications(application):
     await register_leetcode_notifications(application)
     await register_sre_notifications(application)
     await register_ddia_notifications(application)
+    await register_leetcode_grind_notifications(application)
 
 
 async def handle_notification(context: ContextTypes.DEFAULT_TYPE):
@@ -85,7 +86,7 @@ async def handle_sre_notification(context: ContextTypes.DEFAULT_TYPE):
         logging.info("SRE notification is turned off, skipping sending SRE notifications")
 
 
-async def handle_ddia_notification(context: ContextTypes.DEFAULT_TYPE):
+async def handle_notification_for_course(context: ContextTypes.DEFAULT_TYPE):
     course_id: int = context.job.data["course_id"]
     current_week: int = datetime.date.today().isocalendar().week
     with (Session(engine) as session):
@@ -109,7 +110,10 @@ async def handle_ddia_notification(context: ContextTypes.DEFAULT_TYPE):
 
         print(f'call_link is {call_link}')
 
-    context.job.data["message"] = f"Обсуждаем Designing Data-Intensive Applications через 5 минут!\n\n{call_link}"
+    if "message" in context.job.data:
+        context.job.data["message"] = f"{context.job.data['message']}\n\n{call_link}"
+    else:
+        context.job.data["message"] = str(call_link)
     await handle_notification(context)
 
 
@@ -125,9 +129,21 @@ async def register_sre_notifications(app):
 
 async def register_ddia_notifications(app):
     app.job_queue.run_daily(
-        callback=handle_ddia_notification,
+        callback=handle_notification_for_course,
         time=datetime.time(hour=15, minute=53, tzinfo=datetime.timezone.utc),  # 5:53 PM Belgrade time in Summer
         days=(4,),  # 0 = Sunday, 4 = Thursday
         name=f"ddia_notification",
-        data={"course_id": constants.ddia_4_course_id}
+        data={"course_id": constants.ddia_4_course_id,
+              "message": "Обсуждаем Designing Data-Intensive Applications через 5 минут!"}
+    )
+
+
+async def register_leetcode_grind_notifications(app):
+    app.job_queue.run_daily(
+        callback=handle_notification_for_course,
+        time=datetime.time(hour=15, minute=53, tzinfo=datetime.timezone.utc),  # 5:53 PM Belgrade time in Summer
+        days=(3,),  # 0 = Sunday, 4 = Wednesday
+        name=f"leetcode_grind_notification",
+        data={"course_id": constants.grind_course_id,
+              "message": "Прорешивание Leetcode через 5 минут!"}
     )
