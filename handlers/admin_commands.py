@@ -387,6 +387,31 @@ ddia_broadcast_conv_handler = ConversationHandler(
 )
 
 
+GRIND_BROADCAST = 1
+
+
+@is_curator(constants.grind_course_id)
+async def start_grind_broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    logging.info(f"start_grind_broadcast handler triggered by {helpers.repr_user_from_update(update)}")
+    await context.bot.send_message(
+        chat_id=update.effective_chat.id,
+        text=f"Send a message to broadcast to Leetcode Grind users"
+    )
+    return GRIND_BROADCAST
+
+
+@is_curator(constants.grind_course_id)
+async def grind_broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    return await do_broadcast_course(update, context, constants.grind_course_id)
+
+
+grind_broadcast_conv_handler = ConversationHandler(
+    entry_points=[CommandHandler('grind_broadcast', start_grind_broadcast)],
+    states={GRIND_BROADCAST: [MessageHandler(filters.TEXT & ~filters.COMMAND, grind_broadcast)]},
+    fallbacks=[CommandHandler('cancel_broadcast', cancel_broadcast)],
+)
+
+
 @is_admin
 async def leetcode_on(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     logging.info(f"leetcode_on handler triggered by {helpers.repr_user_from_update(update)}")
