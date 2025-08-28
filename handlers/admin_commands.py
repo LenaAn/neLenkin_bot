@@ -305,7 +305,7 @@ async def leetcode_broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE)
 
 leetcode_broadcast_conv_handler = ConversationHandler(
     entry_points=[CommandHandler('leetcode_broadcast', start_leetcode_broadcast)],
-    states={BROADCAST: [MessageHandler(filters.TEXT & ~filters.COMMAND, leetcode_broadcast)]},
+    states={LEETCODE_BROADCAST: [MessageHandler(filters.TEXT & ~filters.COMMAND, leetcode_broadcast)]},
     fallbacks=[CommandHandler('cancel_broadcast', cancel_broadcast)],
 )
 
@@ -358,7 +358,7 @@ async def sre_broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE) -> i
 
 sre_broadcast_conv_handler = ConversationHandler(
     entry_points=[CommandHandler('sre_broadcast', start_sre_broadcast)],
-    states={BROADCAST: [MessageHandler(filters.TEXT & ~filters.COMMAND, sre_broadcast)]},
+    states={SRE_BROADCAST: [MessageHandler(filters.TEXT & ~filters.COMMAND, sre_broadcast)]},
     fallbacks=[CommandHandler('cancel_broadcast', cancel_broadcast)],
 )
 
@@ -382,7 +382,7 @@ async def ddia_broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
 
 ddia_broadcast_conv_handler = ConversationHandler(
     entry_points=[CommandHandler('ddia_broadcast', start_ddia_broadcast)],
-    states={BROADCAST: [MessageHandler(filters.TEXT & ~filters.COMMAND, ddia_broadcast)]},
+    states={DDIA_BROADCAST: [MessageHandler(filters.TEXT & ~filters.COMMAND, ddia_broadcast)]},
     fallbacks=[CommandHandler('cancel_broadcast', cancel_broadcast)],
 )
 
