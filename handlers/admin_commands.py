@@ -117,6 +117,20 @@ async def get_sre_users_handler(update: Update, context: ContextTypes.DEFAULT_TY
     )
 
 
+@is_curator(constants.grind_course_id)
+async def get_grind_users_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    logging.info(f"get_grind_users handler triggered by {helpers.repr_user_from_update(update)}")
+
+    with Session(models.engine) as session:
+        grind_users_count = session.query(models.Enrollment.tg_id).filter(
+            models.Enrollment.course_id == constants.grind_course_id).count()
+
+    await context.bot.send_message(
+        chat_id=update.effective_chat.id,
+        text=f"{grind_users_count} users are enrolled in Leetcode Grind"
+    )
+
+
 @is_curator(constants.ddia_4_course_id)
 async def get_ddia_users_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     logging.info(f"get_ddia_users_handler handler triggered by {helpers.repr_user_from_update(update)}")
