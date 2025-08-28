@@ -32,6 +32,7 @@ if __name__ == '__main__':
     application.add_handler(CommandHandler('get_users', admin_commands.get_users_handler))
     application.add_handler(CommandHandler('get_sre_users', admin_commands.get_sre_users_handler))
     application.add_handler(CommandHandler('get_ddia_users', admin_commands.get_ddia_users_handler))
+    application.add_handler(CommandHandler('get_grind_users', admin_commands.get_grind_users_handler))
     application.add_handler(CommandHandler('leetcode_on', admin_commands.leetcode_on))
     application.add_handler(CommandHandler('leetcode_off', admin_commands.leetcode_off))
     application.add_handler(CommandHandler('sre_notification_on', admin_commands.sre_notification_on))

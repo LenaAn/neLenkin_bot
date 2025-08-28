@@ -87,6 +87,7 @@ error_description = \
 leetcode_course_id: int = 7
 sre_course_id: int = 8
 ddia_4_course_id: int = 10
+grind_course_id: int = 11
 
 id_to_course = {7: "Leetcode", 8: "SRE", 10: "DDIA-4", 11: "Leetcode-Grind-2"}
 
