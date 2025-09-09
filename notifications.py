@@ -48,6 +48,8 @@ async def handle_notification(context: ContextTypes.DEFAULT_TYPE):
             notifications_logger.info(f"failed to send notification to chat {chat_id}: {e}")
             fail_count += 1
 
+    del context.job.data["message"]
+
     logging.info(f"Successfully sent {constants.id_to_course[course_id]} notification to {successful_count} users,"
                  f" failed {fail_count} users.")
 
@@ -108,7 +110,7 @@ async def handle_notification_for_course(context: ContextTypes.DEFAULT_TYPE):
             logging.error('Zoom link for DDIA not found for today!', exc_info=e)
             return
 
-        print(f'call_link is {call_link}')
+        logging.info(f'call_link is {call_link}')
 
     if "message" in context.job.data:
         context.job.data["message"] = f"{context.job.data['message']}\n\n{call_link}"
