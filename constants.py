@@ -68,10 +68,6 @@ how_to_present_description = \
 mock_leetcode_reminder = \
     "Запишись сегодня, чтобы на выходных пройти leetcode мок-собеседование! Завтра уже будут объявлены пары"
 
-sre_reminder = \
-    ("SRE book cозвон через 5 минут! "
-     "<a href='https://us06web.zoom.us/j/89699825499?pwd=252HFSD6l5TH2GYm7qDlI3QRahZNIZ.1'> Ссылка на зум!</a>")
-
 leetcode_cta_description = \
     ("Нажми кнопку \"Хочу участвовать\", чтобы бот каждый понедельник присылал тебе тему недели и в каждый четверг "
      "напоминал зарегистрироваться, чтобы участвовать в мок-собеседовании в выходные.")
@@ -90,6 +86,14 @@ ddia_4_course_id: int = 10
 grind_course_id: int = 11
 
 id_to_course = {7: "Leetcode", 8: "SRE", 10: "DDIA-4", 11: "Leetcode-Grind-2"}
+
+before_call_reminders = {
+    ddia_4_course_id: "Обсуждаем Designing Data-Intensive Applications через 5 минут!",
+    grind_course_id: "Прорешивание Leetcode через 5 минут!",
+    sre_course_id: "SRE book cозвон через 5 минут! <a "
+                   "href='https://us06web.zoom.us/j/89699825499?pwd=252HFSD6l5TH2GYm7qDlI3QRahZNIZ.1'> Ссылка на "
+                   "зум!</a>",
+}
 
 leetcode_register_ask_timeslots = ("В какое время можешь созвониться? Чем больше слотов отметишь, тем больше "
                                    "вероятность, что я смогу найти тебе парнера! Время указано по Москве. "

@@ -25,6 +25,16 @@ async def register_notifications(application):
 
 async def handle_notification(context: ContextTypes.DEFAULT_TYPE):
     course_id: int = context.job.data["course_id"]
+    if "message" not in context.job.data:
+        admin_chat_id = int(os.getenv('ADMIN_CHAT_ID'))
+        notifications_logger.error(
+            f"Can't handle notification, there's no message in context.job.data: {context.job.data}")
+        await context.bot.send_message(
+            chat_id=admin_chat_id,
+            text=f"Can't handle notification, there's no message in context.job.data: {context.job.data}"
+        )
+        return
+
     message: str = context.job.data["message"]
     menu: InlineKeyboardMarkup = context.job.data["menu"] if "menu" in context.job.data else None
     with Session(engine) as session:
@@ -48,14 +58,13 @@ async def handle_notification(context: ContextTypes.DEFAULT_TYPE):
             notifications_logger.info(f"failed to send notification to chat {chat_id}: {e}")
             fail_count += 1
 
-    del context.job.data["message"]
-
-    logging.info(f"Successfully sent {constants.id_to_course[course_id]} notification to {successful_count} users,"
-                 f" failed {fail_count} users.")
+    notifications_logger.info(
+        f"Successfully sent {constants.id_to_course[course_id]} notification to {successful_count} users,"
+        f" failed {fail_count} users.")
 
     load_dotenv(override=True)
     admin_chat_id = int(os.getenv('ADMIN_CHAT_ID'))
-    logging.debug(f"reloaded admin chat id: {admin_chat_id}")
+    notifications_logger.debug(f"reloaded admin chat id: {admin_chat_id}")
 
     await context.bot.send_message(
         chat_id=admin_chat_id,
@@ -64,28 +73,15 @@ async def handle_notification(context: ContextTypes.DEFAULT_TYPE):
     )
 
 
-async def register_leetcode_notifications(app):
-    app.job_queue.run_daily(
-        callback=handle_notification,
-        time=datetime.time(hour=15, minute=6, tzinfo=datetime.timezone.utc),  # 5:06 PM Belgrade time in Summer
-        days=(4,),  # 0 = Sunday, ..., 4 = Thursday
-        name=f"leetcode_notification",
-        data={
-            "course_id": constants.leetcode_course_id,
-            "message": constants.mock_leetcode_reminder,
-            "menu": InlineKeyboardMarkup([[InlineKeyboardButton("Записаться на моки!", callback_data="leetcode_register")]])
-        }
-    )
-
-
 async def handle_sre_notification(context: ContextTypes.DEFAULT_TYPE):
     # todo: we need more nice way of working with feature flags
     # you can't do `from models import sre_notification_on` and use just `sre_notification_on` here
     # because when you import variable from module, it creates a local copy
     if models.sre_notification_on:
+        context.job.data["message"] = constants.before_call_reminders[constants.sre_course_id]
         await handle_notification(context)
     else:
-        logging.info("SRE notification is turned off, skipping sending SRE notifications")
+        notifications_logger.info("SRE notification is turned off, skipping sending SRE notifications")
 
 
 async def handle_notification_for_course(context: ContextTypes.DEFAULT_TYPE):
@@ -101,22 +97,37 @@ async def handle_notification_for_course(context: ContextTypes.DEFAULT_TYPE):
         except NoResultFound as e:
             load_dotenv(override=True)
             admin_chat_id = int(os.getenv('ADMIN_CHAT_ID'))
-            logging.debug(f"reloaded admin chat id: {admin_chat_id}")
+            notifications_logger.debug(f"reloaded admin chat id: {admin_chat_id}")
 
             await context.bot.send_message(
                 chat_id=admin_chat_id,
                 text=f"Zoom link for DDIA not found for today!"
             )
-            logging.error('Zoom link for DDIA not found for today!', exc_info=e)
+            notifications_logger.error('Zoom link for DDIA not found for today!', exc_info=e)
             return
 
-        logging.info(f'call_link is {call_link}')
+        notifications_logger.info(f'call_link is {call_link}')
 
-    if "message" in context.job.data:
-        context.job.data["message"] = f"{context.job.data['message']}\n\n{call_link}"
+    if call_link:
+        context.job.data["message"] = f"{constants.before_call_reminders[course_id]}\n\n{call_link}"
     else:
-        context.job.data["message"] = str(call_link)
+        context.job.data["message"] = constants.before_call_reminders[course_id]
     await handle_notification(context)
+
+
+async def register_leetcode_notifications(app):
+    app.job_queue.run_daily(
+        callback=handle_notification,
+        time=datetime.time(hour=15, minute=6, tzinfo=datetime.timezone.utc),  # 5:06 PM Belgrade time in Summer
+        days=(4,),  # 0 = Sunday, ..., 4 = Thursday
+        name=f"leetcode_notification",
+        data={
+            "course_id": constants.leetcode_course_id,
+            "message": constants.mock_leetcode_reminder,
+            "menu": InlineKeyboardMarkup(
+                [[InlineKeyboardButton("Записаться на моки!", callback_data="leetcode_register")]])
+        }
+    )
 
 
 async def register_sre_notifications(app):
@@ -125,7 +136,7 @@ async def register_sre_notifications(app):
         time=datetime.time(hour=15, minute=55, tzinfo=datetime.timezone.utc),  # 5:55 PM Belgrade time in Summer
         days=(2,),  # 0 = Sunday, 2 = Tuesday
         name=f"sre_notification",
-        data={"course_id": constants.sre_course_id, "message": constants.sre_reminder}
+        data={"course_id": constants.sre_course_id}
     )
 
 
@@ -135,8 +146,7 @@ async def register_ddia_notifications(app):
         time=datetime.time(hour=15, minute=53, tzinfo=datetime.timezone.utc),  # 5:53 PM Belgrade time in Summer
         days=(4,),  # 0 = Sunday, 4 = Thursday
         name=f"ddia_notification",
-        data={"course_id": constants.ddia_4_course_id,
-              "message": "Обсуждаем Designing Data-Intensive Applications через 5 минут!"}
+        data={"course_id": constants.ddia_4_course_id}
     )
 
 
@@ -146,6 +156,5 @@ async def register_leetcode_grind_notifications(app):
         time=datetime.time(hour=15, minute=53, tzinfo=datetime.timezone.utc),  # 5:53 PM Belgrade time in Summer
         days=(3,),  # 0 = Sunday, 4 = Wednesday
         name=f"leetcode_grind_notification",
-        data={"course_id": constants.grind_course_id,
-              "message": "Прорешивание Leetcode через 5 минут!"}
+        data={"course_id": constants.grind_course_id}
     )
