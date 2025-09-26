@@ -4,6 +4,7 @@ from telegram.ext import (filters, ApplicationBuilder, CommandHandler, MessageHa
 
 from handlers import admin_commands, handlers, menu, leetcode_mock_handlers
 import notifications
+from patreon import fetch_patrons
 import settings
 
 logging.basicConfig(
@@ -11,6 +12,12 @@ logging.basicConfig(
     level=logging.INFO
 )
 logging.getLogger("httpx").setLevel(logging.WARNING)
+
+
+async def post_init(app):
+    await notifications.register_notifications(app)
+    fetch_patrons.load_patrons()
+
 
 if __name__ == '__main__':
     persistence = PicklePersistence(filepath="nelenkin_bot_pickle")
@@ -46,6 +53,6 @@ if __name__ == '__main__':
 
     application.add_error_handler(handlers.error_handler)
 
-    application.post_init = notifications.register_notifications
+    application.post_init = post_init
 
     application.run_polling()
