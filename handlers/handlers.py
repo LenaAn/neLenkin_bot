@@ -36,7 +36,9 @@ async def button_click(update: Update, _: ContextTypes.DEFAULT_TYPE) -> None:
         "how_to_present": handle_how_to_present,
         "leetcode_enroll": handle_leetcode_enroll,
         "leetcode_unenroll": handle_leetcode_unenroll,
-
+        "codecrafters": handle_codecrafters,
+        "codecrafters_enroll": handle_codecrafters_enroll,
+        "codecrafters_unenroll": handle_codecrafters_unenroll,
     }
 
     handler = handlers_dict.get(query.data)
@@ -134,6 +136,12 @@ async def handle_sre_book(update: Update) -> None:
                              "sre_enroll", "sre_unenroll")
 
 
+async def handle_codecrafters(update: Update) -> None:
+    await handle_course_info(update, constants.codecrafters_course_id, constants.codecrafters_description,
+                             constants.codecrafters_enroll_description, constants.codecrafters_cta_description,
+                             "codecrafters_enroll", "codecrafters_unenroll")
+
+
 async def handle_enroll(update: Update, course_id: int, unenroll_callback_data: str, enroll_description: str) -> None:
     logging.info(f"enroll for {constants.id_to_course[course_id]} handled by {helpers.repr_user_from_update(update)}")
 
@@ -228,6 +236,18 @@ async def handle_sre_enroll(update: Update) -> None:
 
 async def handle_sre_unenroll(update: Update) -> None:
     await handle_unenroll(update, constants.sre_course_id, constants.sre_unenroll_description)
+
+
+async def handle_codecrafters_enroll(update: Update) -> None:
+    await handle_enroll(
+        update,
+        constants.codecrafters_course_id,
+        "codecrafters_unenroll",
+        constants.codecrafters_enroll_description)
+
+
+async def handle_codecrafters_unenroll(update: Update) -> None:
+    await handle_unenroll(update, constants.codecrafters_course_id, constants.codecrafters_unenroll_description)
 
 
 async def handle_ddia_enroll(update: Update) -> None:

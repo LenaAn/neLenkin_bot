@@ -33,6 +33,24 @@ sre_enroll_description = \
 
 sre_unenroll_description = "Бот больше не будет присылать тебе напоминания о SRE book"
 
+codecrafters_description = \
+    ("Мы много читали — настало время самим что-то написать!\n\n"
+     "Будем писать свой Redis с нуля по <a href='https://app.codecrafters.io/courses/redis/overview'>инструкции из CodeCrafters</a>. "
+     "Redis — это быстрая in-memory база данных, которую используют почти в каждом большом проекте. "
+     "Написать свою реализацию Redis — отличный способ понять, как устроено сетевое взаимодействие, парсинг протоколов "
+     "и хранение данных.\n\n"
+     "Больше подробностей — <a href='t.me/lenka_ne_club/11504'>в группе</a>. Звонки проходят каждый вторник в 18:00 по "
+     "Берлину."
+     )
+
+codecrafters_cta_description = \
+    "Нажми кнопку \"Хочу участвовать\", и бот будет присылать тебе ссылку на Zoom звонок за пять минут до звонка!"
+
+codecrafters_enroll_description = \
+    "Бот будет присылать тебе напоминание с ссылкой на Zoom звонок за пять минут до звонка!"
+
+codecrafters_unenroll_description = "Бот больше не будет присылать тебе напоминания о Redis CodeCrafters"
+
 ddia_cta_description = \
     ("Нажми кнопку \"Хочу участвовать\", и бот будет присылать тебе новости о чтении Designing Data Intensive "
      "Applications и ссылку на звонок")
@@ -84,14 +102,24 @@ leetcode_course_id: int = 7
 sre_course_id: int = 8
 ddia_4_course_id: int = 10
 grind_course_id: int = 11
+codecrafters_course_id: int = 12
 
-id_to_course = {7: "Leetcode", 8: "SRE", 10: "DDIA-4", 11: "Leetcode-Grind-2"}
+id_to_course = {
+    leetcode_course_id: "Leetcode",
+    sre_course_id: "SRE",
+    ddia_4_course_id: "DDIA-4",
+    grind_course_id: "Leetcode-Grind-2",
+    codecrafters_course_id: "CodeCrafters-Redis",
+}
 
 before_call_reminders = {
     ddia_4_course_id: "Обсуждаем Designing Data-Intensive Applications через 5 минут!",
     grind_course_id: "Прорешивание Leetcode через 5 минут!",
     sre_course_id: "SRE book cозвон через 5 минут! <a "
-                   "href='https://us06web.zoom.us/j/89699825499?pwd=252HFSD6l5TH2GYm7qDlI3QRahZNIZ.1'> Ссылка на "
+                   "href='https://us06web.zoom.us/j/89699825499?pwd=252HFSD6l5TH2GYm7qDlI3QRahZNIZ.1'>Ссылка на "
+                   "зум!</a>",
+    codecrafters_course_id: "Redis CodeCrafters cозвон через 5 минут! <a "
+                   "href='https://us06web.zoom.us/j/84775018227?pwd=PU9bbBO5B29wMjQ7qucvatFZcHr2O7.1'>Ссылка на "
                    "зум!</a>",
 }
 

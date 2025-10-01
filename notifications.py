@@ -21,6 +21,7 @@ async def register_notifications(application):
     await register_sre_notifications(application)
     await register_ddia_notifications(application)
     await register_leetcode_grind_notifications(application)
+    await register_codecrafters_notifications(application)
 
 
 async def handle_notification(context: ContextTypes.DEFAULT_TYPE):
@@ -82,6 +83,17 @@ async def handle_sre_notification(context: ContextTypes.DEFAULT_TYPE):
         await handle_notification(context)
     else:
         notifications_logger.info("SRE notification is turned off, skipping sending SRE notifications")
+
+
+async def handle_codecrafters_notification(context: ContextTypes.DEFAULT_TYPE):
+    # todo: we need more nice way of working with feature flags
+    # you can't do `from models import codecrafters_notification_on` and use just `codecrafters_notification_on` here
+    # because when you import variable from module, it creates a local copy
+    if models.codecrafters_notification_on:
+        context.job.data["message"] = constants.before_call_reminders[constants.codecrafters_course_id]
+        await handle_notification(context)
+    else:
+        notifications_logger.info("CodeCrafters notification is turned off, skipping sending CodeCrafters notifications")
 
 
 async def handle_notification_for_course(context: ContextTypes.DEFAULT_TYPE):
@@ -157,4 +169,13 @@ async def register_leetcode_grind_notifications(app):
         days=(3,),  # 0 = Sunday, 4 = Wednesday
         name=f"leetcode_grind_notification",
         data={"course_id": constants.grind_course_id}
+    )
+
+async def register_codecrafters_notifications(app):
+    app.job_queue.run_daily(
+        callback=handle_codecrafters_notification,
+        time=datetime.time(hour=15, minute=55, tzinfo=datetime.timezone.utc),  # 5:55 PM Berlin time in Summer
+        days=(2,),  # 0 = Sunday, 2 = Tuesday
+        name=f"codecrafters_notification",
+        data={"course_id": constants.codecrafters_course_id}
     )
