@@ -123,7 +123,7 @@ async def handle_mock_leetcode(update: Update) -> None:
 
 
 async def handle_leetcode_grind(update: Update) -> None:
-    await handle_course_info(update, constants.leetcode_grind_course_id, constants.leetcode_grind_description,
+    await handle_course_info(update, constants.grind_course_id, constants.leetcode_grind_description,
                              constants.leetcode_grind_enroll_description, constants.leetcode_grind_cta_description,
                              "leetcode_grind_enroll", "leetcode_grind_unenroll")
 
@@ -209,13 +209,13 @@ async def handle_leetcode_unenroll(update: Update) -> None:
 async def handle_leetcode_grind_enroll(update: Update) -> None:
     await handle_enroll(
         update,
-        constants.leetcode_grind_course_id,
+        constants.grind_course_id,
         "leetcode_grind_unenroll",
         constants.leetcode_grind_enroll_description)
 
 
 async def handle_leetcode_grind_unenroll(update: Update) -> None:
-    await handle_unenroll(update, constants.leetcode_grind_course_id, constants.leetcode_grind_enroll_description)
+    await handle_unenroll(update, constants.grind_course_id, constants.leetcode_grind_enroll_description)
 
 
 async def handle_sre_enroll(update: Update) -> None:
