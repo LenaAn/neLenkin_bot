@@ -24,7 +24,6 @@ def main_menu() -> InlineKeyboardMarkup:
     button_list = [
         [InlineKeyboardButton("Как вступить?", callback_data="how_to_join")],
         [InlineKeyboardButton("Хочу читать Кабанчика!", callback_data="ddia")],
-        [InlineKeyboardButton("Хочу читать SRE Book!", callback_data="sre_book")],
         [InlineKeyboardButton("Решать LeetCode!", callback_data="leetcode_grind")],
         [InlineKeyboardButton("LeetCode мок-собеседования!", callback_data="mock_leetcode")],
         [InlineKeyboardButton("Хочу писать свой Redis!", callback_data="codecrafters")],

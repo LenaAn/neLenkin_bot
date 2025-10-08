@@ -24,9 +24,6 @@ async def button_click(update: Update, _: ContextTypes.DEFAULT_TYPE) -> None:
         "how_to_join": handle_how_to_join,
         "ddia": handle_ddia,
         "back_to_ddia": handle_back_to_ddia,
-        "sre_book": handle_sre_book,
-        "sre_enroll": handle_sre_enroll,
-        "sre_unenroll": handle_sre_unenroll,
         "ddia_enroll": handle_ddia_enroll,
         "ddia_unenroll": handle_ddia_unenroll,
         "mock_leetcode": handle_mock_leetcode,
@@ -130,12 +127,6 @@ async def handle_leetcode_grind(update: Update) -> None:
                              "leetcode_grind_enroll", "leetcode_grind_unenroll")
 
 
-async def handle_sre_book(update: Update) -> None:
-    await handle_course_info(update, constants.sre_course_id, constants.sre_book_description,
-                             constants.sre_enroll_description, constants.sre_book_cta_description,
-                             "sre_enroll", "sre_unenroll")
-
-
 async def handle_codecrafters(update: Update) -> None:
     await handle_course_info(update, constants.codecrafters_course_id, constants.codecrafters_description,
                              constants.codecrafters_enroll_description, constants.codecrafters_cta_description,
@@ -224,18 +215,6 @@ async def handle_leetcode_grind_enroll(update: Update) -> None:
 
 async def handle_leetcode_grind_unenroll(update: Update) -> None:
     await handle_unenroll(update, constants.grind_course_id, constants.leetcode_grind_enroll_description)
-
-
-async def handle_sre_enroll(update: Update) -> None:
-    await handle_enroll(
-        update,
-        constants.sre_course_id,
-        "sre_unenroll",
-        constants.sre_enroll_description)
-
-
-async def handle_sre_unenroll(update: Update) -> None:
-    await handle_unenroll(update, constants.sre_course_id, constants.sre_unenroll_description)
 
 
 async def handle_codecrafters_enroll(update: Update) -> None:
