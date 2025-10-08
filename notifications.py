@@ -171,6 +171,7 @@ async def register_leetcode_grind_notifications(app):
         data={"course_id": constants.grind_course_id}
     )
 
+
 async def register_codecrafters_notifications(app):
     app.job_queue.run_daily(
         callback=handle_codecrafters_notification,
