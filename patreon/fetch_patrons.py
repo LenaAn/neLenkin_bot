@@ -8,6 +8,8 @@ from dotenv import load_dotenv
 patreon_logger = logging.getLogger(__name__)
 patreon_logger.setLevel(logging.DEBUG)
 
+r = redis.Redis(host='localhost', port=6379, db=0)
+
 
 def fetch_patrons():
     load_dotenv(override=True)
@@ -45,8 +47,6 @@ def fetch_patrons():
 
 
 def store_to_cache(all_patrons):
-    r = redis.Redis(host='localhost', port=6379, db=0)
-
     success_insert_count = 0
     fail_insert_count = 0
 
@@ -61,8 +61,24 @@ def store_to_cache(all_patrons):
             success_insert_count += 1
         except Exception as e:
             fail_insert_count += 1
-            logging.warning(f"Couldn't add patron to Redis: {e}")
-    logging.info(f"Inserted {success_insert_count} patrons to Redis, failed to insert {fail_insert_count} patrons")
+            patreon_logger.warning(f"Couldn't add patron to Redis: {e}")
+    patreon_logger.info(f"Inserted {success_insert_count} patrons to Redis, failed to insert {fail_insert_count} patrons")
+
+
+def get_users_by_status(status_filter="active_patron"):
+    all_users_count = 0
+    active_users_count = 0
+
+    for key in r.scan_iter("user:*"):
+        all_users_count += 1
+        user_data = r.hgetall(key)
+        user_data = {k.decode(): v.decode() for k, v in user_data.items()}
+
+        if user_data.get("patron_status") == status_filter:
+            active_users_count += 1
+
+    patreon_logger.info(f"Found {all_users_count} in Redis, {active_users_count} of them are active")
+    return all_users_count, active_users_count
 
 
 def load_patrons():
