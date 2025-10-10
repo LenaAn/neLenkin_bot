@@ -11,6 +11,7 @@ from telegram.ext import CommandHandler, ContextTypes, ConversationHandler, Mess
 import constants
 import helpers
 import models
+from patreon import fetch_patrons
 
 
 def is_admin_id(tg_id: int) -> bool:
@@ -100,6 +101,17 @@ async def get_users_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) 
     await context.bot.send_message(
         chat_id=update.effective_chat.id,
         text=f"{users_count} users started the bot"
+    )
+
+
+@is_admin
+async def get_patrons_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    logging.info(f"get_patrons handler triggered by {helpers.repr_user_from_update(update)}")
+
+    all_patrons, active_patrons = fetch_patrons.get_users_by_status()
+    await context.bot.send_message(
+        chat_id=update.effective_chat.id,
+        text=f"Total {all_patrons} patrons, {active_patrons} of them are active patrons"
     )
 
 
