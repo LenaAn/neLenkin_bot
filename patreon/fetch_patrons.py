@@ -2,6 +2,7 @@ import logging
 import os
 import requests
 import redis
+from typing import Optional
 
 from dotenv import load_dotenv
 
@@ -84,3 +85,16 @@ def get_user_counts_by_status(status_filter: str = "active_patron") -> (int, int
 def load_patrons():
     patrons = fetch_patrons()
     store_to_cache(patrons)
+
+
+def get_patron_by_email(email_to_find: str) -> Optional[dict]:
+    # get fresh info from Patreon
+    load_patrons()
+
+    key = f"user:{email_to_find}"
+
+    if r.exists(key):
+        user_data = r.hgetall(key)
+        user_data = {k.decode(): v.decode() for k, v in user_data.items()}
+        return user_data
+    return None
