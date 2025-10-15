@@ -2,7 +2,7 @@ import logging
 from telegram.ext import (filters, ApplicationBuilder, CommandHandler, MessageHandler, CallbackQueryHandler,
                           PicklePersistence)
 
-from handlers import admin_commands, handlers, menu, leetcode_mock_handlers
+from handlers import admin_commands, handlers, menu, leetcode_mock_handlers, patreon_handlers
 import notifications
 from patreon import fetch_patrons
 import settings
@@ -32,6 +32,7 @@ if __name__ == '__main__':
     application.add_handler(admin_commands.grind_broadcast_conv_handler)
     application.add_handler(admin_commands.leetcode_new_topic_broadcast)
     application.add_handler(leetcode_mock_handlers.leetcode_register_handler)
+    application.add_handler(patreon_handlers.connect_patreon_handler)
 
     application.add_handler(CommandHandler('cancel_leetcode_register', leetcode_mock_handlers.cancel_leetcode_register))
 

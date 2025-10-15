@@ -2,6 +2,7 @@ import logging
 import os
 import requests
 import redis
+from typing import Optional
 
 from dotenv import load_dotenv
 
@@ -11,7 +12,7 @@ patreon_logger.setLevel(logging.DEBUG)
 r = redis.Redis(host='localhost', port=6379, db=0)
 
 
-def fetch_patrons():
+def fetch_patrons() -> [dict]:
     load_dotenv(override=True)
 
     # todo: this token expires about once a month. Need to refresh it automatically
@@ -46,13 +47,13 @@ def fetch_patrons():
     return all_members
 
 
-def store_to_cache(all_patrons):
+def store_to_cache(all_patrons: [dict]) -> None:
     success_insert_count = 0
     fail_insert_count = 0
 
     for patron in all_patrons:
         try:
-            r.hset(f"user:{str(patron['email'])}",
+            r.hset(f"user:{str(patron['email']).lower()}",
                    mapping={
                        "full_name": str(patron['full_name']),
                        "patron_status": str(patron['patron_status']),
@@ -65,7 +66,7 @@ def store_to_cache(all_patrons):
     patreon_logger.info(f"Inserted {success_insert_count} patrons to Redis, failed to insert {fail_insert_count} patrons")
 
 
-def get_users_by_status(status_filter="active_patron"):
+def get_user_counts_by_status(status_filter: str = "active_patron") -> (int, int):
     all_users_count = 0
     active_users_count = 0
 
@@ -84,3 +85,16 @@ def get_users_by_status(status_filter="active_patron"):
 def load_patrons():
     patrons = fetch_patrons()
     store_to_cache(patrons)
+
+
+def get_patron_by_email(email_to_find: str) -> Optional[dict]:
+    # get fresh info from Patreon
+    load_patrons()
+
+    key = f"user:{email_to_find}"
+
+    if r.exists(key):
+        user_data = r.hgetall(key)
+        user_data = {k.decode(): v.decode() for k, v in user_data.items()}
+        return user_data
+    return None

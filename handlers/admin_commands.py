@@ -108,7 +108,7 @@ async def get_users_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) 
 async def get_patrons_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     logging.info(f"get_patrons handler triggered by {helpers.repr_user_from_update(update)}")
 
-    all_patrons, active_patrons = fetch_patrons.get_users_by_status()
+    all_patrons, active_patrons = fetch_patrons.get_user_counts_by_status()
     await context.bot.send_message(
         chat_id=update.effective_chat.id,
         text=f"Total {all_patrons} patrons, {active_patrons} of them are active patrons"

@@ -91,6 +91,19 @@ class MockSignUp(Base):
     )
 
 
+class PatreonLink(Base):
+    __tablename__ = 'PatreonLink'
+
+    tg_id = Column(sqlalchemy.Text, nullable=False, primary_key=True)
+    tg_username = Column(sqlalchemy.Text, nullable=True)
+    patreon_email = Column(sqlalchemy.Text, nullable=False)
+
+    __table_args__ = (
+        sqlalchemy.UniqueConstraint('patreon_email', name='Patreon_email_is_unique'),
+        sqlalchemy.ForeignKeyConstraint(['tg_id'], ['Users.tg_id'],  name='fk_valid_tg_id')
+    )
+
+
 engine = create_engine(DATABASE_URL)
 
 # todo: these are essentially feature flags, but are not persisted across restarts. Need a nicer way to work with
