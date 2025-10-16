@@ -9,6 +9,7 @@ import helpers
 import models
 import settings
 from patreon import fetch_patrons
+from membership import get_level_from_patreon_info
 
 CONNECT_PATREON = 1
 
@@ -71,9 +72,10 @@ async def connect_with_email(update: Update, context: ContextTypes.DEFAULT_TYPE)
         if await store_patreon_linking(update, email_to_find, context):
             # todo: analyze if this is a paying and active patron
             logging.info(f"Patron found for email {email_to_find}: {patron_info}")
+            membership_level = get_level_from_patreon_info(patron_info)
             await context.bot.send_message(
                 chat_id=update.effective_chat.id,
-                text=f"Нашла патрона! {patron_info}",
+                text=f"{membership_level.description}",
             )
         else:
             return ConversationHandler.END
