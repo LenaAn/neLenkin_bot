@@ -3,19 +3,21 @@ import logging
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import Session
 from telegram import Update
-from telegram.ext import (CommandHandler, ContextTypes, ConversationHandler, MessageHandler, filters)
+from telegram.ext import (CallbackQueryHandler, CommandHandler, ContextTypes, ConversationHandler, MessageHandler,
+                          filters)
 
 import helpers
 import models
 import settings
 from patreon import fetch_patrons
-from membership import get_level_from_patreon_info
 
 CONNECT_PATREON = 1
 
 
 async def start_connect_patreon(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     logging.info(f"start_connect_patreon handler triggered by {helpers.repr_user_from_update(update)}")
+    if update.callback_query:
+        await update.callback_query.answer()
     await context.bot.send_message(
         chat_id=update.effective_chat.id,
         text=f"Введи почту, которая привязана к твоему профилю Patreon."
@@ -70,12 +72,11 @@ async def connect_with_email(update: Update, context: ContextTypes.DEFAULT_TYPE)
     patron_info = fetch_patrons.get_patron_by_email(email_to_find)
     if patron_info:
         if await store_patreon_linking(update, email_to_find, context):
-            # todo: analyze if this is a paying and active patron
+            # todo: think about what to show here
             logging.info(f"Patron found for email {email_to_find}: {patron_info}")
-            membership_level = get_level_from_patreon_info(patron_info)
             await context.bot.send_message(
                 chat_id=update.effective_chat.id,
-                text=f"{membership_level.description}",
+                text=f"Patron found for email {email_to_find}: {patron_info}",
             )
         else:
             return ConversationHandler.END
@@ -98,7 +99,10 @@ async def cancel_connect(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
 
 
 connect_patreon_handler = ConversationHandler(
-    entry_points=[CommandHandler('connect_patreon', start_connect_patreon)],
+    entry_points=[
+        CommandHandler('connect_patreon', start_connect_patreon),
+        CallbackQueryHandler(start_connect_patreon, '^connect_patreon$')
+    ],
     states={CONNECT_PATREON: [MessageHandler(filters.TEXT & ~filters.COMMAND, connect_with_email)]},
     fallbacks=[CommandHandler('cancel_connect', cancel_connect)],
 )
