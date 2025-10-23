@@ -59,7 +59,18 @@ class UserMembershipInfo:
 def get_user_membership_info(tg_user: User) -> UserMembershipInfo:
     info = UserMembershipInfo()
 
-    # todo: lookup in DB for by_activity
+    with Session(models.engine) as session:
+        result = (
+            session.query(models.MembershipByActivity.expires_at)
+            .filter(models.MembershipByActivity.tg_id == str(tg_user.id))
+            .one_or_none()
+        )
+        if result:
+            logging.info(f"Got member by activity for {tg_user.username} with expiration at: {result}")
+            info.member_level_by_activity = standard
+            info.member_level_by_activity_expiration = result[0]
+        else:
+            info.member_level_by_activity = basic
 
     with Session(models.engine) as session:
         result = (

@@ -1,3 +1,4 @@
+import datetime
 import logging
 
 from sqlalchemy import exists, select
@@ -145,11 +146,18 @@ async def handle_membership(update: Update) -> None:
     reply_markup = None
 
     if membership_info.member_level_by_activity == membership.standard:
-        msg += f"\n\nТвоя подписка истечет {membership_info.member_level_by_activity_expiration}"
+        if not membership_info.member_level_by_activity_expiration:
+            msg += f"\n\nУ тебя вечная подписка за твое активное участие в клубе!"
+        else:
+            if membership_info.member_level_by_activity_expiration < datetime.date.today():
+                msg += f"\n\nТвоя подписка за активное участие закончилась :("
+            else:
+                msg += f"\n\nТвоя подписка истечет {membership_info.member_level_by_activity_expiration}"
 
     if membership_info.patreon_email != "":
-        msg += (f"\n\nПривязанный профиль Patreon: {membership_info.patreon_email}. Ты подписан на "
-                f"${membership_info.patreon_currently_entitled_amount_cents * 100}")
+        msg += f"\n\nПривязанный профиль Patreon: {membership_info.patreon_email}."
+        if membership_info.patreon_currently_entitled_amount_cents > 0:
+            msg += f" Ты донатишь ${membership_info.patreon_currently_entitled_amount_cents * 100}. Спасибо! ❤️"
     else:
         reply_markup = InlineKeyboardMarkup([[
             InlineKeyboardButton("Привязать профиль Patreon", callback_data="connect_patreon"),
