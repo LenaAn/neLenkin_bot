@@ -76,7 +76,7 @@ async def connect_with_email(update: Update, context: ContextTypes.DEFAULT_TYPE)
             msg: str = f"Нашла твой профиль Patron: {email_to_find}.\n\n"
             donate_amount_cents = int(patron_info['currently_entitled_amount_cents'])
             if donate_amount_cents >= 1500:
-                msg += f"Ты донатишь мне ${donate_amount_cents // 100} в месяц. Спасибо! 🥹",
+                msg += f"Ты донатишь мне ${donate_amount_cents // 100} в месяц. Спасибо! 🥹"
             elif 0 < donate_amount_cents < 1500:
                 msg += (f"Ты донатишь мне ${donate_amount_cents // 100} в месяц. Чтобы получить "
                         f"Pro подписку, пожалуйста оформи донат на $15 в месяц 🥹")
