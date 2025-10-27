@@ -147,7 +147,7 @@ async def handle_membership(update: Update) -> None:
 
     if membership_info.member_level_by_activity == membership.standard:
         if not membership_info.member_level_by_activity_expiration:
-            msg += f"\n\nУ тебя вечная подписка за твое активное участие в клубе!"
+            msg += f"\n\nУ тебя вечная подписка за активное участие в клубе!"
         else:
             if membership_info.member_level_by_activity_expiration < datetime.date.today():
                 msg += f"\n\nТвоя подписка за активное участие закончилась :("
