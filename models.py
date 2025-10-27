@@ -104,6 +104,18 @@ class PatreonLink(Base):
     )
 
 
+class MembershipByActivity(Base):
+    __tablename__ = 'MembershipByActivity'
+
+    tg_id = Column(sqlalchemy.Text, nullable=False, primary_key=True)
+    tg_username = Column(sqlalchemy.Text, nullable=True)
+    expires_at = Column(sqlalchemy.Date, nullable=True)  # if NULL, that means never expires
+
+    __table_args__ = (
+        sqlalchemy.ForeignKeyConstraint(['tg_id'], ['Users.tg_id'],  name='fk_valid_tg_id'),
+    )
+
+
 engine = create_engine(DATABASE_URL)
 
 # todo: these are essentially feature flags, but are not persisted across restarts. Need a nicer way to work with

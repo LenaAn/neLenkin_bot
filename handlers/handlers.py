@@ -1,3 +1,4 @@
+import datetime
 import logging
 
 from sqlalchemy import exists, select
@@ -11,6 +12,7 @@ import constants
 import helpers
 import models
 import settings
+import membership
 
 
 async def button_click(update: Update, _: ContextTypes.DEFAULT_TYPE) -> None:
@@ -36,6 +38,7 @@ async def button_click(update: Update, _: ContextTypes.DEFAULT_TYPE) -> None:
         "codecrafters": handle_codecrafters,
         "codecrafters_enroll": handle_codecrafters_enroll,
         "codecrafters_unenroll": handle_codecrafters_unenroll,
+        "membership": handle_membership,
     }
 
     handler = handlers_dict.get(query.data)
@@ -131,6 +134,43 @@ async def handle_codecrafters(update: Update) -> None:
     await handle_course_info(update, constants.codecrafters_course_id, constants.codecrafters_description,
                              constants.codecrafters_enroll_description, constants.codecrafters_cta_description,
                              "codecrafters_enroll", "codecrafters_unenroll")
+
+
+async def handle_membership(update: Update) -> None:
+    tg_user = helpers.get_user(update)
+    logging.info(f"handle_membership triggered by {tg_user}")
+
+    membership_info = membership.get_user_membership_info(tg_user)
+
+    msg: str = membership_info.get_overall_level().description
+    reply_markup = None
+
+    if membership_info.member_level_by_activity == membership.standard:
+        if not membership_info.member_level_by_activity_expiration:
+            msg += f"\n\nУ тебя вечная подписка за твое активное участие в клубе!"
+        else:
+            if membership_info.member_level_by_activity_expiration < datetime.date.today():
+                msg += f"\n\nТвоя подписка за активное участие закончилась :("
+            else:
+                msg += f"\n\nТвоя подписка истечет {membership_info.member_level_by_activity_expiration}"
+
+    if membership_info.patreon_email != "":
+        msg += f"\n\nПривязанный профиль Patreon: {membership_info.patreon_email}."
+        if membership_info.patreon_currently_entitled_amount_cents > 0:
+            msg += f" Ты донатишь ${membership_info.patreon_currently_entitled_amount_cents * 100}. Спасибо! ❤️"
+    else:
+        reply_markup = InlineKeyboardMarkup([[
+            InlineKeyboardButton("Привязать профиль Patreon", callback_data="connect_patreon"),
+        ]])
+
+    if membership_info.get_overall_level() == membership.basic:
+        msg += "\n\nЧтобы улучшить подписку, сделай перезентацию либо подпишись на Patreon хотя бы на $15 в месяц"
+
+    await update.callback_query.edit_message_text(
+        text=msg,
+        reply_markup=reply_markup,
+        parse_mode="HTML"
+    )
 
 
 async def handle_enroll(update: Update, course_id: int, unenroll_callback_data: str, enroll_description: str) -> None:
