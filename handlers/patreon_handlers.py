@@ -72,11 +72,20 @@ async def connect_with_email(update: Update, context: ContextTypes.DEFAULT_TYPE)
     patron_info = fetch_patrons.get_patron_by_email(email_to_find)
     if patron_info:
         if await store_patreon_linking(update, email_to_find, context):
-            # todo: think about what to show here
             logging.info(f"Patron found for email {email_to_find}: {patron_info}")
+            msg: str = f"Нашла твой профиль Patron: {email_to_find}.\n\n"
+            donate_amount_cents = int(patron_info['currently_entitled_amount_cents'])
+            if donate_amount_cents > 1500:
+                msg += f"Ты донатишь мне ${100*patron_info['currently_entitled_amount_cents']} в месяц. Спасибо! 🥹",
+            elif 0 < donate_amount_cents < 1500:
+                msg += (f"Ты донатишь мне ${100*patron_info['currently_entitled_amount_cents']} в месяц. Чтобы получить "
+                        f"Pro подписку, пожалуйста оформи донат на $15 в месяц 🥹")
+            else:
+                msg += (f"Ты пока не донатишь мне на Patreon. Чтобы получить Pro подписку, пожалуйста оформи донат на "
+                        f"$15 в месяц 🥹")
             await context.bot.send_message(
                 chat_id=update.effective_chat.id,
-                text=f"Patron found for email {email_to_find}: {patron_info}",
+                text=msg,
             )
         else:
             return ConversationHandler.END
