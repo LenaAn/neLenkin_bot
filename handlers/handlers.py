@@ -157,7 +157,7 @@ async def handle_membership(update: Update) -> None:
     if membership_info.patreon_email != "":
         msg += f"\n\nПривязанный профиль Patreon: {membership_info.patreon_email}."
         if membership_info.patreon_currently_entitled_amount_cents > 0:
-            msg += f" Ты донатишь ${membership_info.patreon_currently_entitled_amount_cents * 100}. Спасибо! ❤️"
+            msg += f" Ты донатишь ${membership_info.patreon_currently_entitled_amount_cents // 100}. Спасибо! ❤️"
     else:
         reply_markup = InlineKeyboardMarkup([[
             InlineKeyboardButton("Привязать профиль Patreon", callback_data="connect_patreon"),

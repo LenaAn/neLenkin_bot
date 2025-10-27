@@ -75,10 +75,10 @@ async def connect_with_email(update: Update, context: ContextTypes.DEFAULT_TYPE)
             logging.info(f"Patron found for email {email_to_find}: {patron_info}")
             msg: str = f"Нашла твой профиль Patron: {email_to_find}.\n\n"
             donate_amount_cents = int(patron_info['currently_entitled_amount_cents'])
-            if donate_amount_cents > 1500:
-                msg += f"Ты донатишь мне ${100*patron_info['currently_entitled_amount_cents']} в месяц. Спасибо! 🥹",
+            if donate_amount_cents >= 1500:
+                msg += f"Ты донатишь мне ${donate_amount_cents // 100} в месяц. Спасибо! 🥹",
             elif 0 < donate_amount_cents < 1500:
-                msg += (f"Ты донатишь мне ${100*patron_info['currently_entitled_amount_cents']} в месяц. Чтобы получить "
+                msg += (f"Ты донатишь мне ${donate_amount_cents // 100} в месяц. Чтобы получить "
                         f"Pro подписку, пожалуйста оформи донат на $15 в месяц 🥹")
             else:
                 msg += (f"Ты пока не донатишь мне на Patreon. Чтобы получить Pro подписку, пожалуйста оформи донат на "
