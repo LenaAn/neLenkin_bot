@@ -164,7 +164,7 @@ async def handle_membership(update: Update) -> None:
         ]])
 
     if membership_info.get_overall_level() == membership.basic:
-        msg += "\n\nЧтобы улучшить подписку, сделай перезентацию либо подпишись на Patreon хотя бы на $15 в месяц"
+        msg += "\n\nЧтобы улучшить подписку, сделай презентацию либо подпишись на Patreon хотя бы на $15 в месяц"
 
     await update.callback_query.edit_message_text(
         text=msg,
