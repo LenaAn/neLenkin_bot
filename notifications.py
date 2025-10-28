@@ -128,9 +128,11 @@ async def handle_notification_for_course(context: ContextTypes.DEFAULT_TYPE):
 
 
 async def register_leetcode_notifications(app):
+    cet_winter_time = datetime.timezone(datetime.timedelta(hours=1))
+
     app.job_queue.run_daily(
         callback=handle_notification,
-        time=datetime.time(hour=15, minute=6, tzinfo=datetime.timezone.utc),  # 5:06 PM Belgrade time in Summer
+        time=datetime.time(hour=17, minute=6, tzinfo=cet_winter_time),
         days=(4,),  # 0 = Sunday, ..., 4 = Thursday
         name=f"leetcode_notification",
         data={
@@ -143,9 +145,11 @@ async def register_leetcode_notifications(app):
 
 
 async def register_sre_notifications(app):
+    cet_winter_time = datetime.timezone(datetime.timedelta(hours=1))
+
     app.job_queue.run_daily(
         callback=handle_sre_notification,
-        time=datetime.time(hour=15, minute=55, tzinfo=datetime.timezone.utc),  # 5:55 PM Belgrade time in Summer
+        time=datetime.time(hour=17, minute=55, tzinfo=cet_winter_time),
         days=(2,),  # 0 = Sunday, 2 = Tuesday
         name=f"sre_notification",
         data={"course_id": constants.sre_course_id}
@@ -153,9 +157,11 @@ async def register_sre_notifications(app):
 
 
 async def register_ddia_notifications(app):
+    cet_winter_time = datetime.timezone(datetime.timedelta(hours=1))
+
     app.job_queue.run_daily(
         callback=handle_notification_for_course,
-        time=datetime.time(hour=15, minute=53, tzinfo=datetime.timezone.utc),  # 5:53 PM Belgrade time in Summer
+        time=datetime.time(hour=17, minute=53, tzinfo=cet_winter_time),
         days=(4,),  # 0 = Sunday, 4 = Thursday
         name=f"ddia_notification",
         data={"course_id": constants.ddia_4_course_id}
@@ -163,9 +169,12 @@ async def register_ddia_notifications(app):
 
 
 async def register_leetcode_grind_notifications(app):
+    cet_winter_time = datetime.timezone(datetime.timedelta(hours=1))
+
     app.job_queue.run_daily(
         callback=handle_notification_for_course,
-        time=datetime.time(hour=15, minute=53, tzinfo=datetime.timezone.utc),  # 5:53 PM Belgrade time in Summer
+        # this is one-time, move back to 18:53 after one week
+        time=datetime.time(hour=18, minute=53, tzinfo=cet_winter_time),
         days=(3,),  # 0 = Sunday, 4 = Wednesday
         name=f"leetcode_grind_notification",
         data={"course_id": constants.grind_course_id}
@@ -173,9 +182,11 @@ async def register_leetcode_grind_notifications(app):
 
 
 async def register_codecrafters_notifications(app):
+    cet_winter_time = datetime.timezone(datetime.timedelta(hours=1))
+
     app.job_queue.run_daily(
         callback=handle_codecrafters_notification,
-        time=datetime.time(hour=15, minute=55, tzinfo=datetime.timezone.utc),  # 5:55 PM Berlin time in Summer
+        time=datetime.time(hour=17, minute=55, tzinfo=cet_winter_time),
         days=(2,),  # 0 = Sunday, 2 = Tuesday
         name=f"codecrafters_notification",
         data={"course_id": constants.codecrafters_course_id}
