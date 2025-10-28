@@ -175,12 +175,11 @@ async def start_echo(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
 async def echo_message(update: Update, context: ContextTypes.DEFAULT_TYPE, reply_markup: InlineKeyboardMarkup = None) \
         -> int:
     logging.info(f"echo_message handler triggered by {helpers.repr_user_from_update(update)}")
-    await context.bot.send_message(
+    await context.bot.copy_message(
         chat_id=update.effective_chat.id,
-        text=update.message.text,
-        entities=update.message.entities,
-        reply_markup=reply_markup,
-        parse_mode="HTML"
+        from_chat_id=update.effective_chat.id,
+        message_id=update.message.message_id,
+        reply_markup=reply_markup
     )
     return ConversationHandler.END
 
@@ -197,7 +196,7 @@ async def cancel_echo(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int
 
 echo_conv_handler = ConversationHandler(
     entry_points=[CommandHandler('echo', start_echo)],
-    states={ECHO: [MessageHandler(filters.TEXT & ~filters.COMMAND, echo_message)]},
+    states={ECHO: [MessageHandler(~filters.COMMAND, echo_message)]},
     fallbacks=[CommandHandler('cancel_echo', cancel_echo)],
 )
 
@@ -227,12 +226,11 @@ async def broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE, reply_ma
     fail_count = 0
     for user in users:
         try:
-            await context.bot.send_message(
+            await context.bot.copy_message(
                 chat_id=user.tg_id,
-                text=update.message.text,
-                entities=update.message.entities,
-                reply_markup=reply_markup,
-                parse_mode="HTML"
+                from_chat_id=update.effective_chat.id,
+                message_id=update.message.message_id,
+                reply_markup=reply_markup
             )
             successful_count += 1
         except Exception as e:
@@ -240,6 +238,10 @@ async def broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE, reply_ma
             fail_count += 1
 
     logging.info(f"Successfully broadcast message to {successful_count} users, failed {fail_count} users.")
+    await context.bot.send_message(
+        chat_id=update.effective_chat.id,
+        text=f"Successfully broadcast to {successful_count} users, failed {fail_count} users."
+    )
     return ConversationHandler.END
 
 
@@ -256,7 +258,7 @@ async def cancel_broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE) -
 # todo: make sure it doesn't mess up with multiple admins
 broadcast_conv_handler = ConversationHandler(
     entry_points=[CommandHandler('broadcast', start_broadcast)],
-    states={BROADCAST: [MessageHandler(filters.TEXT & ~filters.COMMAND, broadcast)]},
+    states={BROADCAST: [MessageHandler(~filters.COMMAND, broadcast)]},
     fallbacks=[CommandHandler('cancel_broadcast', cancel_broadcast)],
 )
 
@@ -275,12 +277,11 @@ async def do_broadcast_course(update: Update, context: ContextTypes.DEFAULT_TYPE
     fail_count = 0
     for tg_id in tg_ids:
         try:
-            await context.bot.send_message(
-                chat_id=tg_id,
-                text=update.message.text,
-                entities=update.message.entities,
-                reply_markup=reply_markup,
-                parse_mode="HTML"
+            await context.bot.copy_message(
+                chat_id=update.effective_chat.id,
+                from_chat_id=update.effective_chat.id,
+                message_id=update.message.message_id,
+                reply_markup=reply_markup
             )
             successful_count += 1
         except Exception as e:
@@ -317,7 +318,7 @@ async def leetcode_broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE)
 
 leetcode_broadcast_conv_handler = ConversationHandler(
     entry_points=[CommandHandler('leetcode_broadcast', start_leetcode_broadcast)],
-    states={LEETCODE_BROADCAST: [MessageHandler(filters.TEXT & ~filters.COMMAND, leetcode_broadcast)]},
+    states={LEETCODE_BROADCAST: [MessageHandler(~filters.COMMAND, leetcode_broadcast)]},
     fallbacks=[CommandHandler('cancel_broadcast', cancel_broadcast)],
 )
 
@@ -346,7 +347,7 @@ async def leetcode_new_topic_broadcast(update: Update, context: ContextTypes.DEF
 
 leetcode_new_topic_broadcast = ConversationHandler(
     entry_points=[CommandHandler('leetcode_new_topic', start_leetcode_new_topic_broadcast)],
-    states={LEETCODE_NEW_TOPIC: [MessageHandler(filters.TEXT & ~filters.COMMAND, leetcode_new_topic_broadcast)]},
+    states={LEETCODE_NEW_TOPIC: [MessageHandler(~filters.COMMAND, leetcode_new_topic_broadcast)]},
     fallbacks=[CommandHandler('cancel_broadcast', cancel_broadcast)],
 )
 
@@ -370,7 +371,7 @@ async def sre_broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE) -> i
 
 sre_broadcast_conv_handler = ConversationHandler(
     entry_points=[CommandHandler('sre_broadcast', start_sre_broadcast)],
-    states={SRE_BROADCAST: [MessageHandler(filters.TEXT & ~filters.COMMAND, sre_broadcast)]},
+    states={SRE_BROADCAST: [MessageHandler(~filters.COMMAND, sre_broadcast)]},
     fallbacks=[CommandHandler('cancel_broadcast', cancel_broadcast)],
 )
 
@@ -394,7 +395,7 @@ async def ddia_broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
 
 ddia_broadcast_conv_handler = ConversationHandler(
     entry_points=[CommandHandler('ddia_broadcast', start_ddia_broadcast)],
-    states={DDIA_BROADCAST: [MessageHandler(filters.TEXT & ~filters.COMMAND, ddia_broadcast)]},
+    states={DDIA_BROADCAST: [MessageHandler(~filters.COMMAND, ddia_broadcast)]},
     fallbacks=[CommandHandler('cancel_broadcast', cancel_broadcast)],
 )
 
@@ -419,7 +420,7 @@ async def grind_broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
 
 grind_broadcast_conv_handler = ConversationHandler(
     entry_points=[CommandHandler('grind_broadcast', start_grind_broadcast)],
-    states={GRIND_BROADCAST: [MessageHandler(filters.TEXT & ~filters.COMMAND, grind_broadcast)]},
+    states={GRIND_BROADCAST: [MessageHandler(~filters.COMMAND, grind_broadcast)]},
     fallbacks=[CommandHandler('cancel_broadcast', cancel_broadcast)],
 )
 
