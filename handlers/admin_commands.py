@@ -1,8 +1,10 @@
+import datetime
 import os
 import logging
 
 from dotenv import load_dotenv
 
+import sqlalchemy
 from sqlalchemy.orm import Session
 
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
@@ -491,3 +493,82 @@ async def codecrafters_notification_off(update: Update, context: ContextTypes.DE
         chat_id=update.effective_chat.id,
         text="CodeCrafters notification is ON" if models.codecrafters_notification_on else "CodeCrafters notification is OFF"
     )
+
+
+# This method is of limited functionality because not every telegram user has a username.
+# Currently, in order to present, one has to sign up to a spreadsheet with their tg_id, so I guess this should be good
+# enough. If it's impossible to track down user by tg username, admin manual operation is required.
+# Usage: /add_days lenka_colenka 30
+@is_admin
+async def add_days_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    args = context.args
+
+    if len(args) != 2:
+        await update.message.reply_text("Usage: /add_days <username> <number>")
+        return
+
+    username = args[0]
+    try:
+        days = int(args[1])
+        assert days > 0, "Number of days must be positive"
+        assert days < 365 * 10, ("Can't add more than 10 year of membership. If you need to add more days, please add "
+                                 "an infinite membership for user.")
+    except Exception as e:
+        await update.message.reply_text(f"Invalid number of days: {e}")
+        return
+
+    with (Session(models.engine) as session):
+        try:
+            tg_id = session.query(models.User.tg_id).filter(models.User.tg_username == username).first()[0]
+            logging.info(f"got member from Users table: {tg_id}")
+        except Exception as e:
+            logging.warning(f"Tried to add days to {username}, but there's no such User. They either didn't start the "
+                            f"bot or changed their username: {e}")
+            await update.message.reply_text(f"Tried to add days to {username}, but there's no such User. They either "
+                                            f"didn't start the bot or changed their username: {e}")
+            return
+
+        existing = session.query(models.MembershipByActivity).filter(models.MembershipByActivity.tg_id == tg_id).first()
+
+        if existing and not existing.expires_at:
+            logging.info(f"User {username} has infinite membership by activity, no days added")
+            await update.message.reply_text(f"User {username} has infinite membership by activity, no days added")
+            return
+
+        if existing and existing.expires_at > datetime.date.today():
+            current_expiry = existing.expires_at
+        else:
+            current_expiry = datetime.date.today()
+
+        new_expiry = current_expiry + datetime.timedelta(days=days)
+
+        if existing:
+            stmt = (sqlalchemy.update(models.MembershipByActivity).where(models.MembershipByActivity.tg_id == tg_id)
+                    .values(expires_at=new_expiry))
+        else:
+            stmt = (
+                sqlalchemy.insert(models.MembershipByActivity)
+                .values(
+                    tg_id=tg_id,
+                    tg_username=username,
+                    expires_at=new_expiry,
+                )
+            )
+
+        session.execute(stmt)
+        session.commit()
+        logging.info(f"new membership expiry for {username}: {new_expiry}")
+
+    await context.bot.send_message(
+        chat_id=tg_id,
+        text=f"Тебе добавили {days} дней 💜Pro подписки за активное участие в клубе!\n\n"
+             f"Твоя Pro подписка за активность истекает {new_expiry}.\n\n"
+             f"💜Pro подписка дает доступ ко всем возможностям клуба: неограниченные звонки с обсуждениями книг, "
+             f"leetcode моки, Random Coffee встречи и другое!\n\n"
+             f"Чтобы сохранить 💜Pro подписку, сделай презентацию либо подпишись на "
+             f"<a href='https://www.patreon.com/c/LenaAnyusha'>Patreon</a> хотя бы на $15 в месяц.\n\n"
+             f" Спасибо и keep being amazing!",
+        parse_mode="HTML"
+    )
+    await update.message.reply_text(f"Added {days} days to {username}'s membership, new membership expiration is "
+                                    f"{new_expiry}")
