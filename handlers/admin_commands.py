@@ -280,7 +280,7 @@ async def do_broadcast_course(update: Update, context: ContextTypes.DEFAULT_TYPE
     for tg_id in tg_ids:
         try:
             await context.bot.copy_message(
-                chat_id=update.effective_chat.id,
+                chat_id=tg_id,
                 from_chat_id=update.effective_chat.id,
                 message_id=update.message.message_id,
                 reply_markup=reply_markup
