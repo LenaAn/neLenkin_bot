@@ -173,9 +173,8 @@ async def register_leetcode_grind_notifications(app):
 
     app.job_queue.run_daily(
         callback=handle_notification_for_course,
-        # this is one-time, move back to 18:53 after one week
-        time=datetime.time(hour=18, minute=53, tzinfo=cet_winter_time),
-        days=(3,),  # 0 = Sunday, 4 = Wednesday
+        time=datetime.time(hour=17, minute=53, tzinfo=cet_winter_time),
+        days=(3,),  # 0 = Sunday, 3 = Wednesday
         name=f"leetcode_grind_notification",
         data={"course_id": constants.grind_course_id}
     )
