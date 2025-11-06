@@ -33,6 +33,7 @@ standard = MembershipLevel(
     price_cents=1500
 )
 
+
 # todo: add Gold level
 # give them unlimited thank you power
 # give them ability to vote for new books? (hmm i can't promise that we'll read it)
@@ -87,7 +88,11 @@ def get_user_membership_info(tg_user: User) -> UserMembershipInfo:
 
     if info.patreon_email != "":
         patreon_info = fetch_patrons.get_patron_by_email(info.patreon_email)
-        # todo: sometimes the link in DB is present, but in Redis not present
-        info.patreon_currently_entitled_amount_cents = int(patreon_info["currently_entitled_amount_cents"])
+        if patreon_info:
+            info.patreon_currently_entitled_amount_cents = int(patreon_info["currently_entitled_amount_cents"])
+        else:
+            info.patreon_currently_entitled_amount_cents = 0
+            logging.warning(f"Patreon Linking exists in DB, but not in Redis for user {tg_user.username}, patreon email"
+                            f" is {info.patreon_email}")
 
     return info
