@@ -26,7 +26,7 @@ basic = MembershipLevel(
     price_cents=0
 )
 
-standard = MembershipLevel(
+pro = MembershipLevel(
     number=2,
     name="Pro",
     description="Уровень твоей подписки: 💜Pro.\n\nТебе доступны участие во всех потоках без ограничений!",
@@ -51,7 +51,7 @@ class UserMembershipInfo:
         patreon_level = basic
         if self.patreon_currently_entitled_amount_cents >= 1500:
             if self.patreon_email != "":
-                patreon_level = standard
+                patreon_level = pro
             else:
                 raise Exception("patreon_currently_entitled_amount_cents non-zero while patreon email is missing!")
         return patreon_level
@@ -60,18 +60,21 @@ class UserMembershipInfo:
         return max(self.member_level_by_activity, self.get_patreon_level(), key=lambda level: level.number)
 
 
-def get_user_membership_info(tg_user: User) -> UserMembershipInfo:
+def get_user_membership_info(tg_id: int, tg_username: str = None) -> UserMembershipInfo:
+    if tg_username is None:
+        tg_username = tg_id
+
     info = UserMembershipInfo()
 
     with Session(models.engine) as session:
         result = (
             session.query(models.MembershipByActivity.expires_at)
-            .filter(models.MembershipByActivity.tg_id == str(tg_user.id))
+            .filter(models.MembershipByActivity.tg_id == str(tg_id))
             .one_or_none()
         )
         if result:
-            logging.info(f"Got member by activity for {tg_user.username} with expiration at: {result}")
-            info.member_level_by_activity = standard
+            logging.info(f"Got member by activity for {tg_username} with expiration at: {result}")
+            info.member_level_by_activity = pro
             info.member_level_by_activity_expiration = result[0]
         else:
             info.member_level_by_activity = basic
@@ -79,11 +82,11 @@ def get_user_membership_info(tg_user: User) -> UserMembershipInfo:
     with Session(models.engine) as session:
         result = (
             session.query(models.PatreonLink.patreon_email)
-            .filter(models.PatreonLink.tg_id == str(tg_user.id))
+            .filter(models.PatreonLink.tg_id == str(tg_id))
             .one_or_none()
         )
         if result:
-            logging.info(f"Got patreon linking for user {tg_user.username}: {result}")
+            logging.info(f"Got patreon linking for user {tg_username}: {result}")
             info.patreon_email = result[0]
 
     if info.patreon_email != "":
@@ -92,7 +95,7 @@ def get_user_membership_info(tg_user: User) -> UserMembershipInfo:
             info.patreon_currently_entitled_amount_cents = int(patreon_info["currently_entitled_amount_cents"])
         else:
             info.patreon_currently_entitled_amount_cents = 0
-            logging.warning(f"Patreon Linking exists in DB, but not in Redis for user {tg_user.username}, patreon email"
+            logging.warning(f"Patreon Linking exists in DB, but not in Redis for user {tg_username}, patreon email"
                             f" is {info.patreon_email}")
 
     return info
