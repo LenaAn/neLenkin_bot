@@ -33,6 +33,7 @@ standard = MembershipLevel(
     price_cents=1500
 )
 
+
 # todo: add Gold level
 # give them unlimited thank you power
 # give them ability to vote for new books? (hmm i can't promise that we'll read it)
@@ -46,14 +47,17 @@ class UserMembershipInfo:
     patreon_email: str = ""
     patreon_currently_entitled_amount_cents: int = 0
 
-    def get_overall_level(self) -> MembershipLevel:
+    def get_patreon_level(self) -> MembershipLevel:
         patreon_level = basic
         if self.patreon_currently_entitled_amount_cents >= 1500:
             if self.patreon_email != "":
                 patreon_level = standard
             else:
                 raise Exception("patreon_currently_entitled_amount_cents non-zero while patreon email is missing!")
-        return max(self.member_level_by_activity, patreon_level, key=lambda level: level.number)
+        return patreon_level
+
+    def get_overall_level(self) -> MembershipLevel:
+        return max(self.member_level_by_activity, self.get_patreon_level(), key=lambda level: level.number)
 
 
 def get_user_membership_info(tg_user: User) -> UserMembershipInfo:
@@ -84,6 +88,11 @@ def get_user_membership_info(tg_user: User) -> UserMembershipInfo:
 
     if info.patreon_email != "":
         patreon_info = fetch_patrons.get_patron_by_email(info.patreon_email)
-        info.patreon_currently_entitled_amount_cents = int(patreon_info["currently_entitled_amount_cents"])
+        if patreon_info:
+            info.patreon_currently_entitled_amount_cents = int(patreon_info["currently_entitled_amount_cents"])
+        else:
+            info.patreon_currently_entitled_amount_cents = 0
+            logging.warning(f"Patreon Linking exists in DB, but not in Redis for user {tg_user.username}, patreon email"
+                            f" is {info.patreon_email}")
 
     return info

@@ -10,6 +10,7 @@ import helpers
 import models
 import settings
 from patreon import fetch_patrons
+from handlers import button_handlers
 
 CONNECT_PATREON = 1
 
@@ -68,12 +69,13 @@ async def connect_with_email(update: Update, context: ContextTypes.DEFAULT_TYPE)
     email_to_find = update.message.text.strip().lower()
     logging.info(f"looking for patron with email {email_to_find}")
 
-    # this method loads patrons from patreon and does lookup in redis
+    fetch_patrons.load_patrons()
     patron_info = fetch_patrons.get_patron_by_email(email_to_find)
     if patron_info:
         if await store_patreon_linking(update, email_to_find, context):
             logging.info(f"Patron found for email {email_to_find}: {patron_info}")
             msg: str = f"Нашла твой профиль Patron: {email_to_find}.\n\n"
+            # todo: call reply_for_patreon_members or reply_for_basic_with_linked_patreon here
             donate_amount_cents = int(patron_info['currently_entitled_amount_cents'])
             if donate_amount_cents >= 1500:
                 msg += f"Ты донатишь мне ${donate_amount_cents // 100} в месяц. Спасибо! 🥹"
@@ -115,3 +117,14 @@ connect_patreon_handler = ConversationHandler(
     states={CONNECT_PATREON: [MessageHandler(filters.TEXT & ~filters.COMMAND, connect_with_email)]},
     fallbacks=[CommandHandler('cancel_connect', cancel_connect)],
 )
+
+
+async def disconnect_patreon_handler(update: Update) -> None:
+    logging.info(f"disconnect_patreon_handler triggered by {helpers.repr_user_from_update(update)}")
+
+    with Session(models.engine) as session:
+        tg_user = helpers.get_user(update)
+        session.query(models.PatreonLink).filter(models.PatreonLink.tg_id == str(tg_user.id)).delete()
+        session.commit()
+        logging.info(f"Deleted Patreon linking for {tg_user.username}")
+        await button_handlers.handle_membership(update)

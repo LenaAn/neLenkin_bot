@@ -47,6 +47,14 @@ def fetch_patrons() -> [dict]:
     return all_members
 
 
+def clear_users_from_cache() -> None:
+    count = 0
+    for key in r.scan_iter("user:*"):
+        r.delete(key)
+        count += 1
+    patreon_logger.info(f"Deleted {count} user entries from Redis.")
+
+
 def store_to_cache(all_patrons: [dict]) -> None:
     success_insert_count = 0
     fail_insert_count = 0
@@ -84,13 +92,12 @@ def get_user_counts_by_status(status_filter: str = "active_patron") -> (int, int
 
 def load_patrons():
     patrons = fetch_patrons()
+    # patrons may change email address, in this case old email should be deleted from cache
+    clear_users_from_cache()
     store_to_cache(patrons)
 
 
 def get_patron_by_email(email_to_find: str) -> Optional[dict]:
-    # get fresh info from Patreon
-    load_patrons()
-
     key = f"user:{email_to_find}"
 
     if r.exists(key):
