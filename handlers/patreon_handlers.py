@@ -115,7 +115,10 @@ connect_patreon_handler = ConversationHandler(
         CallbackQueryHandler(start_connect_patreon, '^connect_patreon$')
     ],
     states={CONNECT_PATREON: [MessageHandler(filters.TEXT & ~filters.COMMAND, connect_with_email)]},
-    fallbacks=[CommandHandler('cancel_connect', cancel_connect)],
+    fallbacks=[
+        CommandHandler('cancel_connect', cancel_connect),
+        CommandHandler('cancel', cancel_connect),
+    ],
 )
 
 
