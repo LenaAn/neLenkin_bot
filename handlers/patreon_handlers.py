@@ -10,6 +10,7 @@ import helpers
 import models
 import settings
 from patreon import fetch_patrons
+from handlers import button_handlers
 
 CONNECT_PATREON = 1
 
@@ -116,3 +117,14 @@ connect_patreon_handler = ConversationHandler(
     states={CONNECT_PATREON: [MessageHandler(filters.TEXT & ~filters.COMMAND, connect_with_email)]},
     fallbacks=[CommandHandler('cancel_connect', cancel_connect)],
 )
+
+
+async def disconnect_patreon_handler(update: Update) -> None:
+    logging.info(f"disconnect_patreon_handler triggered by {helpers.repr_user_from_update(update)}")
+
+    with Session(models.engine) as session:
+        tg_user = helpers.get_user(update)
+        session.query(models.PatreonLink).filter(models.PatreonLink.tg_id == str(tg_user.id)).delete()
+        session.commit()
+        logging.info(f"Deleted Patreon linking for {tg_user.username}")
+        await button_handlers.handle_membership(update)

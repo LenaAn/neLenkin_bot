@@ -10,9 +10,10 @@ from telegram.ext import ContextTypes
 
 import constants
 import helpers
-import models
-import settings
 import membership
+import models
+from handlers import patreon_handlers
+import settings
 
 
 async def button_click(update: Update, _: ContextTypes.DEFAULT_TYPE) -> None:
@@ -39,6 +40,7 @@ async def button_click(update: Update, _: ContextTypes.DEFAULT_TYPE) -> None:
         "codecrafters_enroll": handle_codecrafters_enroll,
         "codecrafters_unenroll": handle_codecrafters_unenroll,
         "membership": handle_membership,
+        "disconnect_patreon": patreon_handlers.disconnect_patreon_handler,
     }
 
     handler = handlers_dict.get(query.data)
@@ -137,13 +139,20 @@ async def handle_codecrafters(update: Update) -> None:
 
 
 async def reply_for_patreon_members(update: Update, membership_info) -> None:
+    # todo: here a button to Отвязать профиль Patreon
     logging.info(f"reply_for_patreon_members triggered by {helpers.get_user(update)}")
 
     msg: str = membership_info.get_overall_level().description
     msg += (f"\n\nПривязанный профиль Patreon: {membership_info.patreon_email}. Ты донатишь "
             f"${membership_info.patreon_currently_entitled_amount_cents // 100}. Спасибо! ❤️")
+
+    reply_markup = InlineKeyboardMarkup([[
+        InlineKeyboardButton("Отвязать профиль Patreon", callback_data="disconnect_patreon"),
+    ]])
+
     await update.callback_query.edit_message_text(
         text=msg,
+        reply_markup=reply_markup,
     )
 
 
@@ -161,8 +170,19 @@ async def reply_for_activity_members(update: Update, membership_info) -> None:
                     f"{membership_info.member_level_by_activity_expiration}."
                     f"\n\nЧтобы сохранить 💜Pro подписку, сделай презентацию либо подпишись на "
                     f"<a href='https://www.patreon.com/c/LenaAnyusha'>Patreon</a> хотя бы на $15 в месяц.\n\n")
+
+    if membership_info.patreon_email != "":
+        reply_markup = InlineKeyboardMarkup([[
+            InlineKeyboardButton("Отвязать профиль Patreon", callback_data="disconnect_patreon"),
+        ]])
+    else:
+        reply_markup = InlineKeyboardMarkup([[
+            InlineKeyboardButton("Привязать профиль Patreon", callback_data="connect_patreon"),
+        ]])
+
     await update.callback_query.edit_message_text(
         text=msg,
+        reply_markup=reply_markup,
         parse_mode="HTML"
     )
 
@@ -178,8 +198,13 @@ async def reply_for_basic_with_linked_patreon(update: Update, membership_info) -
         msg += f" Ты не донатишь мне на Patreon️"
     msg += ("\n\nЧтобы улучшить подписку, сделай презентацию либо подпишись на "
             "<a href='https://www.patreon.com/c/LenaAnyusha'>Patreon</a> хотя бы на $15 в месяц")
+
+    reply_markup = InlineKeyboardMarkup([[
+        InlineKeyboardButton("Отвязать профиль Patreon", callback_data="disconnect_patreon"),
+    ]])
     await update.callback_query.edit_message_text(
         text=msg,
+        reply_markup=reply_markup,
         parse_mode="HTML"
     )
 
@@ -207,7 +232,6 @@ async def handle_membership(update: Update) -> None:
     membership_info = membership.get_user_membership_info(tg_user)
 
     if membership_info.get_patreon_level() == membership.standard:
-        # todo: here a button to Отвязать профиль Patreon
         await reply_for_patreon_members(update, membership_info)
         return
 

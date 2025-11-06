@@ -2,7 +2,7 @@ import logging
 from telegram.ext import (filters, ApplicationBuilder, CommandHandler, MessageHandler, CallbackQueryHandler,
                           PicklePersistence)
 
-from handlers import admin_commands, handlers, menu, leetcode_mock_handlers, patreon_handlers
+from handlers import admin_commands, button_handlers, menu, leetcode_mock_handlers, patreon_handlers
 import notifications
 from patreon import fetch_patrons
 import settings
@@ -52,9 +52,9 @@ if __name__ == '__main__':
     application.add_handler(CommandHandler('codecrafters_notification_off', admin_commands.codecrafters_notification_off))
     application.add_handler(MessageHandler(~filters.COMMAND, menu.private_message))
 
-    application.add_handler(CallbackQueryHandler(handlers.button_click))
+    application.add_handler(CallbackQueryHandler(button_handlers.button_click))
 
-    application.add_error_handler(handlers.error_handler)
+    application.add_error_handler(button_handlers.error_handler)
 
     application.post_init = post_init
 
