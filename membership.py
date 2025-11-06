@@ -5,6 +5,7 @@ from datetime import date
 from sqlalchemy.orm import Session
 from telegram import User
 
+import constants
 import models
 from patreon import fetch_patrons
 
@@ -99,3 +100,8 @@ def get_user_membership_info(tg_id: int, tg_username: str = None) -> UserMembers
                             f" is {info.patreon_email}")
 
     return info
+
+
+def is_course_pro(course_id: int):
+    # todo: don't hardcode pro courses
+    return course_id == constants.ddia_4_course_id
