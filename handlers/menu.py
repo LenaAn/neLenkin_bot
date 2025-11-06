@@ -45,7 +45,11 @@ async def command_help(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
              "Если бот плохо себя ведет, пожалуйста напишите Ленке @lenka_colenka.\n\n"
              "Поддерживаемые команды:\n"
              "/start — Главное меню\n"
-             "/help — Справка"
+             "/help — Справка\n"
+             "/cancel — Прервать любой диалог\n"
+             "/leetcode_register — Записаться на мок собеседование по Leetcode\n"
+             "/cancel_leetcode_register — Отменить запись на мок собеседование по Leetcode\n"
+             "/connect_patreon — Привязать Patreon аккаунт"
     )
 
 
