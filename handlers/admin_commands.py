@@ -110,6 +110,19 @@ async def get_users_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) 
 async def get_patrons_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     logging.info(f"get_patrons handler triggered by {helpers.repr_user_from_update(update)}")
 
+    active_patrons = fetch_patrons.get_patrons()
+    logging.info(f"active_patrons are {active_patrons}")
+    patrons_str = "\n".join([str(patron) for patron in active_patrons])
+    await context.bot.send_message(
+        chat_id=update.effective_chat.id,
+        text=f"Your active patrons are:\n{patrons_str}"
+    )
+
+
+@is_admin
+async def get_patron_counts_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    logging.info(f"get_patron_counts handler triggered by {helpers.repr_user_from_update(update)}")
+
     all_patrons, active_patrons = fetch_patrons.get_user_counts_by_status()
     await context.bot.send_message(
         chat_id=update.effective_chat.id,

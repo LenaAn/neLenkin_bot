@@ -90,6 +90,20 @@ def get_user_counts_by_status(status_filter: str = "active_patron") -> (int, int
     return all_users_count, active_users_count
 
 
+def get_patrons(status_filter: str = "active_patron") -> list[(str, str)]:
+    active_patrons = []
+
+    for key in r.scan_iter("user:*"):
+        user_data = r.hgetall(key)
+        user_data = {k.decode(): v.decode() for k, v in user_data.items()}
+
+        if user_data.get("patron_status") == status_filter:
+            patreon_logger.info(f"active patron is {user_data}")
+            active_patrons.append((user_data.get("full_name"), user_data.get("currently_entitled_amount_cents")))
+
+    return active_patrons
+
+
 def load_patrons():
     patrons = fetch_patrons()
     # patrons may change email address, in this case old email should be deleted from cache
