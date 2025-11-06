@@ -98,9 +98,6 @@ def load_patrons():
 
 
 def get_patron_by_email(email_to_find: str) -> Optional[dict]:
-    # get fresh info from Patreon
-    load_patrons()
-
     key = f"user:{email_to_find}"
 
     if r.exists(key):
