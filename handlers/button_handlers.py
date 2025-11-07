@@ -229,13 +229,13 @@ async def handle_membership(update: Update) -> None:
     tg_user = helpers.get_user(update)
     logging.info(f"handle_membership triggered by {tg_user}")
 
-    membership_info = membership.get_user_membership_info(tg_user)
+    membership_info = membership.get_user_membership_info(tg_user.id, tg_user.username)
 
-    if membership_info.get_patreon_level() == membership.standard:
+    if membership_info.get_patreon_level() == membership.pro:
         await reply_for_patreon_members(update, membership_info)
         return
 
-    if membership_info.member_level_by_activity == membership.standard:
+    if membership_info.member_level_by_activity == membership.pro:
         await reply_for_activity_members(update, membership_info)
         return
 

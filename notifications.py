@@ -11,6 +11,7 @@ from telegram.ext import ContextTypes
 import constants
 import models
 from models import Enrollment, ScheduledPartMessages, engine
+import membership
 
 notifications_logger = logging.getLogger(__name__)
 notifications_logger.setLevel(logging.DEBUG)
@@ -20,6 +21,8 @@ async def register_notifications(application):
     await register_leetcode_notifications(application)
     await register_sre_notifications(application)
     await register_ddia_notifications(application)
+    # todo: remind people with basic subscription to get PRO in the morning of the DDIA
+    # await register_ddia_prompt_to_connect_patreon_notifications(application)
     await register_leetcode_grind_notifications(application)
     await register_codecrafters_notifications(application)
 
@@ -42,7 +45,15 @@ async def handle_notification(context: ContextTypes.DEFAULT_TYPE):
         result = session.query(Enrollment.tg_id).filter(Enrollment.course_id == course_id).all()
         notification_chat_ids = [item[0] for item in result]
     notifications_logger.debug(f"handling {constants.id_to_course[course_id]} notification, "
-                               f"got {len(notification_chat_ids)} chat ids")
+                               f"got {len(notification_chat_ids)} chat ids that are subscribed to DDIA")
+
+    if membership.is_course_pro(course_id):
+        # only PRO subscribers will get a link for a PRO course
+        # Basic subscribers who are subscribed to notifications about this course will get a Patreon link in the morning
+        notification_chat_ids = [tg_id for tg_id in notification_chat_ids
+                                 if membership.get_user_membership_info(tg_id).get_overall_level() == membership.pro]
+        notifications_logger.debug(f"handling {constants.id_to_course[course_id]} notification, "
+                                   f"got {len(notification_chat_ids)} PRO subscribers to DDIA")
 
     successful_count = 0
     fail_count = 0
