@@ -21,8 +21,7 @@ async def register_notifications(application):
     await register_leetcode_notifications(application)
     await register_sre_notifications(application)
     await register_ddia_notifications(application)
-    # todo: remind people with basic subscription to get PRO in the morning of the DDIA
-    # await register_ddia_prompt_to_connect_patreon_notifications(application)
+    await register_ddia_prompt_to_connect_patreon_notifications(application)
     await register_leetcode_grind_notifications(application)
     await register_codecrafters_notifications(application)
 
@@ -138,6 +137,69 @@ async def handle_notification_for_course(context: ContextTypes.DEFAULT_TYPE):
     await handle_notification(context)
 
 
+async def prompt_to_connect_patreon_notifications(context: ContextTypes.DEFAULT_TYPE):
+    # todo: feature flag for this
+
+    course_id: int = context.job.data["course_id"]
+    notifications_logger.debug(f"prompt_to_connect_patreon_notifications for {constants.id_to_course[course_id]}")
+
+    message: str = ("Привет! Сегодня вечером будет звонок с обсуждением Designing Data-Intensive Applications. Тему "
+                    "сегодняшнего звонка можешь посмотреть <a href='https://docs.google.com/spreadsheets/d/1_08zSvl3dNK_peEbb2yOAQSzWEXJCl_-5T0vq6wZ1Hs/edit?gid=0#gid=0'>здесь</a>. "
+                    "\n\n<b>Обсуждение DDIA — это 💜Pro курс, и чтобы сегодня вечером тебе пришла ссылка на звонок, нужна 💜Pro подписка!</b>"
+                    "\n\nЧтобы оформить Pro подписку, подпишись на донат в $15 в месяц на моем "
+                    "<a href='https://www.patreon.com/c/LenaAnyusha'>Patreon</a>."
+                    "\n\nНикому не говори почту, которая привязана к твоему Patreon аккаунту! Когда оформишь подписку на Patreon, "
+                    "привяжи почту по кнопке ⬇️"
+                    "\n\nЕсли возникнут какие-то сложности, напиши @lenka_colenka!"
+                    "\n\nТы можешь отписаться от новостей про DDIA, чтобы больше не получать уведомления.")
+
+    menu = InlineKeyboardMarkup([
+        [InlineKeyboardButton("Привязать профиль Patreon", callback_data="connect_patreon")],
+        [InlineKeyboardButton("Перестать получать уведомления", callback_data="ddia_unenroll")],
+    ])
+
+    with Session(engine) as session:
+        result = session.query(Enrollment.tg_id).filter(Enrollment.course_id == course_id).all()
+        notification_chat_ids = [item[0] for item in result]
+    notifications_logger.debug(f"handling Patreon prompt for {constants.id_to_course[course_id]}, got "
+                               f"{len(notification_chat_ids)} chat ids that are subscribed to DDIA")
+
+    # only Basic subscribers will get a prompt to subscribe to Patreon
+    notification_chat_ids = [tg_id for tg_id in notification_chat_ids
+                             if membership.get_user_membership_info(tg_id).get_overall_level() == membership.basic]
+    notifications_logger.debug(f"handling Patreon prompt for {constants.id_to_course[course_id]}, got "
+                               f"{len(notification_chat_ids)} Basic subscribers to {constants.id_to_course[course_id]}")
+
+    successful_count = 0
+    fail_count = 0
+    for chat_id in notification_chat_ids:
+        notifications_logger.info(f"notification_chat_ids for chat {chat_id}")
+        try:
+            await context.bot.send_message(
+                chat_id=chat_id,
+                text=message,
+                parse_mode="HTML",
+                reply_markup=menu)
+            successful_count += 1
+        except Exception as e:
+            notifications_logger.info(f"failed to send notification to chat {chat_id}: {e}")
+            fail_count += 1
+
+    notifications_logger.info(
+        f"Successfully sent {constants.id_to_course[course_id]} notification to {successful_count} users,"
+        f" failed {fail_count} users.")
+
+    load_dotenv(override=True)
+    admin_chat_id = int(os.getenv('ADMIN_CHAT_ID'))
+    notifications_logger.debug(f"reloaded admin chat id: {admin_chat_id}")
+
+    await context.bot.send_message(
+        chat_id=admin_chat_id,
+        text=f"Successfully sent {constants.id_to_course[course_id]} Patreon prompt to {successful_count} users, "
+             f"failed {fail_count} users."
+    )
+
+
 async def register_leetcode_notifications(app):
     cet_winter_time = datetime.timezone(datetime.timedelta(hours=1))
 
@@ -164,6 +226,18 @@ async def register_sre_notifications(app):
         days=(2,),  # 0 = Sunday, 2 = Tuesday
         name=f"sre_notification",
         data={"course_id": constants.sre_course_id}
+    )
+
+
+async def register_ddia_prompt_to_connect_patreon_notifications(app):
+    cet_winter_time = datetime.timezone(datetime.timedelta(hours=1))
+
+    app.job_queue.run_daily(
+        callback=prompt_to_connect_patreon_notifications,
+        time=datetime.time(hour=9, minute=53, tzinfo=cet_winter_time),  # morning before DDIA call
+        days=(4,),  # 0 = Sunday, 4 = Thursday
+        name=f"ddia_prompt_to_connect_patreon_notification",
+        data={"course_id": constants.ddia_4_course_id}
     )
 
 
