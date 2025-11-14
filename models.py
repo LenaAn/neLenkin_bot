@@ -120,3 +120,4 @@ engine = create_engine(DATABASE_URL)
 leetcode_status_on = True
 sre_notification_on = False
 codecrafters_notification_on = True
+pro_courses_on=True

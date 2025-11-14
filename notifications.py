@@ -12,6 +12,7 @@ import constants
 import models
 from models import Enrollment, ScheduledPartMessages, engine
 import membership
+import settings
 
 notifications_logger = logging.getLogger(__name__)
 notifications_logger.setLevel(logging.DEBUG)
@@ -44,15 +45,23 @@ async def handle_notification(context: ContextTypes.DEFAULT_TYPE):
         result = session.query(Enrollment.tg_id).filter(Enrollment.course_id == course_id).all()
         notification_chat_ids = [item[0] for item in result]
     notifications_logger.debug(f"handling {constants.id_to_course[course_id]} notification, "
-                               f"got {len(notification_chat_ids)} chat ids that are subscribed to DDIA")
+                               f"got {len(notification_chat_ids)} chat ids that are subscribed to the course")
 
     if membership.is_course_pro(course_id):
-        # only PRO subscribers will get a link for a PRO course
-        # Basic subscribers who are subscribed to notifications about this course will get a Patreon link in the morning
-        notification_chat_ids = [tg_id for tg_id in notification_chat_ids
-                                 if membership.get_user_membership_info(tg_id).get_overall_level() == membership.pro]
-        notifications_logger.debug(f"handling {constants.id_to_course[course_id]} notification, "
-                                   f"got {len(notification_chat_ids)} PRO subscribers to DDIA")
+        if models.pro_courses_on:
+            # only PRO subscribers will get a link for a PRO course
+            # Basic subscribers who are subscribed to notifications about this course will get a Patreon link in the morning
+            notification_chat_ids = [tg_id for tg_id in notification_chat_ids
+                                     if
+                                     membership.get_user_membership_info(tg_id).get_overall_level() == membership.pro]
+            notifications_logger.debug(f"handling {constants.id_to_course[course_id]} notification, "
+                                       f"got {len(notification_chat_ids)} PRO subscribers")
+        else:
+            notifications_logger.debug(f"Sending a link to everyone because PRO courses are turned off")
+            await context.bot.send_message(
+                chat_id=settings.ADMIN_CHAT_ID,
+                text=f"Sending a link to everyone because PRO courses are turned off",
+                parse_mode="HTML")
 
     successful_count = 0
     fail_count = 0
@@ -138,7 +147,14 @@ async def handle_notification_for_course(context: ContextTypes.DEFAULT_TYPE):
 
 
 async def prompt_to_connect_patreon_notifications(context: ContextTypes.DEFAULT_TYPE):
-    # todo: feature flag for this
+    if not models.pro_courses_on:
+        notifications_logger.info(f"Skipping DDIA prompt to connect Patreon because PRO courses are turned off")
+        await context.bot.send_message(
+            chat_id=settings.ADMIN_CHAT_ID,
+            text=f"Skipping DDIA prompt to connect Patreon because PRO courses are turned off",
+            parse_mode="HTML")
+
+        return
 
     course_id: int = context.job.data["course_id"]
     notifications_logger.debug(f"prompt_to_connect_patreon_notifications for {constants.id_to_course[course_id]}")
