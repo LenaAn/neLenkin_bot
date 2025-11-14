@@ -528,6 +528,27 @@ async def codecrafters_notification_off(update: Update, context: ContextTypes.DE
     )
 
 
+@is_admin
+async def pro_courses_on(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    logging.info(f"pro_courses_on handler triggered by {helpers.repr_user_from_update(update)}")
+    models.pro_courses_on = True
+
+    await context.bot.send_message(
+        chat_id=update.effective_chat.id,
+        text="PRO coursee are ON" if models.pro_courses_on else "PRO courses are OFF"
+    )
+
+
+@is_admin
+async def pro_courses_off(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    logging.info(f"pro_courses_off handler triggered by {helpers.repr_user_from_update(update)}")
+    models.pro_courses_on = False
+
+    await context.bot.send_message(
+        chat_id=update.effective_chat.id,
+        text="PRO coursee are ON" if models.pro_courses_on else "PRO courses are OFF"
+    )
+
 # This method is of limited functionality because not every telegram user has a username.
 # Currently, in order to present, one has to sign up to a spreadsheet with their tg_id, so I guess this should be good
 # enough. If it's impossible to track down user by tg username, admin manual operation is required.
