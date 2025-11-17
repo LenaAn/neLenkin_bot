@@ -532,6 +532,11 @@ async def codecrafters_notification_off(update: Update, context: ContextTypes.DE
 # Currently, in order to present, one has to sign up to a spreadsheet with their tg_id, so I guess this should be good
 # enough. If it's impossible to track down user by tg username, admin manual operation is required.
 # Usage: /add_days lenka_colenka 30
+
+# if no user in User table -- insert in MembershipByActivity table without tg_id
+# if user in Users table
+#    if already in MembershipByActivity and expiry = NULL, don't do anything
+#    if already in MembershipByActivity and expiry != NULL, add days
 @is_admin
 async def add_days_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     args = context.args
@@ -550,18 +555,24 @@ async def add_days_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text(f"Invalid number of days: {e}")
         return
 
+    tg_id = None
     with (Session(models.engine) as session):
         try:
             tg_id = session.query(models.User.tg_id).filter(models.User.tg_username == username).first()[0]
             logging.info(f"got member from Users table: {tg_id}")
         except Exception as e:
-            logging.warning(f"Tried to add days to {username}, but there's no such User. They either didn't start the "
-                            f"bot or changed their username: {e}")
-            await update.message.reply_text(f"Tried to add days to {username}, but there's no such User. They either "
-                                            f"didn't start the bot or changed their username: {e}")
-            return
+            logging.info(f"Adding days to {username}, but there's no such User. Will add to MembershipByActivity "
+                         f"without tg_id: {e}")
+            await update.message.reply_text(f"Adding days to {username}, but there's no such User. Will add to "
+                                            f"MembershipByActivity without tg_id: {e}")
 
-        existing = session.query(models.MembershipByActivity).filter(models.MembershipByActivity.tg_id == tg_id).first()
+    with (Session(models.engine) as session):
+        if tg_id is not None:
+            existing = session.query(models.MembershipByActivity
+                                     ).filter(models.MembershipByActivity.tg_id == tg_id).first()
+        else:
+            existing = session.query(models.MembershipByActivity
+                                     ).filter(models.MembershipByActivity.tg_username == username).first()
 
         if existing and not existing.expires_at:
             logging.info(f"User {username} has infinite membership by activity, no days added")
@@ -576,8 +587,14 @@ async def add_days_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         new_expiry = current_expiry + datetime.timedelta(days=days)
 
         if existing:
-            stmt = (sqlalchemy.update(models.MembershipByActivity).where(models.MembershipByActivity.tg_id == tg_id)
-                    .values(expires_at=new_expiry))
+            if tg_id is not None:
+                stmt = (sqlalchemy.update(models.MembershipByActivity)
+                        .where(models.MembershipByActivity.tg_id == tg_id)
+                        .values(expires_at=new_expiry))
+            else:
+                stmt = (sqlalchemy.update(models.MembershipByActivity)
+                        .where(models.MembershipByActivity.tg_username == username)
+                        .values(expires_at=new_expiry))
         else:
             stmt = (
                 sqlalchemy.insert(models.MembershipByActivity)
@@ -592,16 +609,20 @@ async def add_days_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         session.commit()
         logging.info(f"new membership expiry for {username}: {new_expiry}")
 
-    await context.bot.send_message(
-        chat_id=tg_id,
-        text=f"Тебе добавили {days} дней 💜Pro подписки за активное участие в клубе!\n\n"
-             f"Твоя Pro подписка за активность истекает {new_expiry}.\n\n"
-             f"💜Pro подписка дает доступ ко всем возможностям клуба: неограниченные звонки с обсуждениями книг, "
-             f"leetcode моки, Random Coffee встречи и другое!\n\n"
-             f"Чтобы сохранить 💜Pro подписку, сделай презентацию либо подпишись на "
-             f"<a href='https://www.patreon.com/c/LenaAnyusha'>Patreon</a> хотя бы на $15 в месяц.\n\n"
-             f" Спасибо и keep being amazing!",
-        parse_mode="HTML"
-    )
+    try:
+        await context.bot.send_message(
+            chat_id=tg_id,
+            text=f"Тебе добавили {days} дней 💜Pro подписки за активное участие в клубе!\n\n"
+                 f"Твоя Pro подписка за активность истекает {new_expiry}.\n\n"
+                 f"💜Pro подписка дает доступ ко всем возможностям клуба: неограниченные звонки с обсуждениями книг, "
+                 f"leetcode моки, Random Coffee встречи и другое!\n\n"
+                 f"Чтобы сохранить 💜Pro подписку, сделай презентацию либо подпишись на "
+                 f"<a href='https://www.patreon.com/c/LenaAnyusha'>Patreon</a> хотя бы на $15 в месяц.\n\n"
+                 f" Спасибо и keep being amazing!",
+            parse_mode="HTML"
+        )
+    except Exception as e:
+        await update.message.reply_text(f"Couldn't send an update to {username}: {e}")
+
     await update.message.reply_text(f"Added {days} days to {username}'s membership, new membership expiration is "
                                     f"{new_expiry}")
