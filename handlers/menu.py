@@ -2,12 +2,13 @@ import logging
 from telegram import Update
 from telegram.ext import ContextTypes
 
+import sqlalchemy
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
 
 import constants
 import helpers
-from models import User, engine
+from models import MembershipByActivity, User, engine
 
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -35,6 +36,23 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         except Exception as e:
             session.rollback()
             logging.warning(f"Couldn't add new user: {e}")
+
+    with Session(engine) as session:
+        existing_mba = session.query(MembershipByActivity).filter(
+            MembershipByActivity.tg_username == tg_user.username
+        ).first()
+
+        if existing_mba:
+            # user is a Member by activity but it's the first time they start the bot
+            if existing_mba.tg_id is None:
+                # todo: check that both for null and non-null expiry time works
+                stmt = (sqlalchemy.update(MembershipByActivity)
+                        .where(MembershipByActivity.tg_username == tg_user.username)
+                        .values(tg_id=tg_user.id))
+            session.execute(stmt)
+            session.commit()
+            logging.info(f"User {helpers.repr_user_from_update(update)} has a membership by activity, back-filling "
+                         f"tg_id in MembershipByActivity")
 
 
 async def command_help(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
