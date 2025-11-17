@@ -107,13 +107,10 @@ class PatreonLink(Base):
 class MembershipByActivity(Base):
     __tablename__ = 'MembershipByActivity'
 
-    tg_id = Column(sqlalchemy.Text, nullable=False, primary_key=True)
+    id = Column(sqlalchemy.Integer, primary_key=True, autoincrement=True)
+    tg_id = Column(sqlalchemy.Text, nullable=True, unique=True)
     tg_username = Column(sqlalchemy.Text, nullable=True)
-    expires_at = Column(sqlalchemy.Date, nullable=True)  # if NULL, that means never expires
-
-    __table_args__ = (
-        sqlalchemy.ForeignKeyConstraint(['tg_id'], ['Users.tg_id'],  name='fk_valid_tg_id'),
-    )
+    expires_at = Column(sqlalchemy.Date, nullable=True)
 
 
 engine = create_engine(DATABASE_URL)

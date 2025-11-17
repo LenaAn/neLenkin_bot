@@ -20,8 +20,27 @@ def add_memberships_from_file(filename: str):
         user = session.query(User).filter(User.tg_username == username).first()
         if not user:
             print(f"⚠️ User '{username}' not found in Users table.")
+
+            # Check if an entry already exists for this username
+            existing = session.query(MembershipByActivity).filter(
+                MembershipByActivity.tg_username == username
+            ).first()
+
+            if existing:
+                print(f"⏭️  Username '{username}' already inserted earlier (tg_id is NULL), skipping.")
+                continue
+
+            # Insert row with only tg_username
+            new_entry = MembershipByActivity(
+                tg_id=None,
+                tg_username=username,
+                expires_at=None
+            )
+            session.add(new_entry)
+            print(f"➕ Added '{username}' to MembershipByActivity without tg_id.")
             continue
 
+        # --- user exists in Users table ---
         existing = session.query(MembershipByActivity).filter(
             MembershipByActivity.tg_id == user.tg_id
         ).first()
