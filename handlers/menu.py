@@ -49,10 +49,10 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
                 stmt = (sqlalchemy.update(MembershipByActivity)
                         .where(MembershipByActivity.tg_username == tg_user.username)
                         .values(tg_id=tg_user.id))
-            session.execute(stmt)
-            session.commit()
-            logging.info(f"User {helpers.repr_user_from_update(update)} has a membership by activity, back-filling "
-                         f"tg_id in MembershipByActivity")
+                session.execute(stmt)
+                session.commit()
+                logging.info(f"User {helpers.repr_user_from_update(update)} has a membership by activity, back-filling "
+                             f"tg_id in MembershipByActivity")
 
 
 async def command_help(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
