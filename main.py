@@ -51,6 +51,8 @@ if __name__ == '__main__':
     application.add_handler(CommandHandler('sre_notification_off', admin_commands.sre_notification_off))
     application.add_handler(CommandHandler('codecrafters_notification_on', admin_commands.codecrafters_notification_on))
     application.add_handler(CommandHandler('codecrafters_notification_off', admin_commands.codecrafters_notification_off))
+    application.add_handler(CommandHandler('pro_courses_on', admin_commands.pro_courses_on))
+    application.add_handler(CommandHandler('pro_courses_off', admin_commands.pro_courses_off))
     application.add_handler(MessageHandler(~filters.COMMAND, menu.private_message))
 
     application.add_handler(CallbackQueryHandler(button_handlers.button_click))
