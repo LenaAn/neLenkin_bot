@@ -331,7 +331,7 @@ async def handle_leetcode_grind_enroll(update: Update) -> None:
 
 
 async def handle_leetcode_grind_unenroll(update: Update) -> None:
-    await handle_unenroll(update, constants.grind_course_id, constants.leetcode_grind_enroll_description)
+    await handle_unenroll(update, constants.grind_course_id, constants.leetcode_grind_unenroll_description)
 
 
 async def handle_codecrafters_enroll(update: Update) -> None:

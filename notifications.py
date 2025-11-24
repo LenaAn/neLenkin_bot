@@ -24,6 +24,7 @@ async def register_notifications(application):
     await register_ddia_notifications(application)
     await register_ddia_prompt_to_connect_patreon_notifications(application)
     await register_leetcode_grind_notifications(application)
+    await register_leetcode_grind_prompt_to_connect_patreon_notifications(application)
     await register_codecrafters_notifications(application)
 
 
@@ -147,19 +148,23 @@ async def handle_notification_for_course(context: ContextTypes.DEFAULT_TYPE):
 
 
 async def prompt_to_connect_patreon_notifications(context: ContextTypes.DEFAULT_TYPE):
+    # todo: don't hardcode things, move table links and buttons to constants
+    course_id: int = context.job.data["course_id"]
+
     if not models.pro_courses_on:
-        notifications_logger.info(f"Skipping DDIA prompt to connect Patreon because PRO courses are turned off")
+        notifications_logger.info(f"Skipping a prompt to connect Patreon for course {constants.id_to_course[course_id]}"
+                                  f" because PRO courses are turned off")
         await context.bot.send_message(
             chat_id=settings.ADMIN_CHAT_ID,
-            text=f"Skipping DDIA prompt to connect Patreon because PRO courses are turned off",
+            text=f"Skipping {constants.id_to_course[course_id]} prompt to connect Patreon because PRO courses are "
+                 f"turned off",
             parse_mode="HTML")
-
         return
 
-    course_id: int = context.job.data["course_id"]
     notifications_logger.debug(f"prompt_to_connect_patreon_notifications for {constants.id_to_course[course_id]}")
 
-    message: str = ("Привет! Сегодня вечером будет звонок с обсуждением Designing Data-Intensive Applications. Тему "
+    if course_id == constants.ddia_4_course_id:
+            message: str = ("Привет! Сегодня вечером будет звонок с обсуждением Designing Data-Intensive Applications. Тему "
                     "сегодняшнего звонка можешь посмотреть <a href='https://docs.google.com/spreadsheets/d/1_08zSvl3dNK_peEbb2yOAQSzWEXJCl_-5T0vq6wZ1Hs/edit?gid=0#gid=0'>здесь</a>. "
                     "\n\n<b>Обсуждение DDIA — это 💜Pro курс, и чтобы сегодня вечером тебе пришла ссылка на звонок, нужна 💜Pro подписка!</b>"
                     "\n\n1. Чтобы оформить Pro подписку, подпишись на донат в $15 в месяц на моем "
@@ -169,17 +174,31 @@ async def prompt_to_connect_patreon_notifications(context: ContextTypes.DEFAULT_
                     "\n\n2. Если у тебя только российская карточка, оформи подписку на 1500 рублей на мой <a href='https://boosty.to/lenaan'>Boosty</a> и напиши мне @lenka_colenka!"
                     "\n\n3. Если возникнут какие-то сложности, напиши @lenka_colenka!"
                     "\n\n4. Ты можешь отписаться от новостей про DDIA, чтобы больше не получать уведомления.")
+            unenroll_btn = InlineKeyboardButton("Перестать получать уведомления", callback_data="ddia_unenroll")
+    else:
+        message: str = (
+            "Привет! Сегодня вечером будет звонок с обсуждением задач из списка Leetcode-75! Тему "
+            "сегодняшнего звонка можешь посмотреть <a href='https://docs.google.com/spreadsheets/d/1PpDAt6tRd9LNmMIxRBP3Qb8So06beKaAhYoe3ySXI9Y/edit?gid=0#gid=0'>здесь</a>. "
+            "\n\n<b>Обсуждение Leetcode Grind — это 💜Pro курс, и чтобы сегодня вечером тебе пришла ссылка на звонок, нужна 💜Pro подписка!</b>"
+            "\n\n1. Чтобы оформить Pro подписку, подпишись на донат в $15 в месяц на моем "
+            "<a href='https://www.patreon.com/c/LenaAnyusha'>Patreon</a>."
+            "\n\nНикому не говори почту, которая привязана к твоему Patreon аккаунту! Когда оформишь подписку на Patreon, "
+            "привяжи почту по кнопке ⬇️"
+            "\n\n2. Если у тебя только российская карточка, оформи подписку на 1500 рублей на мой <a href='https://boosty.to/lenaan'>Boosty</a> и напиши мне @lenka_colenka!"
+            "\n\n3. Если возникнут какие-то сложности, напиши @lenka_colenka!"
+            "\n\n4. Ты можешь отписаться от новостей про Leetcode Grind, чтобы больше не получать уведомления.")
+        unenroll_btn = InlineKeyboardButton("Перестать получать уведомления", callback_data="leetcode_grind_unenroll")
 
     menu = InlineKeyboardMarkup([
         [InlineKeyboardButton("Привязать профиль Patreon", callback_data="connect_patreon")],
-        [InlineKeyboardButton("Перестать получать уведомления", callback_data="ddia_unenroll")],
+        [unenroll_btn],
     ])
 
     with Session(engine) as session:
         result = session.query(Enrollment.tg_id).filter(Enrollment.course_id == course_id).all()
         notification_chat_ids = [item[0] for item in result]
     notifications_logger.debug(f"handling Patreon prompt for {constants.id_to_course[course_id]}, got "
-                               f"{len(notification_chat_ids)} chat ids that are subscribed to DDIA")
+                               f"{len(notification_chat_ids)} chat ids that are subscribed to the course")
 
     # only Basic subscribers will get a prompt to subscribe to Patreon
     notification_chat_ids = [tg_id for tg_id in notification_chat_ids
@@ -267,6 +286,18 @@ async def register_ddia_notifications(app):
         days=(4,),  # 0 = Sunday, 4 = Thursday
         name=f"ddia_notification",
         data={"course_id": constants.ddia_4_course_id}
+    )
+
+
+async def register_leetcode_grind_prompt_to_connect_patreon_notifications(app):
+    cet_winter_time = datetime.timezone(datetime.timedelta(hours=1))
+
+    app.job_queue.run_daily(
+        callback=prompt_to_connect_patreon_notifications,
+        time=datetime.time(hour=9, minute=55, tzinfo=cet_winter_time),  # morning before Leetcode Grind call
+        days=(3,),  # 0 = Sunday, 3 = Wednesday
+        name=f"leetcode_grind_prompt_to_connect_patreon_notification",
+        data={"course_id": constants.grind_course_id}
     )
 
 
