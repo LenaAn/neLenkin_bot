@@ -139,5 +139,6 @@ leetcode_grind_description = ("Мы собираемся вместе чтобы
                               "\n\nПервый созвон — в среду, 3 сентября 2025")
 
 leetcode_grind_enroll_description = "Бот будет присылать тебе тему недели и ссылку на Zoom за пять минут до звонка!"
+leetcode_grind_unenroll_description = "Бот больше не будет присылать тебе напоминания о Leetcode Grind"
 leetcode_grind_cta_description = ("Нажми кнопку \"Хочу участвовать\" чтобы получать тему недели, ссылку на звонок и "
                                   "новости о потоке!")
