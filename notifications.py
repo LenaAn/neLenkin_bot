@@ -118,6 +118,9 @@ async def handle_codecrafters_notification(context: ContextTypes.DEFAULT_TYPE):
 
 async def handle_notification_for_course(context: ContextTypes.DEFAULT_TYPE):
     course_id: int = context.job.data["course_id"]
+    if course_id == constants.ddia_4_course_id and not models.ddia_notification_on:
+        notifications_logger.info("DDIA notification is turned off, skipping sending DDIA notification")
+        return
     current_week: int = datetime.date.today().isocalendar().week
     with (Session(engine) as session):
         try:
