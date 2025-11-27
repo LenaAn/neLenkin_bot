@@ -119,5 +119,6 @@ engine = create_engine(DATABASE_URL)
 #  feature flags.
 leetcode_status_on = True
 sre_notification_on = False
+ddia_notification_on = True
 codecrafters_notification_on = True
 pro_courses_on=True

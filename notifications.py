@@ -118,6 +118,9 @@ async def handle_codecrafters_notification(context: ContextTypes.DEFAULT_TYPE):
 
 async def handle_notification_for_course(context: ContextTypes.DEFAULT_TYPE):
     course_id: int = context.job.data["course_id"]
+    if course_id == constants.ddia_4_course_id and not models.ddia_notification_on:
+        notifications_logger.info("DDIA notification is turned off, skipping sending DDIA notification")
+        return
     current_week: int = datetime.date.today().isocalendar().week
     with (Session(engine) as session):
         try:
@@ -150,6 +153,16 @@ async def handle_notification_for_course(context: ContextTypes.DEFAULT_TYPE):
 async def prompt_to_connect_patreon_notifications(context: ContextTypes.DEFAULT_TYPE):
     # todo: don't hardcode things, move table links and buttons to constants
     course_id: int = context.job.data["course_id"]
+
+    if course_id == constants.ddia_4_course_id and not models.ddia_notification_on:
+        notifications_logger.info(f"Skipping a prompt to connect Patreon for course {constants.id_to_course[course_id]}"
+                                  f" because DDIA is turned off")
+        await context.bot.send_message(
+            chat_id=settings.ADMIN_CHAT_ID,
+            text=f"Skipping {constants.id_to_course[course_id]} prompt to connect Patreon because DDIA course is "
+                 f"turned off",
+            parse_mode="HTML")
+        return
 
     if not models.pro_courses_on:
         notifications_logger.info(f"Skipping a prompt to connect Patreon for course {constants.id_to_course[course_id]}"
