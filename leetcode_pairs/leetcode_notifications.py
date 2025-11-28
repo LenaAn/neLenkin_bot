@@ -1,11 +1,17 @@
 import datetime
 from telegram.ext import ContextTypes
 from leetcode_pairs import generate_graph
+import settings
 
 
 async def send_leetcode_pairs_to_group(context: ContextTypes.DEFAULT_TYPE, pairs: list[list[int]]):
-    # todo: fill it
-    pass
+    # todo: change it
+    await context.bot.send_message(
+        chat_id=settings.CLUB_GROUP_CHAT_ID,
+        message_thread_id=settings.LEETCODE_MOCKS_THREAD_ID,
+        text="hi! i'll be sending leetcode mock pairs",
+        parse_mode="HTML",
+    )
 
 
 async def unicast_leetcode_partner(context: ContextTypes.DEFAULT_TYPE, pairs: list[list[int]]):
