@@ -6,6 +6,7 @@ from handlers import admin_commands, button_handlers, menu, leetcode_mock_handle
 import notifications
 from patreon import fetch_patrons
 import settings
+from leetcode_pairs import leetcode_notifications
 
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -16,6 +17,7 @@ logging.getLogger("httpx").setLevel(logging.WARNING)
 
 async def post_init(app):
     await notifications.register_notifications(app)
+    await leetcode_notifications.register_leetcode_pairs_notification(application)
     fetch_patrons.load_patrons()
 
 
