@@ -4,7 +4,8 @@ from leetcode_pairs import generate_graph
 import settings
 
 
-async def send_leetcode_pairs_to_group(context: ContextTypes.DEFAULT_TYPE, pairs: list[list[int]]):
+async def send_leetcode_pairs_to_group(context: ContextTypes.DEFAULT_TYPE,
+                                       generate_graph_obj: generate_graph.GenerateLeetcodeMocks):
     # todo: change it
     await context.bot.send_message(
         chat_id=settings.CLUB_GROUP_CHAT_ID,
@@ -14,17 +15,18 @@ async def send_leetcode_pairs_to_group(context: ContextTypes.DEFAULT_TYPE, pairs
     )
 
 
-async def unicast_leetcode_partner(context: ContextTypes.DEFAULT_TYPE, pairs: list[list[int]]):
+async def unicast_leetcode_partner(context: ContextTypes.DEFAULT_TYPE,
+                                   generate_graph_obj: generate_graph.GenerateLeetcodeMocks):
     # todo: fill it
     pass
 
 
 async def leetcode_notifications(context: ContextTypes.DEFAULT_TYPE):
-    pairs = []
-    # todo: use the function
-    # pairs: list[list[int]] = generate_graph.generate_pairs()
-    await send_leetcode_pairs_to_group(context, pairs)
-    await unicast_leetcode_partner(context, pairs)
+    generate_graph_obj = generate_graph.GenerateLeetcodeMocks.build(
+        week_number=datetime.date.today().isocalendar().week)
+
+    await send_leetcode_pairs_to_group(context, generate_graph_obj)
+    await unicast_leetcode_partner(context, generate_graph_obj)
 
 
 async def register_leetcode_pairs_notification(app):
