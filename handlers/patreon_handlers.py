@@ -111,7 +111,7 @@ async def cancel_connect(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
 
 connect_patreon_handler = ConversationHandler(
     entry_points=[
-        CommandHandler('connect_patreon', start_connect_patreon),
+        CommandHandler('connect_patreon', start_connect_patreon, filters.ChatType.PRIVATE),
         CallbackQueryHandler(start_connect_patreon, '^connect_patreon$')
     ],
     states={CONNECT_PATREON: [MessageHandler(filters.TEXT & ~filters.COMMAND, connect_with_email)]},

@@ -274,7 +274,7 @@ def clear_state(context: ContextTypes.DEFAULT_TYPE) -> None:
 
 leetcode_register_handler = ConversationHandler(
     entry_points=[
-        CommandHandler('leetcode_register', start_leetcode_register),
+        CommandHandler('leetcode_register', start_leetcode_register, filters.ChatType.PRIVATE),
         CallbackQueryHandler(start_leetcode_register, '^leetcode_register$')
     ],
     states={
