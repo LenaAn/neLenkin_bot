@@ -10,6 +10,17 @@ aoc_logger = logging.getLogger(__name__)
 aoc_logger.setLevel(logging.DEBUG)
 
 
+def pluralize_points(n: int) -> str:
+    if 11 <= n % 100 <= 19:
+        return "очков"
+    elif n % 10 == 1:
+        return "очко"
+    elif 2 <= n % 10 <= 4:
+        return "очка"
+    else:
+        return "очков"
+
+
 def fetch_leaderboard() -> Optional[dict]:
     """Fetch the private leaderboard JSON from Advent of Code."""
     year = datetime.now().year
@@ -68,7 +79,7 @@ def format_leaderboard(data: dict) -> str:
         else:
             medal = ""
 
-        lines.append(f"{i}. <b>{name}</b> — ⭐{stars} ({score} очков){medal}")
+        lines.append(f"{i}. <b>{name}</b> — ⭐{stars} ({score} {pluralize_points(score)}){medal}")
 
     return "\n".join(lines)
 
