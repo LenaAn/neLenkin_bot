@@ -210,7 +210,7 @@ async def cancel_echo(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int
 
 
 echo_conv_handler = ConversationHandler(
-    entry_points=[CommandHandler('echo', start_echo)],
+    entry_points=[CommandHandler('echo', start_echo, filters.ChatType.PRIVATE)],
     states={ECHO: [MessageHandler(~filters.COMMAND, echo_message)]},
     fallbacks=[
         CommandHandler('cancel_echo', cancel_echo),
@@ -275,7 +275,7 @@ async def cancel_broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE) -
 
 # todo: make sure it doesn't mess up with multiple admins
 broadcast_conv_handler = ConversationHandler(
-    entry_points=[CommandHandler('broadcast', start_broadcast)],
+    entry_points=[CommandHandler('broadcast', start_broadcast, filters.ChatType.PRIVATE)],
     states={BROADCAST: [MessageHandler(~filters.COMMAND, broadcast)]},
     fallbacks=[
         CommandHandler('cancel_broadcast', cancel_broadcast),
@@ -338,7 +338,7 @@ async def leetcode_broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE)
 
 
 leetcode_broadcast_conv_handler = ConversationHandler(
-    entry_points=[CommandHandler('leetcode_broadcast', start_leetcode_broadcast)],
+    entry_points=[CommandHandler('leetcode_broadcast', start_leetcode_broadcast, filters.ChatType.PRIVATE)],
     states={LEETCODE_BROADCAST: [MessageHandler(~filters.COMMAND, leetcode_broadcast)]},
     fallbacks=[
         CommandHandler('cancel_broadcast', cancel_broadcast),
@@ -370,7 +370,7 @@ async def leetcode_new_topic_broadcast(update: Update, context: ContextTypes.DEF
 
 
 leetcode_new_topic_broadcast = ConversationHandler(
-    entry_points=[CommandHandler('leetcode_new_topic', start_leetcode_new_topic_broadcast)],
+    entry_points=[CommandHandler('leetcode_new_topic', start_leetcode_new_topic_broadcast, filters.ChatType.PRIVATE)],
     states={LEETCODE_NEW_TOPIC: [MessageHandler(~filters.COMMAND, leetcode_new_topic_broadcast)]},
     fallbacks=[
         CommandHandler('cancel_broadcast', cancel_broadcast),
@@ -397,7 +397,7 @@ async def sre_broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE) -> i
 
 
 sre_broadcast_conv_handler = ConversationHandler(
-    entry_points=[CommandHandler('sre_broadcast', start_sre_broadcast)],
+    entry_points=[CommandHandler('sre_broadcast', start_sre_broadcast, filters.ChatType.PRIVATE)],
     states={SRE_BROADCAST: [MessageHandler(~filters.COMMAND, sre_broadcast)]},
     fallbacks=[
         CommandHandler('cancel_broadcast', cancel_broadcast),
@@ -423,7 +423,7 @@ async def ddia_broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
 
 
 ddia_broadcast_conv_handler = ConversationHandler(
-    entry_points=[CommandHandler('ddia_broadcast', start_ddia_broadcast)],
+    entry_points=[CommandHandler('ddia_broadcast', start_ddia_broadcast, filters.ChatType.PRIVATE)],
     states={DDIA_BROADCAST: [MessageHandler(~filters.COMMAND, ddia_broadcast)]},
     fallbacks=[
         CommandHandler('cancel_broadcast', cancel_broadcast),
@@ -451,7 +451,7 @@ async def grind_broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
 
 
 grind_broadcast_conv_handler = ConversationHandler(
-    entry_points=[CommandHandler('grind_broadcast', start_grind_broadcast)],
+    entry_points=[CommandHandler('grind_broadcast', start_grind_broadcast, filters.ChatType.PRIVATE)],
     states={GRIND_BROADCAST: [MessageHandler(~filters.COMMAND, grind_broadcast)]},
     fallbacks=[
         CommandHandler('cancel_broadcast', cancel_broadcast),
