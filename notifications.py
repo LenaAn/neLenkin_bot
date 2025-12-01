@@ -26,6 +26,7 @@ async def register_notifications(application):
     await register_leetcode_grind_notifications(application)
     await register_leetcode_grind_prompt_to_connect_patreon_notifications(application)
     await register_codecrafters_notifications(application)
+    await register_aoc_notifications(application)
 
 
 async def handle_notification(context: ContextTypes.DEFAULT_TYPE):
@@ -114,6 +115,22 @@ async def handle_codecrafters_notification(context: ContextTypes.DEFAULT_TYPE):
         await handle_notification(context)
     else:
         notifications_logger.info("CodeCrafters notification is turned off, skipping sending CodeCrafters notifications")
+
+async def handle_aoc_notification(context: ContextTypes.DEFAULT_TYPE):
+    if models.aoc_notification_on:
+        from aoc import fetch_leaderboard
+        notifications_logger.debug("Sending an AoC update to the main chat's AoC thread")
+        formatted_report = fetch_leaderboard.get_formatted_leaderboard()
+        await context.bot.send_message(
+            chat_id=settings.AOC_CHAT_ID,
+            message_thread_id=settings.AOC_TOPIC_ID,
+            text=formatted_report,
+            parse_mode="HTML",
+        )
+        notifications_logger.info("Successfully sent AoC leaderboard update")
+    else:
+        notifications_logger.info("AoC notification is turned off, skipping sending notifications")
+
 
 
 async def handle_notification_for_course(context: ContextTypes.DEFAULT_TYPE):
@@ -335,4 +352,17 @@ async def register_codecrafters_notifications(app):
         days=(2,),  # 0 = Sunday, 2 = Tuesday
         name=f"codecrafters_notification",
         data={"course_id": constants.codecrafters_course_id}
+    )
+
+
+async def register_aoc_notifications(app):
+    eu_winter_time = datetime.timezone(datetime.timedelta(hours=1))
+
+    # should not hit API more than once every 15 minutes. Daily is fine
+    app.job_queue.run_daily(
+        callback=handle_aoc_notification,
+        time=datetime.time(hour=15, minute=15, tzinfo=eu_winter_time),
+        days=(0, 1, 2, 3, 4, 5, 6),  # 0 = Sunday
+        name=f"aoc_notification",
+        data={"course_id": constants.aoc_course_id}
     )

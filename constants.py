@@ -103,6 +103,7 @@ sre_course_id: int = 8
 ddia_4_course_id: int = 10
 grind_course_id: int = 11
 codecrafters_course_id: int = 12
+aoc_course_id: int = 13
 
 id_to_course = {
     leetcode_course_id: "Leetcode",
@@ -110,6 +111,7 @@ id_to_course = {
     ddia_4_course_id: "DDIA-4",
     grind_course_id: "Leetcode-Grind-2",
     codecrafters_course_id: "CodeCrafters-Redis",
+    aoc_course_id: "AdventOfCode-2025",
 }
 
 before_call_reminders = {
