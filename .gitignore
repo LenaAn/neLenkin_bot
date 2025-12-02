@@ -8,3 +8,5 @@ nelenkin_bot_pickle
 
 # everything i want to store locally
 *.local.*
+
+**/*.pyc
