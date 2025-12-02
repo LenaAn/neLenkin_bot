@@ -122,7 +122,7 @@ async def handle_aoc_notification(context: ContextTypes.DEFAULT_TYPE):
         notifications_logger.debug("Sending an AoC update to the main chat's AoC thread")
         formatted_report = fetch_leaderboard.get_formatted_leaderboard()
         await context.bot.send_message(
-            chat_id=settings.AOC_CHAT_ID,
+            chat_id=settings.CLUB_GROUP_CHAT_ID,
             message_thread_id=settings.AOC_TOPIC_ID,
             text=formatted_report,
             parse_mode="HTML",
