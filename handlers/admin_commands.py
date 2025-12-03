@@ -14,6 +14,7 @@ import constants
 import helpers
 import models
 from patreon import fetch_patrons
+import membership
 
 
 def is_admin_id(tg_id: int) -> bool:
@@ -691,3 +692,31 @@ async def add_days_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     await update.message.reply_text(f"Added {days} days to {username}'s membership, new membership expiration is "
                                     f"{new_expiry}")
+
+
+@is_admin
+async def get_status_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    logging.info(f"get_status_handler handler triggered by {helpers.repr_user_from_update(update)}")
+
+    args = context.args
+
+    if len(args) != 1:
+        await update.message.reply_text("Usage: /get_status <username>")
+        return
+
+    username = args[0]
+
+    # get tg_id from Users
+    with (Session(models.engine) as session):
+        try:
+            tg_id = session.query(models.User.tg_id).filter(models.User.tg_username == username).first()[0]
+            logging.info(f"got member from Users table: {tg_id}")
+        except Exception as e:
+            logging.info(f"There's no user with username {username}, not returning status for the user.")
+            await update.message.reply_text(f"There's no user with username {username}, not returning status for the "
+                                            f"user: {e}")
+            return
+
+    membership_info = membership.get_user_membership_info(tg_id, username)
+    logging.info(f"Status for {username}: {membership_info}")
+    await update.message.reply_text(f"Status for {username}:\n\n{membership_info}")

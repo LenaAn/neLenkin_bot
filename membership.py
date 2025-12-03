@@ -60,6 +60,12 @@ class UserMembershipInfo:
     def get_overall_level(self) -> MembershipLevel:
         return max(self.member_level_by_activity, self.get_patreon_level(), key=lambda level: level.number)
 
+    def __repr__(self):
+        return (f"Level by activity: {self.member_level_by_activity.name}\n"
+                f"Member level by activity expiration: {self.member_level_by_activity_expiration}\n"
+                f"Patreon email: {self.patreon_email}\n"
+                f"Patreon currently entitled amount cents: {self.patreon_currently_entitled_amount_cents}")
+
 
 def get_user_membership_info(tg_id: int, tg_username: str = None) -> UserMembershipInfo:
     if tg_username is None:
