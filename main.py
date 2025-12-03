@@ -57,6 +57,8 @@ if __name__ == '__main__':
     application.add_handler(
         CommandHandler('add_days', admin_commands.add_days_handler, filters.ChatType.PRIVATE))
     application.add_handler(
+        CommandHandler('get_status', admin_commands.get_status_handler, filters.ChatType.PRIVATE))
+    application.add_handler(
         CommandHandler('leetcode_on', admin_commands.leetcode_on, filters.ChatType.PRIVATE))
     application.add_handler(
         CommandHandler('leetcode_off', admin_commands.leetcode_off, filters.ChatType.PRIVATE))
