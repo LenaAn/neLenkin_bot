@@ -361,7 +361,7 @@ async def register_aoc_notifications(app):
     # should not hit API more than once every 15 minutes. Daily is fine
     app.job_queue.run_daily(
         callback=handle_aoc_notification,
-        time=datetime.time(hour=15, minute=15, tzinfo=eu_winter_time),
+        time=datetime.time(hour=20, minute=20, tzinfo=eu_winter_time),
         days=(0, 1, 2, 3, 4, 5, 6),  # 0 = Sunday
         name=f"aoc_notification",
         data={"course_id": constants.aoc_course_id}
