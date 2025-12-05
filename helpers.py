@@ -1,3 +1,5 @@
+import random
+
 from telegram import User, Update, InlineKeyboardMarkup, InlineKeyboardButton
 from typing import Optional
 
@@ -47,3 +49,7 @@ def join_menu() -> InlineKeyboardMarkup:
     ]
     menu = [button_list[i:i + 1] for i in range(0, len(button_list), 1)]
     return InlineKeyboardMarkup(menu)
+
+
+def random_neutral_emoji() -> str:
+    return random.choice(["🦆", "🦄", "🐞", "🐢", "🐳", "🦒", "🍄", "🌸", "🥕", "🐇", "🕊", "🌿", "🐲", "🐊", "🍡", "🍧", "🍤", "🍓"])
