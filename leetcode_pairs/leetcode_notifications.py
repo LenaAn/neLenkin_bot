@@ -6,12 +6,24 @@ import settings
 
 async def send_leetcode_pairs_to_group(context: ContextTypes.DEFAULT_TYPE,
                                        generate_graph_obj: generate_graph.GenerateLeetcodeMocks):
-    # todo: change it
+    notification_str: str = ""
+    if len(generate_graph_obj.pairs) > 0:
+        notification_str += f"Пары на эту неделю:\n\n"
+        for pair in generate_graph_obj.pairs:
+            notification_str += f"🐋 @{pair.first.tg_username} — @{pair.second.tg_username}\n"
+        notification_str += f"Напиши партнеру и договорись о времени!\n\n"
+    else:
+        notification_str += "Пар на этой неделе нет 😢\n\n"
+
+    if len(generate_graph_obj.without_pairs) > 0:
+        notification_str += "Без пары на этой неделе "
+        notification_str += ", ".join([f"@{user.tg_username}" for user in generate_graph_obj.without_pairs])
+        notification_str += ". Можно написать в личку и договориться о моке!\n"
+
     await context.bot.send_message(
         chat_id=settings.CLUB_GROUP_CHAT_ID,
         message_thread_id=settings.LEETCODE_MOCKS_THREAD_ID,
-        text="hi! i'll be sending leetcode mock pairs",
-        parse_mode="HTML",
+        text=notification_str
     )
 
 
