@@ -90,6 +90,12 @@ class MockSignUp(Base):
         sqlalchemy.UniqueConstraint('week_number', 'tg_id', name='One_record_per_user_per_week'),
     )
 
+    def __repr__(self):
+        return (f"MockSignUp("
+                f"username={self.tg_username}, "
+                f"telegram_id={self.tg_id}, "
+                f"selected_timeslots={self.selected_timeslots})")
+
 
 class PatreonLink(Base):
     __tablename__ = 'PatreonLink'
