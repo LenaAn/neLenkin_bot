@@ -1,16 +1,20 @@
 import datetime
+
 from telegram.ext import ContextTypes
+
 from leetcode_pairs import generate_graph
+import helpers
 import settings
 
 
 async def send_leetcode_pairs_to_group(context: ContextTypes.DEFAULT_TYPE,
                                        generate_graph_obj: generate_graph.GenerateLeetcodeMocks):
+    emoji = helpers.random_neutral_emoji()
     notification_str: str = ""
     if len(generate_graph_obj.pairs) > 0:
         notification_str += f"Пары на эту неделю:\n\n"
         for pair in generate_graph_obj.pairs:
-            notification_str += f"🐋 @{pair.first.tg_username} — @{pair.second.tg_username}\n"
+            notification_str += f"{emoji} @{pair.first.tg_username} — @{pair.second.tg_username}\n"
         notification_str += f"Напиши партнеру и договорись о времени!\n\n"
     else:
         notification_str += "Пар на этой неделе нет 😢\n\n"
