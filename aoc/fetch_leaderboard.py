@@ -49,10 +49,10 @@ def format_leaderboard(data: dict) -> str:
 
     members = data["members"].values()
 
-    # Sort by local_score (descending), then by stars (descending)
+    # Sort by stars (descending), then by local_score (descending)
     sorted_members = sorted(
         members,
-        key=lambda m: (m.get("local_score", 0), m.get("stars", 0)),
+        key=lambda m: (m.get("stars", 0), m.get("local_score", 0)),
         reverse=True
     )
 
