@@ -49,12 +49,8 @@ def format_leaderboard(data: dict) -> str:
 
     members = data["members"].values()
 
-    # Sort by stars (descending), then by local_score (descending)
-    sorted_members = sorted(
-        members,
-        key=lambda m: (m.get("stars", 0), m.get("local_score", 0)),
-        reverse=True
-    )
+    # Sort by stars (descending), then by last_star_ts (ascending)
+    sorted_members = sorted(members, key=lambda m: (-m.get("stars", 0), m.get("last_star_ts", 0)))
 
     # Filter out members with 0 stars
     active_members = [m for m in sorted_members if m.get("stars", 0) > 0]
