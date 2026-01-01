@@ -1,7 +1,9 @@
 import datetime
+import logging
 
 from telegram.ext import ContextTypes
 
+import models
 from leetcode_pairs import generate_graph
 import helpers
 import settings
@@ -38,6 +40,14 @@ async def unicast_leetcode_partner(context: ContextTypes.DEFAULT_TYPE,
 
 
 async def leetcode_notifications(context: ContextTypes.DEFAULT_TYPE):
+    if not models.leetcode_status_on:
+        logging.info("Skipping creating Leetcode mock pairs because leetcode if off")
+        await context.bot.send_message(
+            chat_id=settings.ADMIN_CHAT_ID,
+            text="Skipping creating Leetcode mock pairs because leetcode if off",
+            parse_mode="HTML")
+        return
+
     generate_graph_obj = generate_graph.GenerateLeetcodeMocks.build(
         week_number=datetime.date.today().isocalendar().week)
 
