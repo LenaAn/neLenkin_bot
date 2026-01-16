@@ -16,7 +16,7 @@ patreon_logger.setLevel(logging.DEBUG)
 r = redis.Redis(host='localhost', port=6379, db=0)
 
 
-async def fetch_patrons(bot: Bot) -> [dict]:
+async def fetch_patrons(bot: Bot) -> Optional[list[dict]]:
     load_dotenv(override=True)
 
     # todo: this token expires about once a month. Need to refresh it automatically
@@ -40,14 +40,14 @@ async def fetch_patrons(bot: Bot) -> [dict]:
                 chat_id=settings.ADMIN_CHAT_ID,
                 text=f"Couldn't get info from Patreon: {e}",
                 parse_mode="HTML")
-            return []
+            return None
         except Exception as e:
             patreon_logger.error(f"Unexpected error while getting info from Patreon: {e}")
             await bot.send_message(
                 chat_id=settings.ADMIN_CHAT_ID,
                 text=f"Unexpected error while getting info from Patreon: {e}",
                 parse_mode="HTML")
-            return []
+            return None
 
         for m in data["data"]:
             attrs = m["attributes"]
@@ -118,9 +118,10 @@ def get_patrons(status_filter: str = "active_patron") -> list[(str, str)]:
 
 async def load_patrons(bot: Bot):
     patrons = await fetch_patrons(bot)
-    # patrons may change email address, in this case old email should be deleted from cache
-    clear_users_from_cache()
-    store_to_cache(patrons)
+    if patrons:
+        # patrons may change email address, in this case old email should be deleted from cache
+        clear_users_from_cache()
+        store_to_cache(patrons)
 
 
 def get_patron_by_email(email_to_find: str) -> Optional[dict]:
