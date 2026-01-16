@@ -111,7 +111,8 @@ async def get_users_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) 
 async def get_patrons_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     logging.info(f"get_patrons handler triggered by {helpers.repr_user_from_update(update)}")
 
-    active_patrons = fetch_patrons.get_patrons()
+    await fetch_patrons.load_patrons(context.bot)
+    active_patrons = fetch_patrons.get_patrons_from_redis("active_patron")
     logging.info(f"active_patrons are {active_patrons}")
     patrons_str = "\n".join([str(patron) for patron in active_patrons])
     await context.bot.send_message(

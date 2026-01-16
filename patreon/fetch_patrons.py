@@ -102,7 +102,7 @@ def get_user_counts_by_status(status_filter: str = "active_patron") -> (int, int
     return all_users_count, active_users_count
 
 
-def get_patrons(status_filter: str = "active_patron") -> list[(str, str)]:
+def get_patrons_from_redis(status_filter: str) -> list[(str, str)]:
     active_patrons = []
 
     for key in r.scan_iter("user:*"):
