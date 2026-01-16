@@ -23,11 +23,16 @@ async def fetch_patrons(bot: Bot) -> Optional[list[dict]]:
     access_token = os.getenv("PATREON_ACCESS_TOKEN")
     campaign_id = os.getenv("PATREON_CAMPAIGN_ID")
     api_url = f"https://www.patreon.com/api/oauth2/v2/campaigns/{campaign_id}/members"
-    params = {"fields[member]": "full_name,email,patron_status,currently_entitled_amount_cents"}
+    params = {
+        "include": "currently_entitled_tiers",
+        "fields[member]": "full_name,email,patron_status,currently_entitled_amount_cents,is_gifted",
+        "fields[tier]": "title,amount_cents"
+    }
     headers = {"Authorization": f"Bearer {access_token}"}
     url = api_url.format(campaign_id=campaign_id)
 
     all_members = []
+    tier_id_to_amount = {}
     while url:
         try:
             patreon_logger.debug("new while url iteration")
@@ -49,8 +54,26 @@ async def fetch_patrons(bot: Bot) -> Optional[list[dict]]:
                 parse_mode="HTML")
             return None
 
+        for tier in data.get("included", []):
+            if tier.get("type") != "tier":
+                continue
+            attrs = tier.get("attributes", {})
+            amount = attrs.get("amount_cents")
+            if amount is not None:
+                tier_id_to_amount[tier["id"]] = amount
+        patreon_logger.debug(f"{tier_id_to_amount=}")
+
         for m in data["data"]:
-            attrs = m["attributes"]
+            attrs = m["attributes"].copy()
+            relationships = m.get("relationships", {})
+            tier_ids = [
+                t["id"]
+                for t in relationships.get("currently_entitled_tiers", {}).get("data", [])
+                if t.get("type") == "tier"
+            ]
+            # just in case someone splits subscription in multiple
+            sum_of_entitled_tiers_amount_cents = sum(tier_id_to_amount.get(tid, 0) for tid in tier_ids)
+            attrs["sum_of_entitled_tiers_amount_cents"] = sum_of_entitled_tiers_amount_cents
             all_members.append(attrs)
 
         url = data.get("links", {}).get("next")  # go to next page if exists
@@ -77,7 +100,9 @@ def store_to_cache(all_patrons: [dict]) -> None:
                    mapping={
                        "full_name": str(patron['full_name']),
                        "patron_status": str(patron['patron_status']),
-                       "currently_entitled_amount_cents": str(patron['currently_entitled_amount_cents'])
+                       "currently_entitled_amount_cents": str(patron['currently_entitled_amount_cents']),
+                       'is_gifted': str(patron['is_gifted']),
+                       'sum_of_entitled_tiers_amount_cents': str(patron['sum_of_entitled_tiers_amount_cents'])
                    })
             success_insert_count += 1
         except Exception as e:
