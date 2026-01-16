@@ -69,7 +69,7 @@ async def connect_with_email(update: Update, context: ContextTypes.DEFAULT_TYPE)
     email_to_find = update.message.text.strip().lower()
     logging.info(f"looking for patron with email {email_to_find}")
 
-    fetch_patrons.load_patrons()
+    await fetch_patrons.load_patrons(context.bot)
     patron_info = fetch_patrons.get_patron_by_email(email_to_find)
     if patron_info:
         if await store_patreon_linking(update, email_to_find, context):

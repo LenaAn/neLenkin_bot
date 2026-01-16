@@ -6,13 +6,17 @@ from typing import Optional
 
 from dotenv import load_dotenv
 
+from telegram import Bot
+
+import settings
+
 patreon_logger = logging.getLogger(__name__)
 patreon_logger.setLevel(logging.DEBUG)
 
 r = redis.Redis(host='localhost', port=6379, db=0)
 
 
-def fetch_patrons() -> [dict]:
+async def fetch_patrons(bot: Bot) -> [dict]:
     load_dotenv(override=True)
 
     # todo: this token expires about once a month. Need to refresh it automatically
@@ -32,9 +36,17 @@ def fetch_patrons() -> [dict]:
             data = r.json()
         except requests.exceptions.HTTPError as e:
             patreon_logger.warning(f"Couldn't get info from Patreon: {e}")
+            await bot.send_message(
+                chat_id=settings.ADMIN_CHAT_ID,
+                text=f"Couldn't get info from Patreon: {e}",
+                parse_mode="HTML")
             return []
         except Exception as e:
             patreon_logger.error(f"Unexpected error while getting info from Patreon: {e}")
+            await bot.send_message(
+                chat_id=settings.ADMIN_CHAT_ID,
+                text=f"Unexpected error while getting info from Patreon: {e}",
+                parse_mode="HTML")
             return []
 
         for m in data["data"]:
@@ -104,8 +116,8 @@ def get_patrons(status_filter: str = "active_patron") -> list[(str, str)]:
     return active_patrons
 
 
-def load_patrons():
-    patrons = fetch_patrons()
+async def load_patrons(bot: Bot):
+    patrons = await fetch_patrons(bot)
     # patrons may change email address, in this case old email should be deleted from cache
     clear_users_from_cache()
     store_to_cache(patrons)

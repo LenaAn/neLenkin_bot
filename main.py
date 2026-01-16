@@ -18,7 +18,7 @@ logging.getLogger("httpx").setLevel(logging.WARNING)
 async def post_init(app):
     await notifications.register_notifications(app)
     await leetcode_notifications.register_leetcode_pairs_notification(application)
-    fetch_patrons.load_patrons()
+    await fetch_patrons.load_patrons(app.bot)
 
 
 if __name__ == '__main__':
