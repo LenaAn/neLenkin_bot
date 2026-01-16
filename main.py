@@ -49,8 +49,6 @@ if __name__ == '__main__':
     application.add_handler(
         CommandHandler('get_patrons', admin_commands.get_patrons_handler, filters.ChatType.PRIVATE))
     application.add_handler(
-        CommandHandler('get_patron_counts', admin_commands.get_patron_counts_handler, filters.ChatType.PRIVATE))
-    application.add_handler(
         CommandHandler('get_sre_users', admin_commands.get_sre_users_handler, filters.ChatType.PRIVATE))
     application.add_handler(
         CommandHandler('get_ddia_users', admin_commands.get_ddia_users_handler, filters.ChatType.PRIVATE))

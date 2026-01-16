@@ -86,22 +86,6 @@ def store_to_cache(all_patrons: [dict]) -> None:
     patreon_logger.info(f"Inserted {success_insert_count} patrons to Redis, failed to insert {fail_insert_count} patrons")
 
 
-def get_user_counts_by_status(status_filter: str = "active_patron") -> (int, int):
-    all_users_count = 0
-    active_users_count = 0
-
-    for key in r.scan_iter("user:*"):
-        all_users_count += 1
-        user_data = r.hgetall(key)
-        user_data = {k.decode(): v.decode() for k, v in user_data.items()}
-
-        if user_data.get("patron_status") == status_filter:
-            active_users_count += 1
-
-    patreon_logger.info(f"Found {all_users_count} in Redis, {active_users_count} of them are active")
-    return all_users_count, active_users_count
-
-
 def get_patrons_from_redis(status_filter: str) -> list[(str, str)]:
     active_patrons = []
 
