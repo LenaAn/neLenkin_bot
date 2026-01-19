@@ -115,10 +115,11 @@ async def get_patrons_handler(update: Update, context: ContextTypes.DEFAULT_TYPE
     active_patrons = fetch_patrons.get_patrons_from_redis("active_patron")
     logging.info(f"active_patrons are {active_patrons}")
     active_patrons_count = len(active_patrons)
-    patrons_str = "\n".join([str(patron) for patron in active_patrons])
+    total_sum = sum(int(patron[1]) for patron in active_patrons)
+    patrons_str = "\n".join([', '.join(patron) for patron in active_patrons])
     await context.bot.send_message(
         chat_id=update.effective_chat.id,
-        text=f"You have {active_patrons_count} active patrons:\n\n{patrons_str}"
+        text=f"You have {active_patrons_count} active patrons with total sum of ${total_sum // 100}:\n\n{patrons_str}"
     )
 
 

@@ -120,7 +120,10 @@ def get_patrons_from_redis(status_filter: str) -> list[(str, str)]:
 
         if user_data.get("patron_status") == status_filter:
             patreon_logger.info(f"active patron is {user_data}")
-            active_patrons.append((user_data.get("full_name"), user_data.get("currently_entitled_amount_cents")))
+            active_patron_info = [user_data.get("full_name"), user_data.get("sum_of_entitled_tiers_amount_cents")]
+            if user_data.get("is_gifted") == "True":
+                active_patron_info.append("is_gifted")
+            active_patrons.append(active_patron_info)
 
     return active_patrons
 

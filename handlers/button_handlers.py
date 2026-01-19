@@ -144,7 +144,7 @@ async def reply_for_patreon_members(update: Update, membership_info) -> None:
 
     msg: str = membership_info.get_overall_level().description
     msg += (f"\n\nПривязанный профиль Patreon: {membership_info.patreon_email}. Ты донатишь "
-            f"${membership_info.patreon_currently_entitled_amount_cents // 100}. Спасибо! ❤️")
+            f"${membership_info.sum_of_entitled_tiers_amount_cents // 100}. Спасибо! ❤️")
 
     reply_markup = InlineKeyboardMarkup([[
         InlineKeyboardButton("Отвязать профиль Patreon", callback_data="disconnect_patreon"),
@@ -192,8 +192,8 @@ async def reply_for_basic_with_linked_patreon(update: Update, membership_info) -
 
     msg: str = membership_info.get_overall_level().description
     msg += f"\n\nПривязанный профиль Patreon: {membership_info.patreon_email}."
-    if membership_info.patreon_currently_entitled_amount_cents > 0:
-        msg += f" Ты донатишь ${membership_info.patreon_currently_entitled_amount_cents // 100}. Спасибо! ❤️"
+    if membership_info.sum_of_entitled_tiers_amount_cents > 0:
+        msg += f" Ты донатишь ${membership_info.sum_of_entitled_tiers_amount_cents // 100}. Спасибо! ❤️"
     else:
         msg += f" Ты не донатишь мне на Patreon️"
     msg += ("\n\nЧтобы улучшить подписку, сделай презентацию либо подпишись на "
