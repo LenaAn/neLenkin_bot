@@ -20,7 +20,7 @@ A telegram bot supporting [NeLenkin Club](https://t.me/lenka_ne_club) — a book
     $ cd neLenkin_bot
     ```
 3. Create a test telegram bot and get a token, here's [an instruction](https://core.telegram.org/bots/tutorial#obtain-your-bot-token).
-4. Create a `.env` file, look at `.env.example` for the examplpe. Put your bot token into `.env` file.
+4. Create a `.env` file, look at `.env.example` for the example. Put your bot token into `.env` file.
 5. Run
 
     ```sh
