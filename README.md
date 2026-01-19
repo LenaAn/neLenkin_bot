@@ -25,7 +25,19 @@ A telegram bot supporting [NeLenkin Club](https://t.me/lenka_ne_club) — a book
 
     ```sh
     $ docker compose up -d
+    ```
+   This will start the local Postgres on [http://127.0.0.1:8080/](http://127.0.0.1:8080/) and local Redis on [http://127.0.0.1:8081/](http://127.0.0.1:8081/).
+
+6. Install [alembic](https://pypi.org/project/alembic/) and run
+
+    ```sh
+    $ alembic upgrade head
+    ```
+   This will create empty tables in your Postgres.
+
+7. Run
+
+    ```sh
     $ python3 main.py
     ```
-
-This will start the local Postgres on [http://127.0.0.1:8080/](http://127.0.0.1:8080/) and local Redis on [http://127.0.0.1:8081/](http://127.0.0.1:8081/). It will also start your test bot. Try `/start` command in your bot!
+   This will start your test bot. Try `/start` command in your bot!
