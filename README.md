@@ -8,3 +8,24 @@ A telegram bot supporting [NeLenkin Club](https://t.me/lenka_ne_club) — a book
  - Users can sign up to Leetcode mocks
  - Bot creates pairs for Leetcode mocks and send a message to a group chat
  - Bot manages subscriptions and Pro courses
+
+## Installing and running locally
+
+1. Install [Docker](https://www.docker.com/get-started)
+
+2. Clone the repo
+
+    ```sh
+    $ git clone https://github.com/LenaAn/neLenkin_bot.git
+    $ cd neLenkin_bot
+    ```
+3. Create a test telegram bot and get a token, here's [an instruction](https://core.telegram.org/bots/tutorial#obtain-your-bot-token).
+4. Create a `.env` file, look at `.env.example` for the examplpe. Put your bot token into `.env` file.
+5. Run
+
+    ```sh
+    $ docker compose up -d
+    $ python3 main.py
+    ```
+
+This will start the local Postgres on [http://127.0.0.1:8080/](http://127.0.0.1:8080/) and local Redis on [http://127.0.0.1:8081/](http://127.0.0.1:8081/). It will also start your test bot. Try `/start` command in your bot!
