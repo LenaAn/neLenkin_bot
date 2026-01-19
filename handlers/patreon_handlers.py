@@ -69,14 +69,14 @@ async def connect_with_email(update: Update, context: ContextTypes.DEFAULT_TYPE)
     email_to_find = update.message.text.strip().lower()
     logging.info(f"looking for patron with email {email_to_find}")
 
-    fetch_patrons.load_patrons()
+    await fetch_patrons.load_patrons(context.bot)
     patron_info = fetch_patrons.get_patron_by_email(email_to_find)
     if patron_info:
         if await store_patreon_linking(update, email_to_find, context):
             logging.info(f"Patron found for email {email_to_find}: {patron_info}")
             msg: str = f"Нашла твой профиль Patreon: {email_to_find}.\n\n"
             # todo: call reply_for_patreon_members or reply_for_basic_with_linked_patreon here
-            donate_amount_cents = int(patron_info['currently_entitled_amount_cents'])
+            donate_amount_cents = int(patron_info['sum_of_entitled_tiers_amount_cents'])
             if donate_amount_cents >= 1500:
                 msg += f"Ты донатишь мне ${donate_amount_cents // 100} в месяц. Спасибо! 🥹"
             elif 0 < donate_amount_cents < 1500:

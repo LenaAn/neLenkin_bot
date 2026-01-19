@@ -15,7 +15,7 @@ class MembershipLevel:
     number: int  # this is to compare two levels and get max
     name: str
     description: str
-    price_cents: int  # compare it with currently_entitled_amount_cents returned from Patreon
+    price_cents: int  # compare it with sum_of_entitled_tiers_amount_cents returned from Patreon
 
 
 basic = MembershipLevel(
@@ -46,15 +46,15 @@ class UserMembershipInfo:
     member_level_by_activity: MembershipLevel = basic
     member_level_by_activity_expiration: date = date(year=1970, month=1, day=1)
     patreon_email: str = ""
-    patreon_currently_entitled_amount_cents: int = 0
+    sum_of_entitled_tiers_amount_cents: int = 0
 
     def get_patreon_level(self) -> MembershipLevel:
         patreon_level = basic
-        if self.patreon_currently_entitled_amount_cents >= 1500:
+        if self.sum_of_entitled_tiers_amount_cents >= 1500:
             if self.patreon_email != "":
                 patreon_level = pro
             else:
-                raise Exception("patreon_currently_entitled_amount_cents non-zero while patreon email is missing!")
+                raise Exception("sum_of_entitled_tiers_amount_cents non-zero while patreon email is missing!")
         return patreon_level
 
     def get_overall_level(self) -> MembershipLevel:
@@ -64,7 +64,7 @@ class UserMembershipInfo:
         return (f"Level by activity: {self.member_level_by_activity.name}\n"
                 f"Member level by activity expiration: {self.member_level_by_activity_expiration}\n"
                 f"Patreon email: {self.patreon_email}\n"
-                f"Patreon currently entitled amount cents: {self.patreon_currently_entitled_amount_cents}")
+                f"Patreon currently entitled amount cents: {self.sum_of_entitled_tiers_amount_cents}")
 
 
 def get_user_membership_info(tg_id: int, tg_username: str = None) -> UserMembershipInfo:
@@ -99,9 +99,9 @@ def get_user_membership_info(tg_id: int, tg_username: str = None) -> UserMembers
     if info.patreon_email != "":
         patreon_info = fetch_patrons.get_patron_by_email(info.patreon_email)
         if patreon_info:
-            info.patreon_currently_entitled_amount_cents = int(patreon_info["currently_entitled_amount_cents"])
+            info.sum_of_entitled_tiers_amount_cents = int(patreon_info["sum_of_entitled_tiers_amount_cents"])
         else:
-            info.patreon_currently_entitled_amount_cents = 0
+            info.sum_of_entitled_tiers_amount_cents = 0
             logging.warning(f"Patreon Linking exists in DB, but not in Redis for user {tg_username}, patreon email"
                             f" is {info.patreon_email}")
 
