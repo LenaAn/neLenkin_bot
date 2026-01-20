@@ -53,6 +53,8 @@ if __name__ == '__main__':
     application.add_handler(
         CommandHandler('get_ddia_users', admin_commands.get_ddia_users_handler, filters.ChatType.PRIVATE))
     application.add_handler(
+        CommandHandler('get_dmls_users', admin_commands.get_dmls_users_handler, filters.ChatType.PRIVATE))
+    application.add_handler(
         CommandHandler('get_grind_users', admin_commands.get_grind_users_handler, filters.ChatType.PRIVATE))
     application.add_handler(
         CommandHandler('add_days', admin_commands.add_days_handler, filters.ChatType.PRIVATE))

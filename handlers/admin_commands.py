@@ -165,6 +165,19 @@ async def get_ddia_users_handler(update: Update, context: ContextTypes.DEFAULT_T
     )
 
 
+@is_curator(constants.dmls_course_id)
+async def get_dmls_users_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    logging.info(f"get_dmls_users_handler handler triggered by {helpers.repr_user_from_update(update)}")
+
+    with Session(models.engine) as session:
+        dmls_users_count = session.query(models.Enrollment.tg_id).filter(
+            models.Enrollment.course_id == constants.dmls_course_id).count()
+
+    await context.bot.send_message(
+        chat_id=update.effective_chat.id,
+        text=f"{dmls_users_count} users are enrolled in DMLS"
+    )
+
 ECHO = 1
 
 
