@@ -104,6 +104,7 @@ ddia_4_course_id: int = 10
 grind_course_id: int = 11
 codecrafters_course_id: int = 12
 aoc_course_id: int = 13
+dmls_course_id: int = 14
 
 id_to_course = {
     leetcode_course_id: "Leetcode",
@@ -112,6 +113,7 @@ id_to_course = {
     grind_course_id: "Leetcode-Grind-2",
     codecrafters_course_id: "CodeCrafters-Redis",
     aoc_course_id: "AdventOfCode-2025",
+    dmls_course_id: "Designing-ML-Systems"
 }
 
 before_call_reminders = {
@@ -144,3 +146,14 @@ leetcode_grind_enroll_description = "Бот будет присылать теб
 leetcode_grind_unenroll_description = "Бот больше не будет присылать тебе напоминания о Leetcode Grind"
 leetcode_grind_cta_description = ("Нажми кнопку \"Хочу участвовать\" чтобы получать тему недели, ссылку на звонок и "
                                   "новости о потоке!")
+
+dmls_description = ("Мы читаем <a "
+                    "href='https://www.oreilly.com/library/view/designing-machine-learning/9781098107956/'>Designing ML Systems</a> "
+                    "от Chip Huyen. Звонки проходят каждый вторник в 19:00 по Берлину. Первый звонок — 27 января 2026 года."
+                    "\n\nТаблица с расписанием и докладчиками "
+                    "<a href='https://docs.google.com/spreadsheets/d/12ZfAfGceVuPZZoWbmHaSPcwe1mLTl9Jg9YONP7JkmsQ/edit?gid=0'>вот</a>.")
+
+dmls_enroll_description = ("Бот будет присылать тебе ссылку на Zoom за пять минут до звонка, если у тебя есть подписка."
+                           "\n\nА если нет — напоминание оформить подписку!")
+dmls_unenroll_description = "Бот больше не будет присылать тебе напоминания о Designing ML Systems"
+dmls_cta_description = "Нажми кнопку \"Хочу участвовать\" чтобы получать ссылку на звонок и рассылку от куратора потока"
