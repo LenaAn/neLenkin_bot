@@ -31,6 +31,9 @@ async def button_click(update: Update, _: ContextTypes.DEFAULT_TYPE) -> None:
         "ddia_unenroll": handle_ddia_unenroll,
         "mock_leetcode": handle_mock_leetcode,
         "leetcode_grind": handle_leetcode_grind,
+        "dmls": handle_dmls,
+        "dmls_enroll": handle_dmls_enroll,
+        "dmls_unenroll": handle_dmls_unenroll,
         "leetcode_grind_enroll": handle_leetcode_grind_enroll,
         "leetcode_grind_unenroll": handle_leetcode_grind_unenroll,
         "how_to_present": handle_how_to_present,
@@ -130,6 +133,12 @@ async def handle_leetcode_grind(update: Update) -> None:
     await handle_course_info(update, constants.grind_course_id, constants.leetcode_grind_description,
                              constants.leetcode_grind_enroll_description, constants.leetcode_grind_cta_description,
                              "leetcode_grind_enroll", "leetcode_grind_unenroll")
+
+
+async def handle_dmls(update: Update) -> None:
+    await handle_course_info(update, constants.dmls_course_id, constants.dmls_description,
+                             constants.dmls_enroll_description, constants.dmls_cta_description,
+                             "dmls_enroll", "dmls_unenroll")
 
 
 async def handle_codecrafters(update: Update) -> None:
@@ -356,6 +365,18 @@ async def handle_ddia_enroll(update: Update) -> None:
 
 async def handle_ddia_unenroll(update: Update) -> None:
     await handle_unenroll(update, constants.ddia_4_course_id, constants.ddia_unenroll_description)
+
+
+async def handle_dmls_enroll(update: Update) -> None:
+    await handle_enroll(
+        update,
+        constants.dmls_course_id ,
+        "dmls_unenroll",
+        constants.dmls_enroll_description)
+
+
+async def handle_dmls_unenroll(update: Update) -> None:
+    await handle_unenroll(update, constants.dmls_course_id, constants.dmls_unenroll_description)
 
 
 async def handle_how_to_present(update: Update) -> None:
