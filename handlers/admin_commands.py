@@ -165,6 +165,19 @@ async def get_ddia_users_handler(update: Update, context: ContextTypes.DEFAULT_T
     )
 
 
+@is_curator(constants.dmls_course_id)
+async def get_dmls_users_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    logging.info(f"get_dmls_users_handler handler triggered by {helpers.repr_user_from_update(update)}")
+
+    with Session(models.engine) as session:
+        dmls_users_count = session.query(models.Enrollment.tg_id).filter(
+            models.Enrollment.course_id == constants.dmls_course_id).count()
+
+    await context.bot.send_message(
+        chat_id=update.effective_chat.id,
+        text=f"{dmls_users_count} users are enrolled in DMLS"
+    )
+
 ECHO = 1
 
 
@@ -418,6 +431,33 @@ async def ddia_broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
 ddia_broadcast_conv_handler = ConversationHandler(
     entry_points=[CommandHandler('ddia_broadcast', start_ddia_broadcast, filters.ChatType.PRIVATE)],
     states={DDIA_BROADCAST: [MessageHandler(~filters.COMMAND, ddia_broadcast)]},
+    fallbacks=[
+        CommandHandler('cancel_broadcast', cancel_broadcast),
+        CommandHandler('cancel', cancel_broadcast),
+    ],
+)
+
+DMLS_BROADCAST = 1
+
+
+@is_curator(constants.dmls_course_id)
+async def start_dmls_broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    logging.info(f"start_dmls_broadcast handler triggered by {helpers.repr_user_from_update(update)}")
+    await context.bot.send_message(
+        chat_id=update.effective_chat.id,
+        text=f"Send a message to broadcast to DMLS users"
+    )
+    return DMLS_BROADCAST
+
+
+@is_curator(constants.dmls_course_id)
+async def dmls_broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    return await do_broadcast_course(update, context, constants.dmls_course_id)
+
+
+dmls_broadcast_conv_handler = ConversationHandler(
+    entry_points=[CommandHandler('dmls_broadcast', start_dmls_broadcast, filters.ChatType.PRIVATE)],
+    states={DMLS_BROADCAST: [MessageHandler(~filters.COMMAND, dmls_broadcast)]},
     fallbacks=[
         CommandHandler('cancel_broadcast', cancel_broadcast),
         CommandHandler('cancel', cancel_broadcast),

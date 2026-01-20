@@ -31,6 +31,7 @@ if __name__ == '__main__':
     application.add_handler(admin_commands.leetcode_broadcast_conv_handler)
     application.add_handler(admin_commands.sre_broadcast_conv_handler)
     application.add_handler(admin_commands.ddia_broadcast_conv_handler)
+    application.add_handler(admin_commands.dmls_broadcast_conv_handler)
     application.add_handler(admin_commands.grind_broadcast_conv_handler)
     application.add_handler(admin_commands.leetcode_new_topic_broadcast)
     application.add_handler(leetcode_mock_handlers.leetcode_register_handler)
@@ -52,6 +53,8 @@ if __name__ == '__main__':
         CommandHandler('get_sre_users', admin_commands.get_sre_users_handler, filters.ChatType.PRIVATE))
     application.add_handler(
         CommandHandler('get_ddia_users', admin_commands.get_ddia_users_handler, filters.ChatType.PRIVATE))
+    application.add_handler(
+        CommandHandler('get_dmls_users', admin_commands.get_dmls_users_handler, filters.ChatType.PRIVATE))
     application.add_handler(
         CommandHandler('get_grind_users', admin_commands.get_grind_users_handler, filters.ChatType.PRIVATE))
     application.add_handler(
