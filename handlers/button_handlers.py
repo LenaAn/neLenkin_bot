@@ -147,7 +147,7 @@ async def handle_codecrafters(update: Update) -> None:
                              "codecrafters_enroll", "codecrafters_unenroll")
 
 
-async def reply_for_patreon_members(update: Update, membership_info) -> None:
+async def reply_for_patreon_members(update: Update, membership_info: membership.UserMembershipInfo) -> None:
     # todo: here a button to Отвязать профиль Patreon
     logging.info(f"reply_for_patreon_members triggered by {helpers.get_user(update)}")
 
@@ -165,7 +165,7 @@ async def reply_for_patreon_members(update: Update, membership_info) -> None:
     )
 
 
-async def reply_for_activity_members(update: Update, membership_info) -> None:
+async def reply_for_activity_members(update: Update, membership_info: membership.UserMembershipInfo) -> None:
     logging.info(f"reply_for_activity_members triggered by {helpers.get_user(update)}")
 
     msg: str = membership_info.get_overall_level().description
@@ -196,7 +196,7 @@ async def reply_for_activity_members(update: Update, membership_info) -> None:
     )
 
 
-async def reply_for_basic_with_linked_patreon(update: Update, membership_info) -> None:
+async def reply_for_basic_with_linked_patreon(update: Update, membership_info: membership.UserMembershipInfo) -> None:
     logging.info(f"reply_for_basic_with_linked_patreon triggered by {helpers.get_user(update)}")
 
     msg: str = membership_info.get_overall_level().description
@@ -218,7 +218,7 @@ async def reply_for_basic_with_linked_patreon(update: Update, membership_info) -
     )
 
 
-async def reply_for_basic(update: Update, membership_info) -> None:
+async def reply_for_basic(update: Update, membership_info: membership.UserMembershipInfo) -> None:
     logging.info(f"reply_for_basic triggered by {helpers.get_user(update)}")
 
     msg: str = membership_info.get_overall_level().description
