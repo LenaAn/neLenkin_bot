@@ -1,6 +1,7 @@
 .idea
 
 .env
+auth.json
 data
 
 #pickle persistance for conversation handlers

@@ -1,0 +1,8 @@
+{
+  "accessToken": "111111111111111111111111111111111111111111111111111111111111111",
+  "refresh_token": "2222222222222222222222222222222222222222222222222222222",
+  "expiresAt": 1771605666624,
+  "isEmptyUser": "0",
+  "redirectAppId": "web",
+  "_clientId": "aaaaaaaa-bbbbb-cccc-dddd-eeeeeeee"
+}

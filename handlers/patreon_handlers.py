@@ -114,7 +114,10 @@ connect_patreon_handler = ConversationHandler(
         CommandHandler('connect_patreon', start_connect_patreon, filters.ChatType.PRIVATE),
         CallbackQueryHandler(start_connect_patreon, '^connect_patreon$')
     ],
-    states={CONNECT_PATREON: [MessageHandler(filters.TEXT & ~filters.COMMAND, connect_with_email)]},
+    states={CONNECT_PATREON: [
+        MessageHandler(filters.TEXT & ~filters.COMMAND, connect_with_email),
+        CallbackQueryHandler(start_connect_patreon, '^connect_patreon$')
+    ]},
     fallbacks=[
         CommandHandler('cancel_connect', cancel_connect),
         CommandHandler('cancel', cancel_connect),
