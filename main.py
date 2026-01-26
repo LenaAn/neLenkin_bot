@@ -4,7 +4,7 @@ from telegram.ext import (filters, ApplicationBuilder, CommandHandler, MessageHa
 
 from handlers import admin_commands, button_handlers, menu, leetcode_mock_handlers, patreon_handlers
 import notifications
-from patreon import fetch_patrons
+from patreon import fetch_patrons, fetch_boosty_patrons
 import settings
 from leetcode_pairs import leetcode_notifications
 
@@ -19,6 +19,12 @@ async def post_init(app):
     await notifications.register_notifications(app)
     await leetcode_notifications.register_leetcode_pairs_notification(application)
     await fetch_patrons.load_patrons(app.bot)
+    await fetch_boosty_patrons.init()
+    await fetch_boosty_patrons.load_boosty_patrons(app.bot)
+
+
+async def post_shutdown(_unused_arg):
+    await fetch_boosty_patrons.close()
 
 
 if __name__ == '__main__':
@@ -97,5 +103,6 @@ if __name__ == '__main__':
     application.add_error_handler(button_handlers.error_handler)
 
     application.post_init = post_init
+    application.post_shutdown = post_shutdown
 
     application.run_polling()
