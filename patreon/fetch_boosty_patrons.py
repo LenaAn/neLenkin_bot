@@ -45,6 +45,7 @@ async def fetch_boosty_patrons(bot: Bot) -> Optional[list[dict]]:
 
         for subscriber in stats["data"]:
             boosty_all_members.append({
+                "id": subscriber["id"],
                 "email": subscriber["email"],
                 "name": subscriber["name"],
                 "price": subscriber["price"],
@@ -73,10 +74,11 @@ def store_boosty_patrons_to_cache(all_boosty_patrons: [dict]) -> None:
 
     for boosty_patron in all_boosty_patrons:
         try:
-            r.hset(f"boosty:user:{str(boosty_patron['email']).lower()}",
+            r.hset(f"boosty:user:{boosty_patron['id']}",
                    mapping={
-                       "name": str(boosty_patron['name']),
-                       "price": str(boosty_patron['price']),
+                       "email": boosty_patron['email'],
+                       "name": boosty_patron['name'],
+                       "price": boosty_patron['price'],
                    })
             success_insert_count += 1
         except Exception as e:
@@ -92,3 +94,18 @@ async def load_boosty_patrons(bot: Bot):
         # boosty patrons may change email address, in this case old email should be deleted from cache
         clear_boosty_patrons_from_cache()
         store_boosty_patrons_to_cache(boosty_patrons)
+
+
+def get_boosty_patrons_from_redis(min_price_rub: int) -> list[(str, str)]:
+    active_boosty_patrons = []
+
+    for key in r.scan_iter("boosty:user:*"):
+        user_data = r.hgetall(key)
+        user_data = {k.decode(): v.decode() for k, v in user_data.items()}
+
+        if int(user_data.get("price")) == min_price_rub:
+            boosty_logger.info(f"paid boosty subscriber is {user_data}")
+            boosty_patron_info = [user_data.get("name"), user_data.get("email"), user_data.get("price")]
+            active_boosty_patrons.append(boosty_patron_info)
+
+    return active_boosty_patrons
