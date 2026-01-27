@@ -129,3 +129,4 @@ ddia_notification_on = True
 codecrafters_notification_on = False
 pro_courses_on=True
 aoc_notification_on = False
+dmls_notification_on = True
