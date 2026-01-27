@@ -45,6 +45,7 @@ async def fetch_boosty_patrons(bot: Bot) -> Optional[list[dict]]:
 
         for subscriber in stats["data"]:
             boosty_all_members.append({
+                "id": subscriber["id"],
                 "email": subscriber["email"],
                 "name": subscriber["name"],
                 "price": subscriber["price"],
@@ -73,10 +74,11 @@ def store_boosty_patrons_to_cache(all_boosty_patrons: [dict]) -> None:
 
     for boosty_patron in all_boosty_patrons:
         try:
-            r.hset(f"boosty:user:{str(boosty_patron['email']).lower()}",
+            r.hset(f"boosty:user:{boosty_patron['id']}",
                    mapping={
-                       "name": str(boosty_patron['name']),
-                       "price": str(boosty_patron['price']),
+                       "email": boosty_patron['email'],
+                       "name": boosty_patron['name'],
+                       "price": boosty_patron['price'],
                    })
             success_insert_count += 1
         except Exception as e:
