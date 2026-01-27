@@ -28,6 +28,7 @@ async def register_notifications(application):
     # await register_leetcode_grind_prompt_to_connect_patreon_notifications(application)
     await register_codecrafters_notifications(application)
     await register_aoc_notifications(application)
+    await register_dmls_notifications(application)
 
 
 async def handle_notification(context: ContextTypes.DEFAULT_TYPE):
@@ -133,11 +134,13 @@ async def handle_aoc_notification(context: ContextTypes.DEFAULT_TYPE):
         notifications_logger.info("AoC notification is turned off, skipping sending notifications")
 
 
-
 async def handle_notification_for_course(context: ContextTypes.DEFAULT_TYPE):
     course_id: int = context.job.data["course_id"]
     if course_id == constants.ddia_4_course_id and not models.ddia_notification_on:
         notifications_logger.info("DDIA notification is turned off, skipping sending DDIA notification")
+        return
+    if course_id == constants.dmls_course_id and not models.dmls_notification_on:
+        notifications_logger.info("DMLS notification is turned off, skipping sending DMLS notification")
         return
     current_week: int = datetime.date.today().isocalendar().week
     with (Session(engine) as session):
@@ -154,9 +157,10 @@ async def handle_notification_for_course(context: ContextTypes.DEFAULT_TYPE):
 
             await context.bot.send_message(
                 chat_id=admin_chat_id,
-                text=f"Zoom link for DDIA not found for today!"
+                text=f"Zoom link for {constants.id_to_course[course_id]} not found for today!"
             )
-            notifications_logger.error('Zoom link for DDIA not found for today!', exc_info=e)
+            notifications_logger.error('Zoom link for {constants.id_to_course[course_id]} not found for today!',
+                                       exc_info=e)
             return
 
         notifications_logger.info(f'call_link is {call_link}')
@@ -366,4 +370,16 @@ async def register_aoc_notifications(app):
         days=(0, 1, 2, 3, 4, 5, 6),  # 0 = Sunday
         name=f"aoc_notification",
         data={"course_id": constants.aoc_course_id}
+    )
+
+
+async def register_dmls_notifications(app):
+    cet_winter_time = datetime.timezone(datetime.timedelta(hours=1))
+
+    app.job_queue.run_daily(
+        callback=handle_notification_for_course,
+        time=datetime.time(hour=18, minute=53, tzinfo=cet_winter_time),
+        days=(2,),  # 0 = Sunday, 2 = Tuesday
+        name=f"dmls_notification",
+        data={"course_id": constants.dmls_course_id}
     )

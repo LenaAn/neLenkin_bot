@@ -561,6 +561,28 @@ async def ddia_notification_off(update: Update, context: ContextTypes.DEFAULT_TY
     )
 
 
+@is_curator(constants.dmls_course_id)
+async def dmls_notification_on(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    logging.info(f"dmls_notification_on handler triggered by {helpers.repr_user_from_update(update)}")
+    models.dmls_notification_on = True
+
+    await context.bot.send_message(
+        chat_id=update.effective_chat.id,
+        text="DMLS notification is ON" if models.dmls_notification_on else "DMLS notification is OFF"
+    )
+
+
+@is_curator(constants.dmls_course_id)
+async def dmls_notification_off(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    logging.info(f"dmls_notification_off handler triggered by {helpers.repr_user_from_update(update)}")
+    models.dmls_notification_on = False
+
+    await context.bot.send_message(
+        chat_id=update.effective_chat.id,
+        text="DMLS notification is ON" if models.dmls_notification_on else "DMLS notification is OFF"
+    )
+
+
 @is_curator(constants.codecrafters_course_id)
 async def codecrafters_notification_on(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     logging.info(f"codecrafters_notification_on handler triggered by {helpers.repr_user_from_update(update)}")
