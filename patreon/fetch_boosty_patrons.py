@@ -103,7 +103,7 @@ def get_boosty_patrons_from_redis(min_price_rub: int) -> list[(str, str)]:
         user_data = r.hgetall(key)
         user_data = {k.decode(): v.decode() for k, v in user_data.items()}
 
-        if int(user_data.get("price")) == min_price_rub:
+        if int(user_data.get("price")) > 0:
             boosty_logger.info(f"paid boosty subscriber is {user_data}")
             boosty_patron_info = [user_data.get("name"), user_data.get("email"), user_data.get("price")]
             active_boosty_patrons.append(boosty_patron_info)
