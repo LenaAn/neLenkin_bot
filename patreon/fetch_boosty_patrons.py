@@ -109,3 +109,14 @@ def get_boosty_patrons_from_redis(min_price_rub: int) -> list[(str, str)]:
             active_boosty_patrons.append(boosty_patron_info)
 
     return active_boosty_patrons
+
+
+def get_boosty_info(boosty_user_id: str) -> Optional[dict]:
+    # todo: maybe need to reload from Boosty somewhere here
+    key = f"boosty:user:{boosty_user_id}"
+
+    if r.exists(key):
+        user_data = r.hgetall(key)
+        user_data = {k.decode(): v.decode() for k, v in user_data.items()}
+        return user_data
+    return None
