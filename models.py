@@ -110,6 +110,23 @@ class PatreonLink(Base):
     )
 
 
+# Some Boosty users don't have email, so identify them by user_id returned from Boosty.
+# The problem is that Boosty users don't know their user_id, they know email if it's present and name.
+# When adding a link from tg user to Boosty user, need to consult Redis to get Boosty user_id by email or name provided
+# by tg user.
+class BoostyLink(Base):
+    __tablename__ = 'BoostyLink'
+
+    tg_id = Column(sqlalchemy.Text, nullable=False, primary_key=True)
+    tg_username = Column(sqlalchemy.Text, nullable=True)
+    boosty_user_id = Column(sqlalchemy.Text, nullable=False)
+
+    __table_args__ = (
+        sqlalchemy.UniqueConstraint('boosty_user_id', name='Boosty_user_id_is_unique'),
+        sqlalchemy.ForeignKeyConstraint(['tg_id'], ['Users.tg_id'],  name='fk_valid_tg_id')
+    )
+
+
 class MembershipByActivity(Base):
     __tablename__ = 'MembershipByActivity'
 
