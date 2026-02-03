@@ -20,9 +20,12 @@ class MembershipLevel:
 basic = MembershipLevel(
     number=1,
     name="Базовый",
-    description="Уровень твоей подписки: 💙Базовый.\n\nТебе доступны Random Coffee без ограничений и участие в "
-                "бесплатных потоках. Время от времени также проходят оффлайн-сходки в городах и "
-                "появляются эксклюзивные вакансии!",
+    description="Уровень твоей подписки: 💙Базовый.\n\n"
+                "Тебе доступны Random Coffee без ограничений и участие в бесплатных потоках. "
+                "Время от времени также проходят оффлайн-сходки в городах и появляются эксклюзивные вакансии!\n\n"
+                "Чтобы улучшить подписку, сделай презентацию либо подпишись на "
+                "<a href='https://boosty.to/lenaan'>Boosty</a> на 1500 рублей в месяц либо на "
+                "<a href='https://www.patreon.com/c/LenaAnyusha'>Patreon</a> на $15 в месяц",
     price_cents=0
 )
 
@@ -68,6 +71,13 @@ class UserMembershipInfo:
     def get_overall_level(self) -> MembershipLevel:
         return max(self.member_level_by_activity, self.get_patreon_level(), self.get_boosty_level(),
                    key=lambda level: level.number)
+
+    def repr_boosty_profile(self) -> str:
+        if self.boosty_email:
+            return self.boosty_email
+        if self.boosty_name:
+            return self.boosty_name
+        return self.boosty_user_id
 
     def __repr__(self):
         return (f"Level by activity: {self.member_level_by_activity.name}\n"

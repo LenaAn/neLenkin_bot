@@ -1,5 +1,6 @@
 import datetime
 import logging
+from typing import Optional
 
 from sqlalchemy import exists, select
 from sqlalchemy.exc import IntegrityError
@@ -148,17 +149,34 @@ async def handle_codecrafters(update: Update) -> None:
 
 
 async def reply_for_patreon_members(update: Update, membership_info: membership.UserMembershipInfo) -> None:
-    # todo: here a button to Отвязать профиль Patreon
     logging.info(f"reply_for_patreon_members triggered by {helpers.get_user(update)}")
 
     msg: str = membership_info.get_overall_level().description
-    msg += (f"\n\nПривязанный профиль Patreon: {membership_info.patreon_email}. Ты донатишь "
+    msg += (f"\n\n • Привязанный профиль Patreon: {membership_info.patreon_email}. Ты донатишь "
             f"${membership_info.sum_of_entitled_tiers_amount_cents // 100}. Спасибо! ❤️")
 
     reply_markup = InlineKeyboardMarkup([[
         InlineKeyboardButton("Отвязать профиль Patreon", callback_data="disconnect_patreon"),
     ]])
 
+    await update.callback_query.edit_message_text(
+        text=msg,
+        reply_markup=reply_markup,
+    )
+
+
+async def reply_for_boosty_members(update: Update, membership_info: membership.UserMembershipInfo) -> None:
+    logging.info(f"reply_for_boosty_members triggered by {helpers.get_user(update)}")
+
+    msg: str = membership_info.get_overall_level().description
+    msg += (f"\n\n • Привязанный профиль Boosty: {membership_info.repr_boosty_profile()}. Ты донатишь "
+            f"{membership_info.boosty_price} рублей. Спасибо! ❤️")
+
+    reply_markup = None
+    # todo: add a button to disconnect Boosty
+    # InlineKeyboardMarkup([[
+    #     InlineKeyboardButton("Отвязать профиль Boosty", callback_data="disconnect_boosty"),
+    # ]])
     await update.callback_query.edit_message_text(
         text=msg,
         reply_markup=reply_markup,
@@ -196,28 +214,6 @@ async def reply_for_activity_members(update: Update, membership_info: membership
     )
 
 
-async def reply_for_basic_with_linked_patreon(update: Update, membership_info: membership.UserMembershipInfo) -> None:
-    logging.info(f"reply_for_basic_with_linked_patreon triggered by {helpers.get_user(update)}")
-
-    msg: str = membership_info.get_overall_level().description
-    msg += f"\n\nПривязанный профиль Patreon: {membership_info.patreon_email}."
-    if membership_info.sum_of_entitled_tiers_amount_cents > 0:
-        msg += f" Ты донатишь ${membership_info.sum_of_entitled_tiers_amount_cents // 100}. Спасибо! ❤️"
-    else:
-        msg += f" Ты не донатишь мне на Patreon️"
-    msg += ("\n\nЧтобы улучшить подписку, сделай презентацию либо подпишись на "
-            "<a href='https://www.patreon.com/c/LenaAnyusha'>Patreon</a> хотя бы на $15 в месяц")
-
-    reply_markup = InlineKeyboardMarkup([[
-        InlineKeyboardButton("Отвязать профиль Patreon", callback_data="disconnect_patreon"),
-    ]])
-    await update.callback_query.edit_message_text(
-        text=msg,
-        reply_markup=reply_markup,
-        parse_mode="HTML"
-    )
-
-
 async def reply_for_basic(update: Update, membership_info: membership.UserMembershipInfo) -> None:
     logging.info(f"reply_for_basic triggered by {helpers.get_user(update)}")
 
@@ -234,6 +230,34 @@ async def reply_for_basic(update: Update, membership_info: membership.UserMember
     )
 
 
+def get_patreon_reply(update: Update, membership_info: membership.UserMembershipInfo) -> tuple[str, Optional[InlineKeyboardButton]]:
+    logging.info(f"get_patreon_reply triggered by {helpers.get_user(update)}")
+    if membership_info.patreon_email == "":
+        return "", InlineKeyboardButton("Привязать профиль Patreon", callback_data="connect_patreon")
+    else:
+        msg = f"\n\n • Привязанный профиль Patreon: {membership_info.patreon_email}."
+        if membership_info.sum_of_entitled_tiers_amount_cents > 0:
+            msg += f" Ты донатишь ${membership_info.sum_of_entitled_tiers_amount_cents // 100}. Спасибо! ❤️"
+        else:
+            msg += f" Ты не донатишь мне на Patreon️"
+        return msg, InlineKeyboardButton("Отвязать профиль Patreon", callback_data="disconnect_patreon")
+
+
+def get_boosty_reply(update: Update, membership_info: membership.UserMembershipInfo) -> tuple[str, Optional[InlineKeyboardButton]]:
+    logging.info(f"get_boosty_reply triggered by {helpers.get_user(update)}")
+
+    if membership_info.boosty_user_id == "":
+        return "", None
+    else:
+        msg = f"\n\n • Привязанный профиль Boosty: {membership_info.repr_boosty_profile()}."
+        if membership_info.boosty_price > 0:
+            msg += f" Ты донатишь {membership_info.boosty_price} рублей. Спасибо! ❤️"
+        else:
+            msg += f" Ты не донатишь мне на Boosty"
+        # todo: return InlineKeyboardButton("Отвязать профиль Boosty", callback_data="disconnect_boosty")
+        return msg, None
+
+
 async def handle_membership(update: Update) -> None:
     tg_user = helpers.get_user(update)
     logging.info(f"handle_membership triggered by {tg_user}")
@@ -244,18 +268,40 @@ async def handle_membership(update: Update) -> None:
         await reply_for_patreon_members(update, membership_info)
         return
 
+    if membership_info.get_boosty_level() == membership.pro:
+        await reply_for_boosty_members(update, membership_info)
+        return
+
     if membership_info.member_level_by_activity == membership.pro:
         await reply_for_activity_members(update, membership_info)
         return
 
     # otherwise user has basic level
-    if membership_info.patreon_email != "":
-        await reply_for_basic_with_linked_patreon(update, membership_info)
-        return
+    # they may have 1 of 4 options:
+    # 1. No Accounts Connected -> Show them two buttons
+    # 2. Only Patreon Connected (but not enough money donating) -> Show then how much they are donating, don't mention Boosty
+    # 3. Only Boosty Connected (but not enough money donating) -> Show them how much they are donating, don't mention Patreon
+    # 4. Both Boosty and Patreon Connected -> Shouldn't happen, but can happen since not enforced on DB level. Show both and add buttons to unlink any of this
 
-    # user has a basic subscription: no Redis donation, no activity membership
-    # and also no Patreon linked
-    await reply_for_basic(update, membership_info)
+    msg: str = membership_info.get_overall_level().description
+    patreon_message, patreon_button = get_patreon_reply(update, membership_info)
+    boosty_message, boosty_button = get_boosty_reply(update, membership_info)
+
+    msg += patreon_message
+    msg += boosty_message
+
+    button_list = []
+    if patreon_button:
+        button_list.append(patreon_button)
+    if boosty_button:
+        button_list.append(boosty_button)
+    menu = [button_list[i:i + 1] for i in range(0, len(button_list), 1)]
+
+    await update.callback_query.edit_message_text(
+        text=msg,
+        reply_markup=InlineKeyboardMarkup(menu),
+        parse_mode="HTML"
+    )
     return
 
 
