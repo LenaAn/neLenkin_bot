@@ -226,6 +226,7 @@ async def prompt_to_connect_patreon_notifications(context: ContextTypes.DEFAULT_
 
     menu = InlineKeyboardMarkup([
         [InlineKeyboardButton("Привязать профиль Patreon", callback_data="connect_patreon")],
+        [InlineKeyboardButton("Привязать профиль Boosty", callback_data="connect_boosty")],
         [unenroll_btn],
     ])
 

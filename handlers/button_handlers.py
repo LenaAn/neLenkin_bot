@@ -13,7 +13,7 @@ import constants
 import helpers
 import membership
 import models
-from handlers import patreon_handlers
+from handlers import boosty_handlers, patreon_handlers
 import settings
 
 
@@ -45,6 +45,7 @@ async def button_click(update: Update, _: ContextTypes.DEFAULT_TYPE) -> None:
         "codecrafters_unenroll": handle_codecrafters_unenroll,
         "membership": handle_membership,
         "disconnect_patreon": patreon_handlers.disconnect_patreon_handler,
+        "disconnect_boosty": boosty_handlers.disconnect_boosty_handler,
     }
 
     handler = handlers_dict.get(query.data)
@@ -172,11 +173,9 @@ async def reply_for_boosty_members(update: Update, membership_info: membership.U
     msg += (f"\n\n • Привязанный профиль Boosty: {membership_info.repr_boosty_profile()}. Ты донатишь "
             f"{membership_info.boosty_price} рублей. Спасибо! ❤️")
 
-    reply_markup = None
-    # todo: add a button to disconnect Boosty
-    # InlineKeyboardMarkup([[
-    #     InlineKeyboardButton("Отвязать профиль Boosty", callback_data="disconnect_boosty"),
-    # ]])
+    reply_markup = InlineKeyboardMarkup([[
+        InlineKeyboardButton("Отвязать профиль Boosty", callback_data="disconnect_boosty"),
+    ]])
     await update.callback_query.edit_message_text(
         text=msg,
         reply_markup=reply_markup,
@@ -198,18 +197,21 @@ async def reply_for_activity_members(update: Update, membership_info: membership
                     f"\n\nЧтобы сохранить 💜Pro подписку, сделай презентацию либо подпишись на "
                     f"<a href='https://www.patreon.com/c/LenaAnyusha'>Patreon</a> хотя бы на $15 в месяц.\n\n")
 
-    if membership_info.patreon_email != "":
-        reply_markup = InlineKeyboardMarkup([[
-            InlineKeyboardButton("Отвязать профиль Patreon", callback_data="disconnect_patreon"),
-        ]])
+    buttons = []
+    if membership_info.patreon_email == "":
+        buttons.append(InlineKeyboardButton("Привязать профиль Patreon", callback_data="connect_patreon"))
     else:
-        reply_markup = InlineKeyboardMarkup([[
-            InlineKeyboardButton("Привязать профиль Patreon", callback_data="connect_patreon"),
-        ]])
+        buttons.append(InlineKeyboardButton("Отвязать профиль Patreon", callback_data="disconnect_patreon"))
+
+    if membership_info.boosty_user_id == "":
+        buttons.append(InlineKeyboardButton("Привязать профиль Boosty", callback_data="connect_boosty"))
+    else:
+        buttons.append(InlineKeyboardButton("Отвязать профиль Boosty", callback_data="disconnect_boosty"))
+    menu = [buttons[i:i + 1] for i in range(0, len(buttons), 1)]
 
     await update.callback_query.edit_message_text(
         text=msg,
-        reply_markup=reply_markup,
+        reply_markup=InlineKeyboardMarkup(menu),
         parse_mode="HTML"
     )
 
@@ -220,9 +222,10 @@ async def reply_for_basic(update: Update, membership_info: membership.UserMember
     msg: str = membership_info.get_overall_level().description
     msg += ("\n\nЧтобы улучшить подписку, сделай презентацию либо подпишись на "
             "<a href='https://www.patreon.com/c/LenaAnyusha'>Patreon</a> хотя бы на $15 в месяц")
-    reply_markup = InlineKeyboardMarkup([[
-        InlineKeyboardButton("Привязать профиль Patreon", callback_data="connect_patreon"),
-    ]])
+    reply_markup = InlineKeyboardMarkup([
+        [InlineKeyboardButton("Привязать профиль Patreon", callback_data="connect_patreon")],
+        [InlineKeyboardButton("Привязать профиль Boosty", callback_data="connect_boosty")],
+    ])
     await update.callback_query.edit_message_text(
         text=msg,
         reply_markup=reply_markup,
@@ -247,15 +250,14 @@ def get_boosty_reply(update: Update, membership_info: membership.UserMembershipI
     logging.info(f"get_boosty_reply triggered by {helpers.get_user(update)}")
 
     if membership_info.boosty_user_id == "":
-        return "", None
+        return "", InlineKeyboardButton("Привязать профиль Boosty", callback_data="connect_boosty")
     else:
         msg = f"\n\n • Привязанный профиль Boosty: {membership_info.repr_boosty_profile()}."
         if membership_info.boosty_price > 0:
             msg += f" Ты донатишь {membership_info.boosty_price} рублей. Спасибо! ❤️"
         else:
             msg += f" Ты не донатишь мне на Boosty"
-        # todo: return InlineKeyboardButton("Отвязать профиль Boosty", callback_data="disconnect_boosty")
-        return msg, None
+        return msg, InlineKeyboardButton("Отвязать профиль Boosty", callback_data="disconnect_boosty")
 
 
 async def handle_membership(update: Update) -> None:
@@ -300,7 +302,8 @@ async def handle_membership(update: Update) -> None:
     await update.callback_query.edit_message_text(
         text=msg,
         reply_markup=InlineKeyboardMarkup(menu),
-        parse_mode="HTML"
+        parse_mode="HTML",
+        disable_web_page_preview=True,
     )
     return
 

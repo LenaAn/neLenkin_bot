@@ -120,3 +120,17 @@ def get_boosty_info(boosty_user_id: str) -> Optional[dict]:
         user_data = {k.decode(): v.decode() for k, v in user_data.items()}
         return user_data
     return None
+
+
+# user_input should be either email or name
+# slower method than `get_boosty_info`, use only when boosty_user_id is not present
+# works in O(n) where n is a number of Boosty users
+def get_boosty_info_by_field(user_input: str = None) -> Optional[tuple[str, dict]]:
+    user_input = user_input.lower()
+    for key in r.scan_iter("boosty:user:*"):
+        user_data = r.hgetall(key)
+        user_data = {k.decode(): v.decode() for k, v in user_data.items()}
+
+        if user_data.get("email").lower() == user_input or user_data.get("name").lower() == user_input:
+            return key.decode().split(':')[2], user_data
+    return None
