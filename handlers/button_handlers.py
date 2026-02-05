@@ -302,7 +302,8 @@ async def handle_membership(update: Update) -> None:
     await update.callback_query.edit_message_text(
         text=msg,
         reply_markup=InlineKeyboardMarkup(menu),
-        parse_mode="HTML"
+        parse_mode="HTML",
+        disable_web_page_preview=True,
     )
     return
 
