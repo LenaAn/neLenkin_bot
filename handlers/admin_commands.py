@@ -257,13 +257,19 @@ async def start_broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
 
 
 @is_admin
-async def broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE, reply_markup: InlineKeyboardMarkup = None) \
+async def broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE, reply_markup: InlineKeyboardMarkup = None,
+                    membership_filter: membership.MembershipLevel = None) \
         -> int:
     logging.info(f"broadcast handler triggered by {helpers.repr_user_from_update(update)}")
 
     with Session(models.engine) as session:
         users = session.query(models.User).all()
         logging.info(f"got {len(users)} users from db for broadcast")
+
+    if membership_filter:
+        users = [user for user in users if
+                 membership.get_user_membership_info(user.tg_id).get_overall_level() == membership_filter]
+        logging.info(f"got {len(users)} after filtering for {membership_filter} membership")
 
     successful_count = 0
     fail_count = 0
@@ -305,6 +311,46 @@ broadcast_conv_handler = ConversationHandler(
     fallbacks=[
         CommandHandler('cancel_broadcast', cancel_broadcast),
         CommandHandler('cancel', cancel_broadcast),
+    ],
+)
+
+
+BROADCAST_BASIC_MEMBERS = 1
+
+
+@is_admin
+async def start_broadcast_basic_members(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    logging.info(f"start_broadcast_basic_members handler triggered by {helpers.repr_user_from_update(update)}")
+    await context.bot.send_message(
+        chat_id=update.effective_chat.id,
+        text=f"Send a message to broadcast to BASIC members"
+    )
+    return BROADCAST_BASIC_MEMBERS
+
+
+@is_admin
+async def broadcast_basic_members(update: Update, context: ContextTypes.DEFAULT_TYPE, reply_markup: InlineKeyboardMarkup = None) \
+        -> int:
+    logging.info(f"broadcast_basic_members handler triggered by {helpers.repr_user_from_update(update)}")
+    return await broadcast(update, context, reply_markup, membership.basic)
+
+
+@is_any_curator
+async def cancel_broadcast_basic_members(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    logging.info(f"cancel_broadcast_basic_members handler triggered by {helpers.repr_user_from_update(update)}")
+    await context.bot.send_message(
+        chat_id=update.effective_chat.id,
+        text="Broadcast to BASIC members cancelled",
+    )
+    return ConversationHandler.END
+
+
+basic_members_broadcast_conv_handler = ConversationHandler(
+    entry_points=[CommandHandler('broadcast_basic_members', start_broadcast_basic_members, filters.ChatType.PRIVATE)],
+    states={BROADCAST_BASIC_MEMBERS: [MessageHandler(~filters.COMMAND, broadcast_basic_members)]},
+    fallbacks=[
+        CommandHandler('cancel_broadcast', cancel_broadcast_basic_members),
+        CommandHandler('cancel', cancel_broadcast_basic_members),
     ],
 )
 
