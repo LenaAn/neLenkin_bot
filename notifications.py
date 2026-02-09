@@ -29,6 +29,7 @@ async def register_notifications(application):
     await register_codecrafters_notifications(application)
     await register_aoc_notifications(application)
     await register_dmls_notifications(application)
+    await register_dmls_prompt_to_connect_patreon_notifications(application)
 
 
 async def handle_notification(context: ContextTypes.DEFAULT_TYPE):
@@ -186,6 +187,16 @@ async def prompt_to_connect_patreon_notifications(context: ContextTypes.DEFAULT_
             parse_mode="HTML")
         return
 
+    if course_id == constants.dmls_course_id and not models.dmls_notification_on:
+        notifications_logger.info(f"Skipping a prompt to connect Patreon for course {constants.id_to_course[course_id]}"
+                                  f" because DMLS is turned off")
+        await context.bot.send_message(
+            chat_id=settings.ADMIN_CHAT_ID,
+            text=f"Skipping {constants.id_to_course[course_id]} prompt to connect Patreon because DMLS course is "
+                 f"turned off",
+            parse_mode="HTML")
+        return
+
     if not models.pro_courses_on:
         notifications_logger.info(f"Skipping a prompt to connect Patreon for course {constants.id_to_course[course_id]}"
                                   f" because PRO courses are turned off")
@@ -206,11 +217,10 @@ async def prompt_to_connect_patreon_notifications(context: ContextTypes.DEFAULT_
                     "<a href='https://www.patreon.com/c/LenaAnyusha'>Patreon</a>."
                     "\n\nНикому не говори почту, которая привязана к твоему Patreon аккаунту! Когда оформишь подписку на Patreon, "
                     "привяжи почту по кнопке ⬇️"
-                    "\n\n2. Если у тебя только российская карточка, оформи подписку на 1500 рублей на мой <a href='https://boosty.to/lenaan'>Boosty</a> и напиши мне @lenka_colenka!"
-                    "\n\n3. Если возникнут какие-то сложности, напиши @lenka_colenka!"
+                    "\n\n2. Либо оформи подписку на 1500 рублей на мой <a href='https://boosty.to/lenaan'>Boosty</a> и привяжи почту по кнопке ⬇️"                    "\n\n3. Если возникнут какие-то сложности, напиши @lenka_colenka!"
                     "\n\n4. Ты можешь отписаться от новостей про DDIA, чтобы больше не получать уведомления.")
-            unenroll_btn = InlineKeyboardButton("Перестать получать уведомления", callback_data="ddia_unenroll")
-    else:
+            unenroll_btn = InlineKeyboardButton("Перестать получать уведомления о DDIA", callback_data="ddia_unenroll")
+    elif course_id == constants.leetcode_course_id:
         message: str = (
             "Привет! Сегодня вечером будет звонок с обсуждением задач из списка Leetcode-75! Тему "
             "сегодняшнего звонка можешь посмотреть <a href='https://docs.google.com/spreadsheets/d/1PpDAt6tRd9LNmMIxRBP3Qb8So06beKaAhYoe3ySXI9Y/edit?gid=0#gid=0'>здесь</a>. "
@@ -219,10 +229,23 @@ async def prompt_to_connect_patreon_notifications(context: ContextTypes.DEFAULT_
             "<a href='https://www.patreon.com/c/LenaAnyusha'>Patreon</a>."
             "\n\nНикому не говори почту, которая привязана к твоему Patreon аккаунту! Когда оформишь подписку на Patreon, "
             "привяжи почту по кнопке ⬇️"
-            "\n\n2. Если у тебя только российская карточка, оформи подписку на 1500 рублей на мой <a href='https://boosty.to/lenaan'>Boosty</a> и напиши мне @lenka_colenka!"
+            "\n\n2. Либо оформи подписку на 1500 рублей на мой <a href='https://boosty.to/lenaan'>Boosty</a> и привяжи почту по кнопке ⬇️"
             "\n\n3. Если возникнут какие-то сложности, напиши @lenka_colenka!"
             "\n\n4. Ты можешь отписаться от новостей про Leetcode Grind, чтобы больше не получать уведомления.")
-        unenroll_btn = InlineKeyboardButton("Перестать получать уведомления", callback_data="leetcode_grind_unenroll")
+        unenroll_btn = InlineKeyboardButton("Перестать получать уведомления о Leetcode Grind", callback_data="leetcode_grind_unenroll")
+    elif course_id == constants.dmls_course_id:
+        message: str = (
+            "Привет! Сегодня вечером будет звонок с обсуждением <a href='https://www.oreilly.com/library/view/designing-machine-learning/9781098107956/'>Designing Machine Learning Systems</a>. "
+            "Тему сегодняшнего звонка можешь посмотреть <a href='https://docs.google.com/spreadsheets/d/12ZfAfGceVuPZZoWbmHaSPcwe1mLTl9Jg9YONP7JkmsQ/edit?gid=0#gid=0'>в таблице</a>. "
+            "\n\n<b>Обсуждение DMLS — это 💜Pro курс, и чтобы сегодня вечером тебе пришла ссылка на звонок, нужна 💜Pro подписка!</b>"
+            "\n\n1. Чтобы оформить Pro подписку, подпишись на донат в $15 в месяц на моем "
+            "<a href='https://www.patreon.com/c/LenaAnyusha'>Patreon</a>. "
+            "\n\nНикому не говори почту, которая привязана к твоему Patreon аккаунту! Когда оформишь подписку на Patreon, "
+            "привяжи почту по кнопке ⬇️"
+            "\n\n2. Либо оформи подписку на 1500 рублей на мой <a href='https://boosty.to/lenaan'>Boosty</a> и привяжи почту по кнопке ⬇️"
+            "\n\n3. Если возникнут какие-то сложности, напиши @lenka_colenka!"
+            "\n\n4. Ты можешь отписаться от новостей про DMLS, чтобы больше не получать уведомления.")
+        unenroll_btn = InlineKeyboardButton("Перестать получать уведомления o DMLS", callback_data="dmls_unenroll")
 
     menu = InlineKeyboardMarkup([
         [InlineKeyboardButton("Привязать профиль Patreon", callback_data="connect_patreon")],
@@ -310,6 +333,18 @@ async def register_ddia_prompt_to_connect_patreon_notifications(app):
         days=(4,),  # 0 = Sunday, 4 = Thursday
         name=f"ddia_prompt_to_connect_patreon_notification",
         data={"course_id": constants.ddia_4_course_id}
+    )
+
+
+async def register_dmls_prompt_to_connect_patreon_notifications(app):
+    cet_winter_time = datetime.timezone(datetime.timedelta(hours=1))
+
+    app.job_queue.run_daily(
+        callback=prompt_to_connect_patreon_notifications,
+        time=datetime.time(hour=9, minute=53, tzinfo=cet_winter_time),  # morning before DMLS call
+        days=(2,),  # 0 = Sunday, 2 = Tuesday
+        name=f"dmls_prompt_to_connect_patreon_notification",
+        data={"course_id": constants.dmls_course_id}
     )
 
 
