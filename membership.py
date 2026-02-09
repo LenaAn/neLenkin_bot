@@ -181,4 +181,5 @@ def get_user_membership_info(tg_id: int, tg_username: str = None) -> UserMembers
 
 def is_course_pro(course_id: int):
     # todo: don't hardcode pro courses
-    return (course_id == constants.ddia_4_course_id) or (course_id == constants.grind_course_id)
+    return ((course_id == constants.ddia_4_course_id) or (course_id == constants.grind_course_id) or
+            (course_id == constants.dmls_course_id))
