@@ -144,6 +144,7 @@ leetcode_status_on = True
 sre_notification_on = False
 ddia_notification_on = False
 codecrafters_notification_on = False
+codecrafters_kafka_notification_on = True
 pro_courses_on=True
 aoc_notification_on = False
 dmls_notification_on = True
