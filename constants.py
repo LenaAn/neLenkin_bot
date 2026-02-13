@@ -51,6 +51,20 @@ codecrafters_enroll_description = \
 
 codecrafters_unenroll_description = "Бот больше не будет присылать тебе напоминания о Redis CodeCrafters"
 
+codecrafters_kafka_description = \
+    ("Мы пишем свою Kafka с нуля по <a href='https://app.codecrafters.io/courses/kafka/overview'>инструкции из CodeCrafters</a>. "
+     "Kafka — это распределенная очередь сообщений. Написать свою реализацию Kafka — отличный способ понять, как "
+     "устроено сетевое взаимодействие, парсинг протоколов и хранение данных.\n\n"
+     "Расписание тем и докладчики — <a href='https://docs.google.com/spreadsheets/d/11N3WttQfo1FwPj815aedUTP8bgu2Ka1HTkdxopZ0MnA/edit?usp=sharing'>в таблице</a>. "
+     "Звонки проходят каждую среду в 18:00 по Берлину, первый звонок — 18 февраля 2026."
+     )
+codecrafters_kafka_enroll_description = \
+    "Бот будет присылать тебе напоминание с ссылкой на Zoom звонок за пять минут до звонка!"
+codecrafters_kafka_unenroll_description = \
+    "Бот больше не будет присылать тебе новости о CodeCrafters Kafka"
+codecrafters_kafka_cta_description = \
+    "Нажми кнопку \"Хочу участвовать\", и бот будет присылать тебе ссылку на Zoom звонок за пять минут до звонка!"
+
 ddia_cta_description = \
     ("Нажми кнопку \"Хочу участвовать\", и бот будет присылать тебе новости о чтении Designing Data Intensive "
      "Applications и ссылку на звонок")
@@ -105,6 +119,7 @@ grind_course_id: int = 11
 codecrafters_course_id: int = 12
 aoc_course_id: int = 13
 dmls_course_id: int = 14
+codecrafters_kafka_course_id: int = 15
 
 id_to_course = {
     leetcode_course_id: "Leetcode",
@@ -113,7 +128,8 @@ id_to_course = {
     grind_course_id: "Leetcode-Grind-2",
     codecrafters_course_id: "CodeCrafters-Redis",
     aoc_course_id: "AdventOfCode-2025",
-    dmls_course_id: "Designing-ML-Systems"
+    dmls_course_id: "Designing-ML-Systems",
+    codecrafters_kafka_course_id: "CodeCrafters-Kafka"
 }
 
 before_call_reminders = {
