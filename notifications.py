@@ -26,7 +26,8 @@ async def register_notifications(application):
     # todo: disable courses nicely
     # await register_leetcode_grind_notifications(application)
     # await register_leetcode_grind_prompt_to_connect_patreon_notifications(application)
-    await register_codecrafters_notifications(application)
+    # await register_codecrafters_notifications(application)
+    await register_codecrafters_kafka_notifications(application)
     await register_aoc_notifications(application)
     await register_dmls_notifications(application)
     await register_dmls_prompt_to_connect_patreon_notifications(application)
@@ -118,6 +119,18 @@ async def handle_codecrafters_notification(context: ContextTypes.DEFAULT_TYPE):
         await handle_notification(context)
     else:
         notifications_logger.info("CodeCrafters notification is turned off, skipping sending CodeCrafters notifications")
+
+
+async def handle_codecrafters_kafka_notification(context: ContextTypes.DEFAULT_TYPE):
+    # todo: we need more nice way of working with feature flags
+    # you can't do `from models import codecrafters_notification_on` and use just `codecrafters_notification_on` here
+    # because when you import variable from module, it creates a local copy
+    if models.codecrafters_kafka_notification_on:
+        context.job.data["message"] = constants.before_call_reminders[constants.codecrafters_kafka_course_id]
+        await handle_notification(context)
+    else:
+        notifications_logger.info("CodeCrafters-Kafka notification is turned off, skipping sending CodeCrafters-Kafka notifications")
+
 
 async def handle_aoc_notification(context: ContextTypes.DEFAULT_TYPE):
     if models.aoc_notification_on:
@@ -393,6 +406,18 @@ async def register_codecrafters_notifications(app):
         days=(2,),  # 0 = Sunday, 2 = Tuesday
         name=f"codecrafters_notification",
         data={"course_id": constants.codecrafters_course_id}
+    )
+
+
+async def register_codecrafters_kafka_notifications(app):
+    cet_winter_time = datetime.timezone(datetime.timedelta(hours=1))
+
+    app.job_queue.run_daily(
+        callback=handle_codecrafters_kafka_notification,
+        time=datetime.time(hour=17, minute=55, tzinfo=cet_winter_time),
+        days=(3,),  # 0 = Sunday, 3 = Wednesday
+        name=f"codecrafters_kafka_notification",
+        data={"course_id": constants.codecrafters_kafka_course_id}
     )
 
 

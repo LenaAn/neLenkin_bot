@@ -142,6 +142,9 @@ before_call_reminders = {
                    "href='https://us06web.zoom.us/j/84775018227?pwd=PU9bbBO5B29wMjQ7qucvatFZcHr2O7.1'>Ссылка на "
                    "зум!</a>",
     dmls_course_id: "Обсуждаем Designing Machine Learning Systems через 5 минут!",
+    codecrafters_kafka_course_id: "Kafka CodeCrafters cозвон через 5 минут! <a "
+                   "href='https://us06web.zoom.us/j/87020105960?pwd=ck7KEnlRjbFTQpf9Cdqea3UBN4vShH.1'>Ссылка на "
+                   "зум!</a>",
 }
 
 leetcode_register_ask_timeslots = ("В какое время можешь созвониться? Чем больше слотов отметишь, тем больше "
