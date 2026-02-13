@@ -41,8 +41,11 @@ async def button_click(update: Update, _: ContextTypes.DEFAULT_TYPE) -> None:
         "leetcode_enroll": handle_leetcode_enroll,
         "leetcode_unenroll": handle_leetcode_unenroll,
         "codecrafters": handle_codecrafters,
+        "codecrafters_kafka": handle_codecrafters_kafka,
         "codecrafters_enroll": handle_codecrafters_enroll,
         "codecrafters_unenroll": handle_codecrafters_unenroll,
+        "codecrafters_kafka_enroll": handle_codecrafters_kafka_enroll,
+        "codecrafters_kafka_unenroll": handle_codecrafters_kafka_unenroll,
         "membership": handle_membership,
         "disconnect_patreon": patreon_handlers.disconnect_patreon_handler,
         "disconnect_boosty": boosty_handlers.disconnect_boosty_handler,
@@ -147,6 +150,12 @@ async def handle_codecrafters(update: Update) -> None:
     await handle_course_info(update, constants.codecrafters_course_id, constants.codecrafters_description,
                              constants.codecrafters_enroll_description, constants.codecrafters_cta_description,
                              "codecrafters_enroll", "codecrafters_unenroll")
+
+
+async def handle_codecrafters_kafka(update: Update) -> None:
+    await handle_course_info(update, constants.codecrafters_kafka_course_id, constants.codecrafters_kafka_description,
+                             constants.codecrafters_kafka_enroll_description, constants.codecrafters_kafka_cta_description,
+                             "codecrafters_kafka_enroll", "codecrafters_kafka_unenroll")
 
 
 async def reply_for_patreon_members(update: Update, membership_info: membership.UserMembershipInfo) -> None:
@@ -402,6 +411,18 @@ async def handle_codecrafters_enroll(update: Update) -> None:
 
 async def handle_codecrafters_unenroll(update: Update) -> None:
     await handle_unenroll(update, constants.codecrafters_course_id, constants.codecrafters_unenroll_description)
+
+
+async def handle_codecrafters_kafka_enroll(update: Update) -> None:
+    await handle_enroll(
+        update,
+        constants.codecrafters_kafka_course_id,
+        "codecrafters_kafka_unenroll",
+        constants.codecrafters_kafka_enroll_description)
+
+
+async def handle_codecrafters_kafka_unenroll(update: Update) -> None:
+    await handle_unenroll(update, constants.codecrafters_kafka_course_id, constants.codecrafters_kafka_unenroll_description)
 
 
 async def handle_ddia_enroll(update: Update) -> None:

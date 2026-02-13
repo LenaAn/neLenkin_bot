@@ -31,7 +31,7 @@ def main_menu() -> InlineKeyboardMarkup:
         # [InlineKeyboardButton("Решать LeetCode!", callback_data="leetcode_grind")],
         [InlineKeyboardButton("LeetCode мок-собеседования!", callback_data="mock_leetcode")],
         # todo: should handle inactive courses nicely
-        # [InlineKeyboardButton("Хочу писать свой Redis!", callback_data="codecrafters")],
+        [InlineKeyboardButton("Хочу писать свою Kafka!", callback_data="codecrafters_kafka")],
         [InlineKeyboardButton("🌟Подписка", callback_data="membership")]
     ]
     return InlineKeyboardMarkup(button_list)
