@@ -2,30 +2,30 @@
 # put it in /usr/local/bin/nelenkin_club_backup.sh
 # and add running it to crontab
 
-# Digital Ocean machine where backup is stored
-DO_USER=root
-DO_HOST=digital_ocean
-DO_BACKUP_DIR=/var/backups/nelenkin_bot
-DO_KEY_PATH=/home/ec2-user/.ssh/do_key
-
 # Docker container with Postgres. I take snapshots of this Postgres
 CONTAINER_NAME=bot_postgres
 DB_NAME=nelenkin_club
 DB_USER=postgres
 
 # How to store snapshot on AWS
-DATE=$(date +%F)
+DATE=$(date +%F_%H_%M_%S)
 BACKUP_NAME=$DATE.sql.gz
-BACKUP_TMP=/tmp/$BACKUP_NAME
+BACKUP_DIR=/var/backups/nelenkin_bot
+BACKUP_PATH=$BACKUP_DIR/$BACKUP_NAME
+
+# Cloudfare bucket
+# The bucket is private and accessed via Access Token
+# Access token is configured on the machine with `aws configure`
+R2_BUCKET=nelenkin-bot-backups
+R2_ENDPOINT=https://d40843b9f118eda9d6249336a5b175a6.r2.cloudflarestorage.com
 
 # Dump the DB inside docker and compress
-docker exec -t $CONTAINER_NAME pg_dump -U $DB_USER $DB_NAME | gzip > "$BACKUP_TMP"
+docker exec -t $CONTAINER_NAME pg_dump -U $DB_USER $DB_NAME | gzip > "$BACKUP_PATH"
 
-# Copy to DO
-scp -i "$DO_KEY_PATH" "$BACKUP_TMP" $DO_USER@$DO_HOST:$DO_BACKUP_DIR/
+# Upload backup to Cloudflare R2 bucket
+aws s3 cp "$BACKUP_PATH" "s3://$R2_BUCKET/$BACKUP_NAME" \
+    --endpoint-url "$R2_ENDPOINT" \
+    --region auto
 
-# Remove local temp file
-rm "$BACKUP_TMP"
-
-# Trigger rotation on DO
-ssh -i "$DO_KEY_PATH" $DO_USER@$DO_HOST "find \$DO_BACKUP_DIR -type f -name '*.sql.gz' -mtime +30 -delete"
+# Delete local backups older than 30 days
+find "$BACKUP_DIR" -type f -name '*.sql.gz' -mtime +30 -delete
