@@ -3,7 +3,7 @@ from telegram.ext import (filters, ApplicationBuilder, CommandHandler, MessageHa
                           PicklePersistence)
 
 from handlers import admin_commands, button_handlers, menu, leetcode_mock_handlers, boosty_handlers, patreon_handlers
-import notifications
+from notifications import notifications
 from patreon import fetch_patrons, fetch_boosty_patrons
 import settings
 from leetcode_pairs import leetcode_notifications
