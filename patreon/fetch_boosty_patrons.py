@@ -23,8 +23,9 @@ async def init():
 
 
 async def close():
-    boosty_logger.info("Closing Boosty API...")
-    await boosty_api.close()
+    if boosty_api:
+        boosty_logger.info("Closing Boosty API...")
+        await boosty_api.close()
 
 
 async def fetch_boosty_patrons(bot: Bot) -> Optional[list[dict]]:
