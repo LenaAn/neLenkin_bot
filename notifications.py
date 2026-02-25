@@ -3,6 +3,7 @@ import logging
 import os
 from dotenv import load_dotenv
 
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import NoResultFound
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
@@ -31,6 +32,69 @@ async def register_notifications(application):
     await register_aoc_notifications(application)
     await register_dmls_notifications(application)
     await register_dmls_prompt_to_connect_patreon_notifications(application)
+
+
+async def handle_leetcode_reminder(context: ContextTypes.DEFAULT_TYPE):
+    course_id: int = context.job.data["course_id"]
+    if "message" not in context.job.data:
+        admin_chat_id = int(os.getenv('ADMIN_CHAT_ID'))
+        notifications_logger.error(
+            f"Can't handle notification, there's no message in context.job.data: {context.job.data}")
+        await context.bot.send_message(
+            chat_id=admin_chat_id,
+            text=f"Can't handle notification, there's no message in context.job.data: {context.job.data}"
+        )
+        return
+
+    message: str = context.job.data["message"]
+    menu: InlineKeyboardMarkup = context.job.data["menu"] if "menu" in context.job.data else None
+    with Session(engine) as session:
+        subquery = (
+            select(models.MockSignUp.tg_id)
+            .where(models.MockSignUp.week_number == datetime.date.today().isocalendar().week)
+        )
+
+        result = (
+            session.query(Enrollment.tg_id)
+            .filter(Enrollment.course_id == course_id)
+            .filter(~Enrollment.tg_id.in_(subquery))
+            .all()
+        )
+
+    notification_chat_ids = [item[0] for item in result]
+    notifications_logger.debug(f"handling {constants.id_to_course[course_id]} notification, "
+                               f"got {len(notification_chat_ids)} chat ids that are enrolled to Leetcode and not signed "
+                               f"for this week")
+
+    # todo: move it to the function i guess
+    successful_count = 0
+    fail_count = 0
+    for chat_id in notification_chat_ids:
+        notifications_logger.info(f"notification_chat_ids for chat {chat_id}")
+        try:
+            await context.bot.send_message(
+                chat_id=chat_id,
+                text=message,
+                parse_mode="HTML",
+                reply_markup=menu)
+            successful_count += 1
+        except Exception as e:
+            notifications_logger.info(f"failed to send notification to chat {chat_id}: {e}")
+            fail_count += 1
+
+    notifications_logger.info(
+        f"Successfully sent {constants.id_to_course[course_id]} notification to {successful_count} users,"
+        f" failed {fail_count} users.")
+
+    load_dotenv(override=True)
+    admin_chat_id = int(os.getenv('ADMIN_CHAT_ID'))
+    notifications_logger.debug(f"reloaded admin chat id: {admin_chat_id}")
+
+    await context.bot.send_message(
+        chat_id=admin_chat_id,
+        text=f"Successfully sent {constants.id_to_course[course_id]} notifications to {successful_count} users, "
+             f"failed {fail_count} users."
+    )
 
 
 async def handle_notification(context: ContextTypes.DEFAULT_TYPE):
@@ -312,7 +376,7 @@ async def register_leetcode_notifications(app):
     cet_winter_time = datetime.timezone(datetime.timedelta(hours=1))
 
     app.job_queue.run_daily(
-        callback=handle_notification,
+        callback=handle_leetcode_reminder,
         time=datetime.time(hour=17, minute=6, tzinfo=cet_winter_time),
         days=(4,),  # 0 = Sunday, ..., 4 = Thursday
         name=f"leetcode_notification",
