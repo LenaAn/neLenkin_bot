@@ -40,6 +40,7 @@ codecrafters_course_id: int = 12
 aoc_course_id: int = 13
 dmls_course_id: int = 14
 codecrafters_kafka_course_id: int = 15
+ddia_5_course_id: int = 16
 
 id_to_course = {
     leetcode_course_id: "Leetcode",
@@ -49,7 +50,8 @@ id_to_course = {
     codecrafters_course_id: "CodeCrafters-Redis",
     aoc_course_id: "AdventOfCode-2025",
     dmls_course_id: "Designing-ML-Systems",
-    codecrafters_kafka_course_id: "CodeCrafters-Kafka"
+    codecrafters_kafka_course_id: "CodeCrafters-Kafka",
+    ddia_5_course_id: "DDIA-5",
 }
 
 id_to_description = {
@@ -94,6 +96,12 @@ id_to_description = {
                         "в качестве интервьюера, а второй в качестве кандидата решает задачу. Потом партнеры меняются "
                         "местами. Больше подробностей — <a href='https://t.me/lenka_ne_club/6833/6834'>в закрепленном "
                         "сообщении</a>!",
+    ddia_5_course_id: "Мы читаем <a href='https://www.oreilly.com/library/view/designing-data-intensive-applications"
+                      "/9781098119058/'>Designing Data-Intensive Applications, второе издание</a>. Звонки проходят "
+                      "каждый четверг в 18:00 по Берлину. Первый звонок — 12 марта 2026 года."
+                      "\n\nТаблица с расписанием и докладчиками <a "
+                      "href='https://docs.google.com/spreadsheets/d/1Q1brVbkrS-PDNRrmigOVN_AF8yGGHslLsBzVumkv9-0/edit"
+                      "?gid=0#gid=0'>вот</a>.",
 }
 
 id_to_cta = {
@@ -110,6 +118,8 @@ id_to_cta = {
                       "Intensive Applications и ссылку на звонок",
     leetcode_course_id: "Нажми кнопку \"Хочу участвовать\", чтобы бот каждый понедельник присылал тебе тему недели и в "
                         "каждый четверг напоминал зарегистрироваться, чтобы участвовать в мок-собеседовании в выходные.",
+    ddia_5_course_id: "Нажми кнопку \"Хочу участвовать\", и бот будет присылать тебе новости о чтении Designing Data "
+                      "Intensive Applications и ссылку на звонок",
 }
 
 id_to_enroll_description = {
@@ -124,6 +134,8 @@ id_to_enroll_description = {
                       "звоноки за пять минут до звонка!",
     leetcode_course_id: "Бот будет присылать тебе тему недели по понедельникам и напоминание записаться на моки по "
                         "четвергам!",
+    ddia_5_course_id: "Бот будет присылать тебе новости о чтении Designing Data Intensive Applications и ссылку на "
+                      "звоноки за пять минут до звонка!",
 }
 
 id_to_unenroll_description = {
@@ -132,8 +144,9 @@ id_to_unenroll_description = {
     sre_course_id: "Бот больше не будет присылать тебе напоминания о SRE book",
     codecrafters_course_id: "Бот больше не будет присылать тебе напоминания о Redis CodeCrafters",
     codecrafters_kafka_course_id: "Бот больше не будет присылать тебе новости о CodeCrafters Kafka",
-    ddia_4_course_id:  "Бот больше не будет присылать тебе новости о DDIA",
+    ddia_4_course_id: "Бот больше не будет присылать тебе новости о DDIA",
     leetcode_course_id: "Бот больше не будет присылать тебе напоминания о Leetcode моках",
+    ddia_5_course_id: "Бот больше не будет присылать тебе новости о DDIA",
 }
 
 before_call_reminders = {
