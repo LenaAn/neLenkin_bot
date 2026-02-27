@@ -22,40 +22,33 @@ async def button_click(update: Update, _: ContextTypes.DEFAULT_TYPE) -> None:
     query = update.callback_query
     await query.answer()  # Acknowledge the callback
 
-    # todo: refactor so enrolling new course doesn't involve writing new code
     handlers_dict = {
         "back": handle_back_to_start,
         "how_to_join": handle_how_to_join,
-        "ddia": handle_ddia,
+        "course_info": handle_course_info,
         "back_to_ddia": handle_back_to_ddia,
-        "ddia_enroll": handle_ddia_enroll,
-        "ddia_unenroll": handle_ddia_unenroll,
-        "mock_leetcode": handle_mock_leetcode,
-        "leetcode_grind": handle_leetcode_grind,
-        "dmls": handle_dmls,
-        "dmls_enroll": handle_dmls_enroll,
-        "dmls_unenroll": handle_dmls_unenroll,
-        "leetcode_grind_enroll": handle_leetcode_grind_enroll,
-        "leetcode_grind_unenroll": handle_leetcode_grind_unenroll,
+        "enroll": handle_enroll,
+        "unenroll": handle_unenroll,
         "how_to_present": handle_how_to_present,
-        "leetcode_enroll": handle_leetcode_enroll,
-        "leetcode_unenroll": handle_leetcode_unenroll,
-        "codecrafters": handle_codecrafters,
-        "codecrafters_kafka": handle_codecrafters_kafka,
-        "codecrafters_enroll": handle_codecrafters_enroll,
-        "codecrafters_unenroll": handle_codecrafters_unenroll,
-        "codecrafters_kafka_enroll": handle_codecrafters_kafka_enroll,
-        "codecrafters_kafka_unenroll": handle_codecrafters_kafka_unenroll,
         "membership": handle_membership,
         "disconnect_patreon": patreon_handlers.disconnect_patreon_handler,
         "disconnect_boosty": boosty_handlers.disconnect_boosty_handler,
     }
 
-    handler = handlers_dict.get(query.data)
+    course_id: Optional[int] = None
+    command: str = query.data
+    if ":" in query.data:
+        course_id = int(query.data.split(":")[1])
+        command = query.data.split(":")[0]
+
+    handler = handlers_dict.get(command)
     if handler:
-        await handler(update)
+        if course_id:
+            await handler(update, course_id)
+        else:
+            await handler(update)
     else:
-        logging.warning(f"Unhandled callback query data: {query.data} by {helpers.repr_user_from_update(update)}")
+        logging.warning(f"Unhandled callback query data: {command} by {helpers.repr_user_from_update(update)}")
 
 
 async def handle_back_to_start(update: Update) -> None:
@@ -73,16 +66,9 @@ async def handle_how_to_join(update: Update) -> None:
         reply_markup=helpers.join_menu())
 
 
-async def handle_ddia(update: Update) -> None:
-    logging.info(f"ddia triggered by {helpers.repr_user_from_update(update)}")
-    await handle_course_info(update, constants.ddia_4_course_id, constants.ddia_description,
-                             constants.ddia_enroll_description, constants.ddia_cta_description,
-                             "ddia_enroll", "ddia_unenroll")
-
-
 async def handle_back_to_ddia(update: Update) -> None:
     logging.info(f"back_to_ddia triggered by {helpers.repr_user_from_update(update)}")
-    await handle_ddia(update)
+    await handle_course_info(update, constants.ddia_4_course_id)
 
 
 def user_is_enrolled(tg_user: User, course_id: int) -> bool:
@@ -100,62 +86,31 @@ def user_is_enrolled(tg_user: User, course_id: int) -> bool:
     return users_exists
 
 
-async def handle_course_info(update: Update, course_id: int, course_description: str, enroll_description: str,
-                             cta_description: str, enroll_callback: str, unenroll_callback: str) -> None:
+async def handle_course_info(update: Update, course_id: int) -> None:
     logging.info(f"handle_course_info for {constants.id_to_course[course_id]} triggered by "
                  f"{helpers.repr_user_from_update(update)}")
 
     tg_user = helpers.get_user(update)
     if user_is_enrolled(tg_user, course_id):
         button_list = [
-            InlineKeyboardButton("Перестать получать уведомления", callback_data=unenroll_callback),
+            InlineKeyboardButton("Перестать получать уведомления", callback_data=f"unenroll:{course_id}"),
             InlineKeyboardButton("Назад", callback_data="back"),
         ]
         menu = [button_list[i:i + 1] for i in range(0, len(button_list), 1)]
         await update.callback_query.edit_message_text(
-            text=course_description + "\n\n" + enroll_description,
+            text=constants.id_to_description[course_id] + "\n\n" + constants.id_to_enroll_description[course_id],
             reply_markup=InlineKeyboardMarkup(menu),
             parse_mode="HTML")
     else:
         button_list = [
-            InlineKeyboardButton("Хочу участвовать!", callback_data=enroll_callback),
+            InlineKeyboardButton("Хочу участвовать!", callback_data=f"enroll:{course_id}"),
             InlineKeyboardButton("Назад", callback_data="back"),
         ]
         menu = [button_list[i:i + 1] for i in range(0, len(button_list), 1)]
         await update.callback_query.edit_message_text(
-            text=course_description + "\n\n" + cta_description,
+            text=constants.id_to_description[course_id] + "\n\n" + constants.id_to_cta[course_id],
             reply_markup=InlineKeyboardMarkup(menu),
             parse_mode="HTML")
-
-
-async def handle_mock_leetcode(update: Update) -> None:
-    await handle_course_info(update, constants.leetcode_course_id, constants.mock_leetcode_description,
-                             constants.leetcode_enroll_description, constants.leetcode_cta_description,
-                             "leetcode_enroll", "leetcode_unenroll")
-
-
-async def handle_leetcode_grind(update: Update) -> None:
-    await handle_course_info(update, constants.grind_course_id, constants.leetcode_grind_description,
-                             constants.leetcode_grind_enroll_description, constants.leetcode_grind_cta_description,
-                             "leetcode_grind_enroll", "leetcode_grind_unenroll")
-
-
-async def handle_dmls(update: Update) -> None:
-    await handle_course_info(update, constants.dmls_course_id, constants.dmls_description,
-                             constants.dmls_enroll_description, constants.dmls_cta_description,
-                             "dmls_enroll", "dmls_unenroll")
-
-
-async def handle_codecrafters(update: Update) -> None:
-    await handle_course_info(update, constants.codecrafters_course_id, constants.codecrafters_description,
-                             constants.codecrafters_enroll_description, constants.codecrafters_cta_description,
-                             "codecrafters_enroll", "codecrafters_unenroll")
-
-
-async def handle_codecrafters_kafka(update: Update) -> None:
-    await handle_course_info(update, constants.codecrafters_kafka_course_id, constants.codecrafters_kafka_description,
-                             constants.codecrafters_kafka_enroll_description, constants.codecrafters_kafka_cta_description,
-                             "codecrafters_kafka_enroll", "codecrafters_kafka_unenroll")
 
 
 async def reply_for_patreon_members(update: Update, membership_info: membership.UserMembershipInfo) -> None:
@@ -317,7 +272,7 @@ async def handle_membership(update: Update) -> None:
     return
 
 
-async def handle_enroll(update: Update, course_id: int, unenroll_callback_data: str, enroll_description: str) -> None:
+async def handle_enroll(update: Update, course_id: int) -> None:
     logging.info(f"enroll for {constants.id_to_course[course_id]} handled by {helpers.repr_user_from_update(update)}")
 
     tg_user = helpers.get_user(update)
@@ -339,18 +294,18 @@ async def handle_enroll(update: Update, course_id: int, unenroll_callback_data: 
             session.rollback()
             logging.warning(f"Couldn't add user enrollment to {constants.id_to_course[course_id]}: {e}")
     button_list = [
-        InlineKeyboardButton("Перестать получать уведомления", callback_data=unenroll_callback_data),
+        InlineKeyboardButton("Перестать получать уведомления", callback_data=f"unenroll:{course_id}"),
         InlineKeyboardButton("Назад", callback_data="back"),
     ]
     menu = [button_list[i:i + 1] for i in range(0, len(button_list), 1)]
     await update.callback_query.edit_message_text(
-        text=enroll_description,
+        text=constants.id_to_enroll_description[course_id],
         reply_markup=InlineKeyboardMarkup(menu),
         parse_mode="HTML"
     )
 
 
-async def handle_unenroll(update: Update, course_id: int, unenroll_description: str) -> None:
+async def handle_unenroll(update: Update, course_id: int) -> None:
     logging.info(f"unenroll for {constants.id_to_course[course_id]} handled by {helpers.repr_user_from_update(update)}")
 
     tg_user = helpers.get_user(update)
@@ -371,82 +326,10 @@ async def handle_unenroll(update: Update, course_id: int, unenroll_description: 
     ]
     menu = [button_list[i:i + 1] for i in range(0, len(button_list), 1)]
     await update.callback_query.edit_message_text(
-        text=unenroll_description,
+        text=constants.id_to_unenroll_description[course_id],
         reply_markup=InlineKeyboardMarkup(menu),
         parse_mode="HTML"
     )
-
-
-async def handle_leetcode_enroll(update: Update) -> None:
-    await handle_enroll(
-        update,
-        constants.leetcode_course_id,
-        "leetcode_unenroll",
-        constants.leetcode_enroll_description)
-
-
-async def handle_leetcode_unenroll(update: Update) -> None:
-    await handle_unenroll(update, constants.leetcode_course_id, constants.leetcode_unenroll_description)
-
-
-async def handle_leetcode_grind_enroll(update: Update) -> None:
-    await handle_enroll(
-        update,
-        constants.grind_course_id,
-        "leetcode_grind_unenroll",
-        constants.leetcode_grind_enroll_description)
-
-
-async def handle_leetcode_grind_unenroll(update: Update) -> None:
-    await handle_unenroll(update, constants.grind_course_id, constants.leetcode_grind_unenroll_description)
-
-
-async def handle_codecrafters_enroll(update: Update) -> None:
-    await handle_enroll(
-        update,
-        constants.codecrafters_course_id,
-        "codecrafters_unenroll",
-        constants.codecrafters_enroll_description)
-
-
-async def handle_codecrafters_unenroll(update: Update) -> None:
-    await handle_unenroll(update, constants.codecrafters_course_id, constants.codecrafters_unenroll_description)
-
-
-async def handle_codecrafters_kafka_enroll(update: Update) -> None:
-    await handle_enroll(
-        update,
-        constants.codecrafters_kafka_course_id,
-        "codecrafters_kafka_unenroll",
-        constants.codecrafters_kafka_enroll_description)
-
-
-async def handle_codecrafters_kafka_unenroll(update: Update) -> None:
-    await handle_unenroll(update, constants.codecrafters_kafka_course_id, constants.codecrafters_kafka_unenroll_description)
-
-
-async def handle_ddia_enroll(update: Update) -> None:
-    await handle_enroll(
-        update,
-        constants.ddia_4_course_id,
-        "ddia_unenroll",
-        constants.ddia_enroll_description)
-
-
-async def handle_ddia_unenroll(update: Update) -> None:
-    await handle_unenroll(update, constants.ddia_4_course_id, constants.ddia_unenroll_description)
-
-
-async def handle_dmls_enroll(update: Update) -> None:
-    await handle_enroll(
-        update,
-        constants.dmls_course_id ,
-        "dmls_unenroll",
-        constants.dmls_enroll_description)
-
-
-async def handle_dmls_unenroll(update: Update) -> None:
-    await handle_unenroll(update, constants.dmls_course_id, constants.dmls_unenroll_description)
 
 
 async def handle_how_to_present(update: Update) -> None:

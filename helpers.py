@@ -1,7 +1,11 @@
 import random
 
+import logging
+from sqlalchemy.orm import Session
 from telegram import User, Update, InlineKeyboardMarkup, InlineKeyboardButton
 from typing import Optional
+
+import models
 
 
 def get_user(update: Update) -> Optional[User]:
@@ -23,17 +27,20 @@ def repr_user_from_update(update: Update) -> str:
 
 
 def main_menu() -> InlineKeyboardMarkup:
+    with Session(models.engine) as session:
+        active_courses = session.query(models.Course).filter(models.Course.is_active.is_(True)).all()
+        logging.info(f"{active_courses=}")
+
     button_list = [
         [InlineKeyboardButton("Как вступить?", callback_data="how_to_join")],
-        [InlineKeyboardButton("Хочу читать Кабанчика!", callback_data="ddia")],
-        [InlineKeyboardButton("Хочу читать Designing ML Systems!", callback_data="dmls")],
-        # todo: should handle inactive courses nicely
-        # [InlineKeyboardButton("Решать LeetCode!", callback_data="leetcode_grind")],
-        [InlineKeyboardButton("LeetCode мок-собеседования!", callback_data="mock_leetcode")],
-        # todo: should handle inactive courses nicely
-        [InlineKeyboardButton("Хочу писать свою Kafka!", callback_data="codecrafters_kafka")],
-        [InlineKeyboardButton("🌟Подписка", callback_data="membership")]
     ]
+
+    for course in active_courses:
+        button_list.append([InlineKeyboardButton(course.one_liner if course.one_liner else f"{course.name}",
+                                                 callback_data=f"course_info:{course.id}")])
+
+    button_list.append([InlineKeyboardButton("🌟Подписка", callback_data="membership")])
+
     return InlineKeyboardMarkup(button_list)
 
 

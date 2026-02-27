@@ -47,10 +47,12 @@ class Course(Base):
 
     id = Column(sqlalchemy.Integer, primary_key=True, autoincrement=True)
     name = Column(sqlalchemy.Text, nullable=False)
+    one_liner = Column(sqlalchemy.Text, nullable=True)
     description = Column(sqlalchemy.Text, nullable=True)
     date_start = Column(sqlalchemy.Date, nullable=True)
     date_end = Column(sqlalchemy.Date, nullable=True)
     curator_tg_id = Column(sqlalchemy.Text, nullable=True)
+    is_active = Column(sqlalchemy.Boolean, nullable=True)
 
     def __repr__(self):
         return f"Course(id={self.id}, name={self.name}"
