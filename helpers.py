@@ -3,6 +3,8 @@ import random
 from telegram import User, Update, InlineKeyboardMarkup, InlineKeyboardButton
 from typing import Optional
 
+import constants
+
 
 def get_user(update: Update) -> Optional[User]:
     if hasattr(update, "callback_query") and update.callback_query:
@@ -25,13 +27,13 @@ def repr_user_from_update(update: Update) -> str:
 def main_menu() -> InlineKeyboardMarkup:
     button_list = [
         [InlineKeyboardButton("Как вступить?", callback_data="how_to_join")],
-        [InlineKeyboardButton("Хочу читать Кабанчика!", callback_data="ddia")],
-        [InlineKeyboardButton("Хочу читать Designing ML Systems!", callback_data="dmls")],
+        [InlineKeyboardButton("Хочу читать Кабанчика!", callback_data=f"course_info:{constants.ddia_4_course_id}")],
+        [InlineKeyboardButton("Хочу читать Designing ML Systems!", callback_data=f"course_info:{constants.dmls_course_id}")],
         # todo: should handle inactive courses nicely
         # [InlineKeyboardButton("Решать LeetCode!", callback_data="leetcode_grind")],
-        [InlineKeyboardButton("LeetCode мок-собеседования!", callback_data="mock_leetcode")],
+        [InlineKeyboardButton("LeetCode мок-собеседования!", callback_data=f"course_info:{constants.leetcode_course_id}")],
         # todo: should handle inactive courses nicely
-        [InlineKeyboardButton("Хочу писать свою Kafka!", callback_data="codecrafters_kafka")],
+        [InlineKeyboardButton("Хочу писать свою Kafka!", callback_data=f"course_info:{constants.codecrafters_kafka_course_id}")],
         [InlineKeyboardButton("🌟Подписка", callback_data="membership")]
     ]
     return InlineKeyboardMarkup(button_list)

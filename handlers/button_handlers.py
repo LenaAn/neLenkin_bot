@@ -22,20 +22,14 @@ async def button_click(update: Update, _: ContextTypes.DEFAULT_TYPE) -> None:
     query = update.callback_query
     await query.answer()  # Acknowledge the callback
 
-    # todo: refactor so enrolling new course doesn't involve writing new code
     handlers_dict = {
         "back": handle_back_to_start,
         "how_to_join": handle_how_to_join,
-        "ddia": handle_ddia,
+        "course_info": handle_course_info,
         "back_to_ddia": handle_back_to_ddia,
         "enroll": handle_enroll,
         "unenroll": handle_unenroll,
-        "mock_leetcode": handle_mock_leetcode,
-        "leetcode_grind": handle_leetcode_grind,
-        "dmls": handle_dmls,
         "how_to_present": handle_how_to_present,
-        "codecrafters": handle_codecrafters,
-        "codecrafters_kafka": handle_codecrafters_kafka,
         "membership": handle_membership,
         "disconnect_patreon": patreon_handlers.disconnect_patreon_handler,
         "disconnect_boosty": boosty_handlers.disconnect_boosty_handler,
@@ -72,15 +66,9 @@ async def handle_how_to_join(update: Update) -> None:
         reply_markup=helpers.join_menu())
 
 
-async def handle_ddia(update: Update) -> None:
-    logging.info(f"ddia triggered by {helpers.repr_user_from_update(update)}")
-    await handle_course_info(update, constants.ddia_4_course_id, constants.ddia_description,
-                             constants.ddia_cta_description)
-
-
 async def handle_back_to_ddia(update: Update) -> None:
     logging.info(f"back_to_ddia triggered by {helpers.repr_user_from_update(update)}")
-    await handle_ddia(update)
+    await handle_course_info(update, constants.ddia_4_course_id)
 
 
 def user_is_enrolled(tg_user: User, course_id: int) -> bool:
@@ -98,7 +86,7 @@ def user_is_enrolled(tg_user: User, course_id: int) -> bool:
     return users_exists
 
 
-async def handle_course_info(update: Update, course_id: int, course_description: str, cta_description: str) -> None:
+async def handle_course_info(update: Update, course_id: int) -> None:
     logging.info(f"handle_course_info for {constants.id_to_course[course_id]} triggered by "
                  f"{helpers.repr_user_from_update(update)}")
 
@@ -110,7 +98,7 @@ async def handle_course_info(update: Update, course_id: int, course_description:
         ]
         menu = [button_list[i:i + 1] for i in range(0, len(button_list), 1)]
         await update.callback_query.edit_message_text(
-            text=course_description + "\n\n" + constants.id_to_enroll_description[course_id],
+            text=constants.id_to_description[course_id] + "\n\n" + constants.id_to_enroll_description[course_id],
             reply_markup=InlineKeyboardMarkup(menu),
             parse_mode="HTML")
     else:
@@ -120,34 +108,9 @@ async def handle_course_info(update: Update, course_id: int, course_description:
         ]
         menu = [button_list[i:i + 1] for i in range(0, len(button_list), 1)]
         await update.callback_query.edit_message_text(
-            text=course_description + "\n\n" + cta_description,
+            text=constants.id_to_description[course_id] + "\n\n" + constants.id_to_cta[course_id],
             reply_markup=InlineKeyboardMarkup(menu),
             parse_mode="HTML")
-
-
-async def handle_mock_leetcode(update: Update) -> None:
-    await handle_course_info(update, constants.leetcode_course_id, constants.mock_leetcode_description,
-                             constants.leetcode_cta_description)
-
-
-async def handle_leetcode_grind(update: Update) -> None:
-    await handle_course_info(update, constants.grind_course_id, constants.leetcode_grind_description,
-                             constants.leetcode_grind_cta_description)
-
-
-async def handle_dmls(update: Update) -> None:
-    await handle_course_info(update, constants.dmls_course_id, constants.dmls_description,
-                             constants.dmls_cta_description)
-
-
-async def handle_codecrafters(update: Update) -> None:
-    await handle_course_info(update, constants.codecrafters_course_id, constants.codecrafters_description,
-                             constants.codecrafters_cta_description)
-
-
-async def handle_codecrafters_kafka(update: Update) -> None:
-    await handle_course_info(update, constants.codecrafters_kafka_course_id, constants.codecrafters_kafka_description,
-                             constants.codecrafters_kafka_cta_description)
 
 
 async def reply_for_patreon_members(update: Update, membership_info: membership.UserMembershipInfo) -> None:
