@@ -98,7 +98,7 @@ id_to_description = {
                         "сообщении</a>!",
     ddia_5_course_id: "Мы читаем <a href='https://www.oreilly.com/library/view/designing-data-intensive-applications"
                       "/9781098119058/'>Designing Data-Intensive Applications, второе издание</a>. Звонки проходят "
-                      "каждый четверг в 18:00 по Берлину. Первый звонок — 12 марта 2026 года."
+                      "каждый четверг в 18:00 по Берлину. Первый звонок — 5 марта 2026 года."
                       "\n\nТаблица с расписанием и докладчиками <a "
                       "href='https://docs.google.com/spreadsheets/d/1Q1brVbkrS-PDNRrmigOVN_AF8yGGHslLsBzVumkv9-0/edit"
                       "?gid=0#gid=0'>вот</a>.",
