@@ -28,11 +28,6 @@ sre_book_description = \
 sre_book_cta_description = \
     "Нажми кнопку \"Хочу участвовать\", и бот будет присылать тебе ссылку на Zoom звонок за пять минут до звонка!"
 
-sre_enroll_description = \
-    "Бот будет присылать тебе напоминание с ссылкой на Zoom звонок за пять минут до звонка!"
-
-sre_unenroll_description = "Бот больше не будет присылать тебе напоминания о SRE book"
-
 codecrafters_description = \
     ("Мы много читали — настало время самим что-то написать!\n\n"
      "Будем писать свой Redis с нуля по <a href='https://app.codecrafters.io/courses/redis/overview'>инструкции из CodeCrafters</a>. "
@@ -46,11 +41,6 @@ codecrafters_description = \
 codecrafters_cta_description = \
     "Нажми кнопку \"Хочу участвовать\", и бот будет присылать тебе ссылку на Zoom звонок за пять минут до звонка!"
 
-codecrafters_enroll_description = \
-    "Бот будет присылать тебе напоминание с ссылкой на Zoom звонок за пять минут до звонка!"
-
-codecrafters_unenroll_description = "Бот больше не будет присылать тебе напоминания о Redis CodeCrafters"
-
 codecrafters_kafka_description = \
     ("Мы пишем свою Kafka с нуля по <a href='https://app.codecrafters.io/courses/kafka/overview'>инструкции из CodeCrafters</a>. "
      "Kafka — это распределенная очередь сообщений. Написать свою реализацию Kafka — отличный способ понять, как "
@@ -58,22 +48,13 @@ codecrafters_kafka_description = \
      "Расписание тем и докладчики — <a href='https://docs.google.com/spreadsheets/d/11N3WttQfo1FwPj815aedUTP8bgu2Ka1HTkdxopZ0MnA/edit?usp=sharing'>в таблице</a>. "
      "Звонки проходят каждую среду в 18:00 по Берлину, первый звонок — 18 февраля 2026."
      )
-codecrafters_kafka_enroll_description = \
-    "Бот будет присылать тебе напоминание с ссылкой на Zoom звонок за пять минут до звонка!"
-codecrafters_kafka_unenroll_description = \
-    "Бот больше не будет присылать тебе новости о CodeCrafters Kafka"
+
 codecrafters_kafka_cta_description = \
     "Нажми кнопку \"Хочу участвовать\", и бот будет присылать тебе ссылку на Zoom звонок за пять минут до звонка!"
 
 ddia_cta_description = \
     ("Нажми кнопку \"Хочу участвовать\", и бот будет присылать тебе новости о чтении Designing Data Intensive "
      "Applications и ссылку на звонок")
-
-ddia_enroll_description = \
-    ("Бот будет присылать тебе новости о чтении Designing Data Intensive Applications и ссылку на звоноки за пять минут"
-     " до звонка!")
-
-ddia_unenroll_description = "Бот больше не будет присылать тебе новости о DDIA"
 
 mock_leetcode_description = \
     ("Прорешивать Leetcode — это хорошо, но на реальном собеседовании важно уметь рассказать ход решения, "
@@ -104,11 +85,6 @@ leetcode_cta_description = \
     ("Нажми кнопку \"Хочу участвовать\", чтобы бот каждый понедельник присылал тебе тему недели и в каждый четверг "
      "напоминал зарегистрироваться, чтобы участвовать в мок-собеседовании в выходные.")
 
-leetcode_enroll_description = \
-    "Бот будет присылать тебе тему недели по понедельникам и напоминание записаться на моки по четвергам!"
-
-leetcode_unenroll_description = "Бот больше не будет присылать тебе напоминания о Leetcode моках"
-
 error_description = \
     "Упс, случилась ошибка в боте. Попробуй заново с команды /start. Я уже оповестил о случившемся Ленку"
 
@@ -130,6 +106,30 @@ id_to_course = {
     aoc_course_id: "AdventOfCode-2025",
     dmls_course_id: "Designing-ML-Systems",
     codecrafters_kafka_course_id: "CodeCrafters-Kafka"
+}
+
+id_to_enroll_description = {
+    grind_course_id: "Бот будет присылать тебе тему недели и ссылку на Zoom за пять минут до звонка!",
+    dmls_course_id: "Бот будет присылать тебе ссылку на Zoom за пять минут до звонка, если у тебя есть подписка."
+                    "\n\nА если нет — напоминание оформить подписку!",
+    sre_course_id: "Бот будет присылать тебе напоминание с ссылкой на Zoom звонок за пять минут до звонка!",
+    codecrafters_course_id: "Бот будет присылать тебе напоминание с ссылкой на Zoom звонок за пять минут до звонка!",
+    codecrafters_kafka_course_id: "Бот будет присылать тебе напоминание с ссылкой на Zoom звонок за пять минут до "
+                                  "звонка!",
+    ddia_4_course_id: "Бот будет присылать тебе новости о чтении Designing Data Intensive Applications и ссылку на "
+                      "звоноки за пять минут до звонка!",
+    leetcode_course_id: "Бот будет присылать тебе тему недели по понедельникам и напоминание записаться на моки по "
+                        "четвергам!",
+}
+
+id_to_unenroll_description = {
+    grind_course_id: "Бот больше не будет присылать тебе напоминания о Leetcode Grind",
+    dmls_course_id: "Бот больше не будет присылать тебе напоминания о Designing ML Systems",
+    sre_course_id: "Бот больше не будет присылать тебе напоминания о SRE book",
+    codecrafters_course_id: "Бот больше не будет присылать тебе напоминания о Redis CodeCrafters",
+    codecrafters_kafka_course_id: "Бот больше не будет присылать тебе новости о CodeCrafters Kafka",
+    ddia_4_course_id:  "Бот больше не будет присылать тебе новости о DDIA",
+    leetcode_course_id: "Бот больше не будет присылать тебе напоминания о Leetcode моках",
 }
 
 before_call_reminders = {
@@ -162,8 +162,6 @@ leetcode_grind_description = ("Мы собираемся вместе чтобы
                               "на вопросы."
                               "\n\nПервый созвон — в среду, 3 сентября 2025")
 
-leetcode_grind_enroll_description = "Бот будет присылать тебе тему недели и ссылку на Zoom за пять минут до звонка!"
-leetcode_grind_unenroll_description = "Бот больше не будет присылать тебе напоминания о Leetcode Grind"
 leetcode_grind_cta_description = ("Нажми кнопку \"Хочу участвовать\" чтобы получать тему недели, ссылку на звонок и "
                                   "новости о потоке!")
 
@@ -173,7 +171,4 @@ dmls_description = ("Мы читаем <a "
                     "\n\nТаблица с расписанием и докладчиками "
                     "<a href='https://docs.google.com/spreadsheets/d/12ZfAfGceVuPZZoWbmHaSPcwe1mLTl9Jg9YONP7JkmsQ/edit?gid=0'>вот</a>.")
 
-dmls_enroll_description = ("Бот будет присылать тебе ссылку на Zoom за пять минут до звонка, если у тебя есть подписка."
-                           "\n\nА если нет — напоминание оформить подписку!")
-dmls_unenroll_description = "Бот больше не будет присылать тебе напоминания о Designing ML Systems"
 dmls_cta_description = "Нажми кнопку \"Хочу участвовать\" чтобы получать ссылку на звонок и рассылку от куратора потока"
