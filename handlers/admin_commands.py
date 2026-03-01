@@ -8,7 +8,7 @@ import sqlalchemy
 from sqlalchemy.orm import Session
 
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
-from telegram.ext import CommandHandler, ContextTypes, ConversationHandler, MessageHandler, filters
+from telegram.ext import CallbackQueryHandler, CommandHandler, ContextTypes, ConversationHandler, MessageHandler, filters
 
 import constants
 import helpers
@@ -92,6 +92,37 @@ def is_curator(course_id: int):
         return wrapper
 
     return is_curator_for_course
+
+
+def is_curator_for_course_in_context(callback):
+    async def wrapper(update: Update, context: ContextTypes.DEFAULT_TYPE):
+        course_id = context.user_data["broadcast_to_course"]
+        logging.info(f"is_curator_for_course_in_context triggered by {helpers.repr_user_from_update(update)} for "
+                     f"{constants.id_to_course[course_id]}")
+
+        if is_admin_id(update.effective_chat.id):
+            logging.info(f"{helpers.repr_user_from_update(update)} is admin so has power of curator")
+            return await callback(update, context)
+
+        with Session(models.engine) as session:
+            course_curator_tg_id = session.query(models.Course.curator_tg_id).filter(
+                models.Course.id == course_id).all()
+        if len(course_curator_tg_id) == 0 or len(course_curator_tg_id[0]) == 0:
+            logging.info(f"{constants.id_to_course[course_id]} doesn't have a curator")
+            await update.effective_chat.send_message("❌ Для этого действия нужно быть куратором потока")
+            return None
+
+        if str(update.effective_chat.id) in course_curator_tg_id[0]:
+            logging.info(f"{helpers.repr_user_from_update(update)} IS a curator for "
+                         f"{constants.id_to_course[course_id]}")
+            return await callback(update, context)
+
+        logging.info(f"{helpers.repr_user_from_update(update)} IS NOT a curator for "
+                     f"{constants.id_to_course[course_id]}")
+        await update.effective_chat.send_message("❌ Для этого действия нужно быть куратором потока")
+        return None
+
+    return wrapper
 
 
 @is_admin
@@ -301,6 +332,7 @@ async def cancel_broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE) -
         chat_id=update.effective_chat.id,
         text="Broadcast cancelled",
     )
+    clear_state(context)
     return ConversationHandler.END
 
 
@@ -357,7 +389,7 @@ basic_members_broadcast_conv_handler = ConversationHandler(
 
 async def do_broadcast_course(update: Update, context: ContextTypes.DEFAULT_TYPE, course_id: int,
                               reply_markup: InlineKeyboardMarkup = None) -> int:
-    logging.info(f"{constants.id_to_course[course_id]}_broadcast handler triggered by "
+    logging.info(f"do_broadcast_course for {constants.id_to_course[course_id]} triggered by "
                  f"{helpers.repr_user_from_update(update)}")
     with Session(models.engine) as session:
         course_enrollments = session.query(models.Enrollment.tg_id).filter(
@@ -448,6 +480,90 @@ leetcode_new_topic_broadcast = ConversationHandler(
         CommandHandler('cancel', cancel_broadcast)
     ],
 )
+
+SELECT_COURSE, COURSE_BROADCAST = range(2)
+
+
+async def start_course_broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    logging.info(f"start_course_broadcast handler triggered by {helpers.repr_user_from_update(update)}")
+
+    # todo: if user is admin, return all active courses
+
+    with Session(models.engine) as session:
+        if is_admin_id(helpers.get_user(update).id):
+            courses = session.query(models.Course).filter(
+                    models.Course.is_active.is_(True)).all()
+            logging.info(f"returning all the active courses for admin: {', '.join([course.name for course in courses])}")
+        else:
+            courses = session.query(models.Course).filter(
+                    models.Course.curator_tg_id == str(helpers.get_user(update).id),
+                    models.Course.is_active.is_(True)).all()
+            logging.info(f"returning the active courses for curator: {', '.join([course.name for course in courses])}")
+
+    if not courses:
+        await update.message.reply_text("Нет активных курсов, для которых ты куратор. Если они должны быть, напиши "
+                                        "@lenka_colenka!")
+        return ConversationHandler.END
+
+    keyboard = [
+        [InlineKeyboardButton(course.name, callback_data=f"broadcast_to_course:{course.id}")]
+        for course in courses
+    ]
+
+    await context.bot.send_message(
+        chat_id=update.effective_chat.id,
+        text="Выбери курс, для которого сделать рассылку:",
+        reply_markup=InlineKeyboardMarkup(keyboard),
+    )
+
+    return SELECT_COURSE
+
+
+async def select_course(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    await update.callback_query.answer()
+    logging.info(f"select_course handler triggered by {helpers.repr_user_from_update(update)}")
+
+    course_id = int(update.callback_query.data.split(":")[1])
+    context.user_data["broadcast_to_course"] = course_id
+
+    await context.bot.send_message(
+        chat_id=update.effective_chat.id,
+        text=f"Пришли сообщение, чтобы отправить всем пользователям в потоке {constants.id_to_course[course_id]}"
+    )
+    return COURSE_BROADCAST
+
+
+@is_curator_for_course_in_context
+async def course_broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    await do_broadcast_course(update, context, context.user_data["broadcast_to_course"])
+    clear_state(context)
+    return ConversationHandler.END
+
+
+course_broadcast_conv_handler = ConversationHandler(
+    entry_points=[
+        CommandHandler("course_broadcast", start_course_broadcast, filters.ChatType.PRIVATE)
+    ],
+    states={
+        SELECT_COURSE: [CallbackQueryHandler(select_course, pattern=r"^broadcast_to_course:\d+$")],
+        COURSE_BROADCAST: [
+            MessageHandler(~filters.COMMAND, course_broadcast),
+            CommandHandler("course_broadcast", start_course_broadcast, filters.ChatType.PRIVATE),
+        ]
+    },
+    fallbacks=[
+        CommandHandler('cancel_broadcast', cancel_broadcast),
+        CommandHandler("cancel", cancel_broadcast),
+    ],
+    name="course_broadcast_conversation",
+    persistent=True
+)
+
+
+def clear_state(context: ContextTypes.DEFAULT_TYPE) -> None:
+    if "broadcast_to_course" in context.user_data:
+        del context.user_data["broadcast_to_course"]
+
 
 SRE_BROADCAST = 1
 

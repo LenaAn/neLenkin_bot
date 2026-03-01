@@ -35,6 +35,7 @@ if __name__ == '__main__':
     application.add_handler(admin_commands.echo_conv_handler)
     application.add_handler(admin_commands.broadcast_conv_handler)
     application.add_handler(admin_commands.basic_members_broadcast_conv_handler)
+    application.add_handler(admin_commands.course_broadcast_conv_handler)
     application.add_handler(admin_commands.leetcode_broadcast_conv_handler)
     application.add_handler(admin_commands.sre_broadcast_conv_handler)
     application.add_handler(admin_commands.ddia_broadcast_conv_handler)
