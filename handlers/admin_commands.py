@@ -454,14 +454,10 @@ leetcode_new_topic_broadcast = ConversationHandler(
     ],
 )
 
-SELECT_COURSE, COURSE_BROADCAST = range(2)
+SELECT_COURSE_TO_BROADCAST, COURSE_BROADCAST = range(2)
 
 
-async def start_course_broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    logging.info(f"start_course_broadcast handler triggered by {helpers.repr_user_from_update(update)}")
-
-    # todo: if user is admin, return all active courses
-
+def get_active_courses_for_curator(update: Update) -> list[models.Course]:
     with Session(models.engine) as session:
         if is_admin_id(helpers.get_user(update).id):
             courses = session.query(models.Course).filter(
@@ -472,7 +468,13 @@ async def start_course_broadcast(update: Update, context: ContextTypes.DEFAULT_T
                     models.Course.curator_tg_id == str(helpers.get_user(update).id),
                     models.Course.is_active.is_(True)).all()
             logging.info(f"returning the active courses for curator: {', '.join([course.name for course in courses])}")
+    return courses
 
+
+async def start_course_broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    logging.info(f"start_course_broadcast handler triggered by {helpers.repr_user_from_update(update)}")
+
+    courses = get_active_courses_for_curator(update)
     if not courses:
         await update.message.reply_text("Нет активных курсов, для которых ты куратор. Если они должны быть, напиши "
                                         "@lenka_colenka!")
@@ -489,7 +491,7 @@ async def start_course_broadcast(update: Update, context: ContextTypes.DEFAULT_T
         reply_markup=InlineKeyboardMarkup(keyboard),
     )
 
-    return SELECT_COURSE
+    return SELECT_COURSE_TO_BROADCAST
 
 
 async def select_course(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
@@ -518,7 +520,7 @@ course_broadcast_conv_handler = ConversationHandler(
         CommandHandler("course_broadcast", start_course_broadcast, filters.ChatType.PRIVATE)
     ],
     states={
-        SELECT_COURSE: [CallbackQueryHandler(select_course, pattern=r"^broadcast_to_course:\d+$")],
+        SELECT_COURSE_TO_BROADCAST: [CallbackQueryHandler(select_course, pattern=r"^broadcast_to_course:\d+$")],
         COURSE_BROADCAST: [
             MessageHandler(~filters.COMMAND, course_broadcast),
             CommandHandler("course_broadcast", start_course_broadcast, filters.ChatType.PRIVATE),
