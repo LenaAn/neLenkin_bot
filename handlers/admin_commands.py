@@ -540,6 +540,74 @@ def clear_state(context: ContextTypes.DEFAULT_TYPE) -> None:
         del context.user_data["broadcast_to_course"]
 
 
+GET_COURSE_USERS = 1
+
+
+async def start_course_get_users(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    logging.info(f"start_course_get_users handler triggered by {helpers.repr_user_from_update(update)}")
+
+    courses = get_active_courses_for_curator(update)
+    if not courses:
+        await update.message.reply_text("Нет активных курсов, для которых ты куратор. Если они должны быть, напиши "
+                                        "@lenka_colenka!")
+        return ConversationHandler.END
+
+    keyboard = [
+        [InlineKeyboardButton(course.name, callback_data=f"course_get_users:{course.id}")]
+        for course in courses
+    ]
+
+    await context.bot.send_message(
+        chat_id=update.effective_chat.id,
+        text="Выбери курс, для которого узнать число подписчиков:",
+        reply_markup=InlineKeyboardMarkup(keyboard),
+    )
+
+    return GET_COURSE_USERS
+
+
+# todo: maybe add check that caller is a curator for course in query callback?
+async def course_get_users(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    await update.callback_query.answer()
+    logging.info(f"course_get_users handler triggered by {helpers.repr_user_from_update(update)}")
+
+    course_id = int(update.callback_query.data.split(":")[1])
+
+    with Session(models.engine) as session:
+        course_users_count = session.query(models.Enrollment).filter(models.Enrollment.course_id == course_id).count()
+
+    await context.bot.send_message(
+        chat_id=update.effective_chat.id,
+        text=f"{course_users_count} пользователей подписались на {constants.id_to_course[course_id]}"
+    )
+    return ConversationHandler.END
+
+
+async def cancel_get_users(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    logging.info(f"cancel_get_users handler triggered by {helpers.repr_user_from_update(update)}")
+    await context.bot.send_message(
+        chat_id=update.effective_chat.id,
+        text="course get users cancelled",
+    )
+    return ConversationHandler.END
+
+
+course_get_users_conv_handler = ConversationHandler(
+    entry_points=[
+        CommandHandler("course_get_users", start_course_get_users, filters.ChatType.PRIVATE)
+    ],
+    states={
+        GET_COURSE_USERS: [
+            CallbackQueryHandler(course_get_users, pattern=r"^course_get_users:\d+$"),
+            CommandHandler("course_get_users", start_course_get_users, filters.ChatType.PRIVATE)
+        ],
+    },
+    fallbacks=[
+        CommandHandler("cancel", cancel_get_users),
+    ],
+)
+
+
 @is_admin
 async def leetcode_on(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     logging.info(f"leetcode_on handler triggered by {helpers.repr_user_from_update(update)}")

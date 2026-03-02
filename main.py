@@ -36,6 +36,7 @@ if __name__ == '__main__':
     application.add_handler(admin_commands.broadcast_conv_handler)
     application.add_handler(admin_commands.basic_members_broadcast_conv_handler)
     application.add_handler(admin_commands.course_broadcast_conv_handler)
+    application.add_handler(admin_commands.course_get_users_conv_handler)
     application.add_handler(admin_commands.leetcode_new_topic_broadcast)
     application.add_handler(leetcode_mock_handlers.leetcode_register_handler)
     application.add_handler(patreon_handlers.connect_patreon_handler)
