@@ -127,7 +127,7 @@ connect_boosty_handler = ConversationHandler(
 )
 
 
-async def disconnect_boosty_handler(update: Update) -> None:
+async def disconnect_boosty_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     logging.info(f"disconnect_boosty_handler triggered by {helpers.repr_user_from_update(update)}")
 
     with Session(models.engine) as session:
@@ -135,4 +135,4 @@ async def disconnect_boosty_handler(update: Update) -> None:
         session.query(models.BoostyLink).filter(models.BoostyLink.tg_id == str(tg_user.id)).delete()
         session.commit()
         logging.info(f"Deleted Boosty linking for {tg_user.username}")
-        await button_handlers.handle_membership(update)
+        await button_handlers.handle_membership(update, context)

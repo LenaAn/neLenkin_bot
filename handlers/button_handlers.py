@@ -17,7 +17,7 @@ from handlers import boosty_handlers, patreon_handlers
 import settings
 
 
-async def button_click(update: Update, _: ContextTypes.DEFAULT_TYPE) -> None:
+async def button_click(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Handle button clicks"""
     query = update.callback_query
     await query.answer()  # Acknowledge the callback
@@ -35,23 +35,19 @@ async def button_click(update: Update, _: ContextTypes.DEFAULT_TYPE) -> None:
         "disconnect_boosty": boosty_handlers.disconnect_boosty_handler,
     }
 
-    course_id: Optional[int] = None
     command: str = query.data
     if ":" in query.data:
-        course_id = int(query.data.split(":")[1])
+        context.user_data["callback_course_id"] = int(query.data.split(":")[1])
         command = query.data.split(":")[0]
 
     handler = handlers_dict.get(command)
     if handler:
-        if course_id:
-            await handler(update, course_id)
-        else:
-            await handler(update)
+        await handler(update, context)
     else:
         logging.warning(f"Unhandled callback query data: {command} by {helpers.repr_user_from_update(update)}")
 
 
-async def handle_back_to_start(update: Update) -> None:
+async def handle_back_to_start(update: Update, _: ContextTypes.DEFAULT_TYPE) -> None:
     logging.info(f"back_to_start triggered by {helpers.repr_user_from_update(update)}")
     await update.callback_query.edit_message_text(
         text=constants.club_description,
@@ -59,14 +55,14 @@ async def handle_back_to_start(update: Update) -> None:
     )
 
 
-async def handle_how_to_join(update: Update) -> None:
+async def handle_how_to_join(update: Update, _: ContextTypes.DEFAULT_TYPE) -> None:
     logging.info(f"how_to_join triggered by {helpers.repr_user_from_update(update)}")
     await update.callback_query.edit_message_text(
         text=constants.how_to_join_description,
         reply_markup=helpers.join_menu())
 
 
-async def handle_back_to_ddia(update: Update) -> None:
+async def handle_back_to_ddia(update: Update, _: ContextTypes.DEFAULT_TYPE) -> None:
     logging.info(f"back_to_ddia triggered by {helpers.repr_user_from_update(update)}")
     await handle_course_info(update, constants.ddia_4_course_id)
 
@@ -86,7 +82,9 @@ def user_is_enrolled(tg_user: User, course_id: int) -> bool:
     return users_exists
 
 
-async def handle_course_info(update: Update, course_id: int) -> None:
+async def handle_course_info(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    course_id = context.user_data["callback_course_id"]
+    del context.user_data["callback_course_id"]
     logging.info(f"handle_course_info for {constants.id_to_course[course_id]} triggered by "
                  f"{helpers.repr_user_from_update(update)}")
 
@@ -224,7 +222,7 @@ def get_boosty_reply(update: Update, membership_info: membership.UserMembershipI
         return msg, InlineKeyboardButton("Отвязать профиль Boosty", callback_data="disconnect_boosty")
 
 
-async def handle_membership(update: Update) -> None:
+async def handle_membership(update: Update, _: ContextTypes.DEFAULT_TYPE) -> None:
     tg_user = helpers.get_user(update)
     logging.info(f"handle_membership triggered by {tg_user}")
 
@@ -272,7 +270,9 @@ async def handle_membership(update: Update) -> None:
     return
 
 
-async def handle_enroll(update: Update, course_id: int) -> None:
+async def handle_enroll(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    course_id = context.user_data["callback_course_id"]
+    del context.user_data["callback_course_id"]
     logging.info(f"enroll for {constants.id_to_course[course_id]} handled by {helpers.repr_user_from_update(update)}")
 
     tg_user = helpers.get_user(update)
@@ -305,7 +305,9 @@ async def handle_enroll(update: Update, course_id: int) -> None:
     )
 
 
-async def handle_unenroll(update: Update, course_id: int) -> None:
+async def handle_unenroll(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    course_id = context.user_data["callback_course_id"]
+    del context.user_data["callback_course_id"]
     logging.info(f"unenroll for {constants.id_to_course[course_id]} handled by {helpers.repr_user_from_update(update)}")
 
     tg_user = helpers.get_user(update)
@@ -332,7 +334,7 @@ async def handle_unenroll(update: Update, course_id: int) -> None:
     )
 
 
-async def handle_how_to_present(update: Update) -> None:
+async def handle_how_to_present(update: Update, _: ContextTypes.DEFAULT_TYPE) -> None:
     logging.info(f"how_to_present triggered by {helpers.repr_user_from_update(update)}")
     button_list = [
         InlineKeyboardButton("Назад", callback_data="back_to_ddia"),
