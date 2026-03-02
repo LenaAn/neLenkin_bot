@@ -445,8 +445,7 @@ async def select_course(update: Update, context: ContextTypes.DEFAULT_TYPE) -> i
     course_id = int(update.callback_query.data.split(":")[1])
     context.user_data["broadcast_to_course"] = course_id
 
-    await context.bot.send_message(
-        chat_id=update.effective_chat.id,
+    await update.callback_query.edit_message_text(
         text=f"Пришли сообщение, чтобы отправить всем пользователям в потоке {constants.id_to_course[course_id]}"
     )
     return COURSE_BROADCAST
@@ -520,8 +519,7 @@ async def course_get_users(update: Update, context: ContextTypes.DEFAULT_TYPE) -
     with Session(models.engine) as session:
         course_users_count = session.query(models.Enrollment).filter(models.Enrollment.course_id == course_id).count()
 
-    await context.bot.send_message(
-        chat_id=update.effective_chat.id,
+    await update.callback_query.edit_message_text(
         text=f"{course_users_count} пользователей подписались на {constants.id_to_course[course_id]}"
     )
     return ConversationHandler.END
