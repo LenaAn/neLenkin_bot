@@ -7,10 +7,10 @@ from telegram.ext import (CallbackQueryHandler, CommandHandler, ContextTypes, Co
                           filters)
 
 import helpers
+import membership
 import models
 import settings
 from patreon import fetch_boosty_patrons
-from handlers import button_handlers
 
 CONNECT_BOOSTY = 1
 
