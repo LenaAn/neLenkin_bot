@@ -39,8 +39,6 @@ def main_menu() -> InlineKeyboardMarkup:
         button_list.append([InlineKeyboardButton(course.one_liner if course.one_liner else f"{course.name}",
                                                  callback_data=f"course_info:{course.id}")])
 
-    button_list.append([InlineKeyboardButton("🌟Подписка", callback_data="membership")])
-
     return InlineKeyboardMarkup(button_list)
 
 
