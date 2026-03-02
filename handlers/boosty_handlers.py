@@ -7,10 +7,10 @@ from telegram.ext import (CallbackQueryHandler, CommandHandler, ContextTypes, Co
                           filters)
 
 import helpers
+import membership
 import models
 import settings
 from patreon import fetch_boosty_patrons
-from handlers import button_handlers
 
 CONNECT_BOOSTY = 1
 
@@ -135,4 +135,4 @@ async def disconnect_boosty_handler(update: Update, context: ContextTypes.DEFAUL
         session.query(models.BoostyLink).filter(models.BoostyLink.tg_id == str(tg_user.id)).delete()
         session.commit()
         logging.info(f"Deleted Boosty linking for {tg_user.username}")
-        await button_handlers.handle_membership(update, context)
+        await membership.handle_membership(update, context)
