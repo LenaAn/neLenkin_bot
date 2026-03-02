@@ -172,62 +172,6 @@ async def get_patrons_handler(update: Update, context: ContextTypes.DEFAULT_TYPE
         text=f"{patreon_summary}\n\n{boosty_summary}"
     )
 
-
-@is_curator(constants.sre_course_id)
-async def get_sre_users_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    logging.info(f"get_sre_users handler triggered by {helpers.repr_user_from_update(update)}")
-
-    with Session(models.engine) as session:
-        sre_users_count = session.query(models.Enrollment.tg_id).filter(
-            models.Enrollment.course_id == constants.sre_course_id).count()
-
-    await context.bot.send_message(
-        chat_id=update.effective_chat.id,
-        text=f"{sre_users_count} users are enrolled in SRE"
-    )
-
-
-@is_curator(constants.grind_course_id)
-async def get_grind_users_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    logging.info(f"get_grind_users handler triggered by {helpers.repr_user_from_update(update)}")
-
-    with Session(models.engine) as session:
-        grind_users_count = session.query(models.Enrollment.tg_id).filter(
-            models.Enrollment.course_id == constants.grind_course_id).count()
-
-    await context.bot.send_message(
-        chat_id=update.effective_chat.id,
-        text=f"{grind_users_count} users are enrolled in Leetcode Grind"
-    )
-
-
-@is_curator(constants.ddia_4_course_id)
-async def get_ddia_users_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    logging.info(f"get_ddia_users_handler handler triggered by {helpers.repr_user_from_update(update)}")
-
-    with Session(models.engine) as session:
-        ddia_users_count = session.query(models.Enrollment.tg_id).filter(
-            models.Enrollment.course_id == constants.ddia_4_course_id).count()
-
-    await context.bot.send_message(
-        chat_id=update.effective_chat.id,
-        text=f"{ddia_users_count} users are enrolled in DDIA"
-    )
-
-
-@is_curator(constants.dmls_course_id)
-async def get_dmls_users_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    logging.info(f"get_dmls_users_handler handler triggered by {helpers.repr_user_from_update(update)}")
-
-    with Session(models.engine) as session:
-        dmls_users_count = session.query(models.Enrollment.tg_id).filter(
-            models.Enrollment.course_id == constants.dmls_course_id).count()
-
-    await context.bot.send_message(
-        chat_id=update.effective_chat.id,
-        text=f"{dmls_users_count} users are enrolled in DMLS"
-    )
-
 ECHO = 1
 
 
@@ -454,14 +398,10 @@ leetcode_new_topic_broadcast = ConversationHandler(
     ],
 )
 
-SELECT_COURSE, COURSE_BROADCAST = range(2)
+SELECT_COURSE_TO_BROADCAST, COURSE_BROADCAST = range(2)
 
 
-async def start_course_broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    logging.info(f"start_course_broadcast handler triggered by {helpers.repr_user_from_update(update)}")
-
-    # todo: if user is admin, return all active courses
-
+def get_active_courses_for_curator(update: Update) -> list[models.Course]:
     with Session(models.engine) as session:
         if is_admin_id(helpers.get_user(update).id):
             courses = session.query(models.Course).filter(
@@ -472,7 +412,13 @@ async def start_course_broadcast(update: Update, context: ContextTypes.DEFAULT_T
                     models.Course.curator_tg_id == str(helpers.get_user(update).id),
                     models.Course.is_active.is_(True)).all()
             logging.info(f"returning the active courses for curator: {', '.join([course.name for course in courses])}")
+    return courses
 
+
+async def start_course_broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    logging.info(f"start_course_broadcast handler triggered by {helpers.repr_user_from_update(update)}")
+
+    courses = get_active_courses_for_curator(update)
     if not courses:
         await update.message.reply_text("Нет активных курсов, для которых ты куратор. Если они должны быть, напиши "
                                         "@lenka_colenka!")
@@ -489,7 +435,7 @@ async def start_course_broadcast(update: Update, context: ContextTypes.DEFAULT_T
         reply_markup=InlineKeyboardMarkup(keyboard),
     )
 
-    return SELECT_COURSE
+    return SELECT_COURSE_TO_BROADCAST
 
 
 async def select_course(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
@@ -518,7 +464,7 @@ course_broadcast_conv_handler = ConversationHandler(
         CommandHandler("course_broadcast", start_course_broadcast, filters.ChatType.PRIVATE)
     ],
     states={
-        SELECT_COURSE: [CallbackQueryHandler(select_course, pattern=r"^broadcast_to_course:\d+$")],
+        SELECT_COURSE_TO_BROADCAST: [CallbackQueryHandler(select_course, pattern=r"^broadcast_to_course:\d+$")],
         COURSE_BROADCAST: [
             MessageHandler(~filters.COMMAND, course_broadcast),
             CommandHandler("course_broadcast", start_course_broadcast, filters.ChatType.PRIVATE),
@@ -536,6 +482,74 @@ course_broadcast_conv_handler = ConversationHandler(
 def clear_state(context: ContextTypes.DEFAULT_TYPE) -> None:
     if "broadcast_to_course" in context.user_data:
         del context.user_data["broadcast_to_course"]
+
+
+GET_COURSE_USERS = 1
+
+
+async def start_course_get_users(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    logging.info(f"start_course_get_users handler triggered by {helpers.repr_user_from_update(update)}")
+
+    courses = get_active_courses_for_curator(update)
+    if not courses:
+        await update.message.reply_text("Нет активных курсов, для которых ты куратор. Если они должны быть, напиши "
+                                        "@lenka_colenka!")
+        return ConversationHandler.END
+
+    keyboard = [
+        [InlineKeyboardButton(course.name, callback_data=f"course_get_users:{course.id}")]
+        for course in courses
+    ]
+
+    await context.bot.send_message(
+        chat_id=update.effective_chat.id,
+        text="Выбери курс, для которого узнать число подписчиков:",
+        reply_markup=InlineKeyboardMarkup(keyboard),
+    )
+
+    return GET_COURSE_USERS
+
+
+# todo: maybe add check that caller is a curator for course in query callback?
+async def course_get_users(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    await update.callback_query.answer()
+    logging.info(f"course_get_users handler triggered by {helpers.repr_user_from_update(update)}")
+
+    course_id = int(update.callback_query.data.split(":")[1])
+
+    with Session(models.engine) as session:
+        course_users_count = session.query(models.Enrollment).filter(models.Enrollment.course_id == course_id).count()
+
+    await context.bot.send_message(
+        chat_id=update.effective_chat.id,
+        text=f"{course_users_count} пользователей подписались на {constants.id_to_course[course_id]}"
+    )
+    return ConversationHandler.END
+
+
+async def cancel_get_users(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    logging.info(f"cancel_get_users handler triggered by {helpers.repr_user_from_update(update)}")
+    await context.bot.send_message(
+        chat_id=update.effective_chat.id,
+        text="course get users cancelled",
+    )
+    return ConversationHandler.END
+
+
+course_get_users_conv_handler = ConversationHandler(
+    entry_points=[
+        CommandHandler("course_get_users", start_course_get_users, filters.ChatType.PRIVATE)
+    ],
+    states={
+        GET_COURSE_USERS: [
+            CallbackQueryHandler(course_get_users, pattern=r"^course_get_users:\d+$"),
+            CommandHandler("course_get_users", start_course_get_users, filters.ChatType.PRIVATE)
+        ],
+    },
+    fallbacks=[
+        CommandHandler("cancel", cancel_get_users),
+    ],
+)
 
 
 @is_admin

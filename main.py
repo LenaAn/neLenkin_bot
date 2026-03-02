@@ -36,6 +36,7 @@ if __name__ == '__main__':
     application.add_handler(admin_commands.broadcast_conv_handler)
     application.add_handler(admin_commands.basic_members_broadcast_conv_handler)
     application.add_handler(admin_commands.course_broadcast_conv_handler)
+    application.add_handler(admin_commands.course_get_users_conv_handler)
     application.add_handler(admin_commands.leetcode_new_topic_broadcast)
     application.add_handler(leetcode_mock_handlers.leetcode_register_handler)
     application.add_handler(patreon_handlers.connect_patreon_handler)
@@ -53,14 +54,6 @@ if __name__ == '__main__':
         CommandHandler('get_users', admin_commands.get_users_handler, filters.ChatType.PRIVATE))
     application.add_handler(
         CommandHandler('get_patrons', admin_commands.get_patrons_handler, filters.ChatType.PRIVATE))
-    application.add_handler(
-        CommandHandler('get_sre_users', admin_commands.get_sre_users_handler, filters.ChatType.PRIVATE))
-    application.add_handler(
-        CommandHandler('get_ddia_users', admin_commands.get_ddia_users_handler, filters.ChatType.PRIVATE))
-    application.add_handler(
-        CommandHandler('get_dmls_users', admin_commands.get_dmls_users_handler, filters.ChatType.PRIVATE))
-    application.add_handler(
-        CommandHandler('get_grind_users', admin_commands.get_grind_users_handler, filters.ChatType.PRIVATE))
     application.add_handler(
         CommandHandler('add_days', admin_commands.add_days_handler, filters.ChatType.PRIVATE))
     application.add_handler(
