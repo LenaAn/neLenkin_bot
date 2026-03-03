@@ -270,6 +270,7 @@ async def prompt_to_connect_patreon_notifications(context: ContextTypes.DEFAULT_
             "\n\n2. Либо оформи подписку на 1500 рублей на мой <a href='https://boosty.to/lenaan'>Boosty</a> и привяжи почту по кнопке ⬇️"
             "\n\n3. Если возникнут какие-то сложности, напиши @lenka_colenka!"
             "\n\n4. Ты можешь отписаться от новостей про DMLS, чтобы больше не получать уведомления.")
+        # todo: change here to course_unenroll
         unenroll_btn = InlineKeyboardButton("Перестать получать уведомления o DMLS", callback_data="dmls_unenroll")
     else:
         raise Exception("unsupported course id!")
@@ -293,7 +294,7 @@ async def prompt_to_connect_patreon_notifications(context: ContextTypes.DEFAULT_
                                f"{len(notification_chat_ids)} Basic subscribers to {constants.id_to_course[course_id]}")
 
     await notifications_helpers.do_send_notifications(context, notification_chat_ids, message, menu,
-                                                      constants.id_to_course[course_id])
+                                                      f"{constants.id_to_course[course_id]} Patreon prompt")
 
 
 async def register_leetcode_notifications(app):
