@@ -244,7 +244,6 @@ async def prompt_to_connect_patreon_notifications(context: ContextTypes.DEFAULT_
                     "привяжи почту по кнопке ⬇️"
                     "\n\n2. Либо оформи подписку на 1500 рублей на мой <a href='https://boosty.to/lenaan'>Boosty</a> и привяжи почту по кнопке ⬇️"                    "\n\n3. Если возникнут какие-то сложности, напиши @lenka_colenka!"
                     "\n\n4. Ты можешь отписаться от новостей про DDIA, чтобы больше не получать уведомления.")
-            unenroll_btn = InlineKeyboardButton("Перестать получать уведомления о DDIA", callback_data="ddia_unenroll")
     elif course_id == constants.leetcode_course_id:
         message: str = (
             "Привет! Сегодня вечером будет звонок с обсуждением задач из списка Leetcode-75! Тему "
@@ -257,7 +256,6 @@ async def prompt_to_connect_patreon_notifications(context: ContextTypes.DEFAULT_
             "\n\n2. Либо оформи подписку на 1500 рублей на мой <a href='https://boosty.to/lenaan'>Boosty</a> и привяжи почту по кнопке ⬇️"
             "\n\n3. Если возникнут какие-то сложности, напиши @lenka_colenka!"
             "\n\n4. Ты можешь отписаться от новостей про Leetcode Grind, чтобы больше не получать уведомления.")
-        unenroll_btn = InlineKeyboardButton("Перестать получать уведомления о Leetcode Grind", callback_data="leetcode_grind_unenroll")
     elif course_id == constants.dmls_course_id:
         message: str = (
             "Привет! Сегодня вечером будет звонок с обсуждением <a href='https://www.oreilly.com/library/view/designing-machine-learning/9781098107956/'>Designing Machine Learning Systems</a>. "
@@ -270,14 +268,13 @@ async def prompt_to_connect_patreon_notifications(context: ContextTypes.DEFAULT_
             "\n\n2. Либо оформи подписку на 1500 рублей на мой <a href='https://boosty.to/lenaan'>Boosty</a> и привяжи почту по кнопке ⬇️"
             "\n\n3. Если возникнут какие-то сложности, напиши @lenka_colenka!"
             "\n\n4. Ты можешь отписаться от новостей про DMLS, чтобы больше не получать уведомления.")
-        unenroll_btn = InlineKeyboardButton("Перестать получать уведомления o DMLS", callback_data="dmls_unenroll")
     else:
         raise Exception("unsupported course id!")
 
     menu = InlineKeyboardMarkup([
         [InlineKeyboardButton("Привязать профиль Patreon", callback_data="connect_patreon")],
         [InlineKeyboardButton("Привязать профиль Boosty", callback_data="connect_boosty")],
-        [unenroll_btn],
+        [InlineKeyboardButton(f"Перестать получать уведомления о {constants.id_to_course[course_id]}", callback_data=f"unenroll:{course_id}")],
     ])
 
     with Session(engine) as session:
@@ -293,7 +290,7 @@ async def prompt_to_connect_patreon_notifications(context: ContextTypes.DEFAULT_
                                f"{len(notification_chat_ids)} Basic subscribers to {constants.id_to_course[course_id]}")
 
     await notifications_helpers.do_send_notifications(context, notification_chat_ids, message, menu,
-                                                      constants.id_to_course[course_id])
+                                                      f"{constants.id_to_course[course_id]} Patreon prompt")
 
 
 async def register_leetcode_notifications(app):
