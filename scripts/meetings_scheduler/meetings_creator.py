@@ -1,13 +1,15 @@
 from datetime import datetime, timedelta
 from dotenv import load_dotenv
 import os
+import sys
 from pathlib import Path
-
 
 from google.oauth2 import service_account
 from googleapiclient.discovery import build
 
 from zoom_meetings_creator import create_meeting
+from meeting_saver import insert_scheduled_part_message
+import constants
 
 load_dotenv()
 CLIENT_EMAIL = os.getenv("ZOOM_CLIENT_EMAIL")
@@ -73,14 +75,27 @@ def schedule_zoom_and_calendar(topic: str, start_time: str):
         start_time=zoom_start_time,
         duration_minutes=zoom_meeting["duration"],
     )
-
-    return {
-        "zoom": zoom_meeting,
-        "calendar": calendar_event,
-    }
+    return zoom_meeting, calendar_event
 
 
 if __name__ == "__main__":
-    start_time = datetime(2026, 3, 5, 18, 0, 0).isoformat()
-    event = schedule_zoom_and_calendar("DDIA-5", start_time)
-    print(f"{event=}")
+    if len(sys.argv) < 7:
+        print("Usage: python3 meetings_creator.py <course_id> <year> <month> <day> <hour> <number of events>")
+        sys.exit(1)
+    course_id = int(sys.argv[1])
+    first_meeeting_day = datetime(int(sys.argv[2]), int(sys.argv[3]), int(sys.argv[4]), int(sys.argv[5]))
+    number_of_events = int(sys.argv[6])
+
+    for i in range(number_of_events):
+        start_time = first_meeeting_day + (i * timedelta(7))
+        zoom_meeting, calendar_event = schedule_zoom_and_calendar(f"Zoom for {constants.id_to_course[course_id]}",
+                                                                  start_time.isoformat())
+
+        insert_scheduled_part_message(
+            week_number=start_time.isocalendar()[1],
+            course_id=course_id,
+            text=zoom_meeting["join_url"]
+        )
+        print(f"{zoom_meeting['join_url']} created!")
+
+    print(f"{number_of_events} events created!")
