@@ -2,6 +2,7 @@
 
 .env
 auth.json
+google_calendar.auth.json
 data
 
 #pickle persistance for conversation handlers
