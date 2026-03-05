@@ -24,7 +24,7 @@ async def register_notifications(application):
     await register_leetcode_notifications(application)
     await register_sre_notifications(application)
     await register_ddia_notifications(application)
-    await register_ddia_prompt_to_connect_patreon_notifications(application)
+    # await register_ddia_prompt_to_connect_patreon_notifications(application)
     # todo: disable courses nicely
     # await register_leetcode_grind_notifications(application)
     # await register_leetcode_grind_prompt_to_connect_patreon_notifications(application)
@@ -202,7 +202,7 @@ async def prompt_to_connect_patreon_notifications(context: ContextTypes.DEFAULT_
     # todo: don't hardcode things, move table links and buttons to constants
     course_id: int = context.job.data["course_id"]
 
-    if course_id == constants.ddia_4_course_id and not models.ddia_notification_on:
+    if course_id == constants.ddia_5_course_id and not models.ddia_notification_on:
         notifications_logger.info(f"Skipping a prompt to connect Patreon for course {constants.id_to_course[course_id]}"
                                   f" because DDIA is turned off")
         await context.bot.send_message(
@@ -234,9 +234,9 @@ async def prompt_to_connect_patreon_notifications(context: ContextTypes.DEFAULT_
 
     notifications_logger.debug(f"prompt_to_connect_patreon_notifications for {constants.id_to_course[course_id]}")
 
-    if course_id == constants.ddia_4_course_id:
+    if course_id == constants.ddia_5_course_id:
             message: str = ("Привет! Сегодня вечером будет звонок с обсуждением Designing Data-Intensive Applications. Тему "
-                    "сегодняшнего звонка можешь посмотреть <a href='https://docs.google.com/spreadsheets/d/1_08zSvl3dNK_peEbb2yOAQSzWEXJCl_-5T0vq6wZ1Hs/edit?gid=0#gid=0'>здесь</a>. "
+                    "сегодняшнего звонка можешь посмотреть <a href='https://docs.google.com/spreadsheets/d/1Q1brVbkrS-PDNRrmigOVN_AF8yGGHslLsBzVumkv9-0/edit?usp=sharing'>здесь</a>. "
                     "\n\n<b>Обсуждение DDIA — это 💜Pro курс, и чтобы сегодня вечером тебе пришла ссылка на звонок, нужна 💜Pro подписка!</b>"
                     "\n\n1. Чтобы оформить Pro подписку, подпишись на донат в $15 в месяц на моем "
                     "<a href='https://www.patreon.com/c/LenaAnyusha'>Patreon</a>."
@@ -274,7 +274,8 @@ async def prompt_to_connect_patreon_notifications(context: ContextTypes.DEFAULT_
     menu = InlineKeyboardMarkup([
         [InlineKeyboardButton("Привязать профиль Patreon", callback_data="connect_patreon")],
         [InlineKeyboardButton("Привязать профиль Boosty", callback_data="connect_boosty")],
-        [InlineKeyboardButton(f"Перестать получать уведомления о {constants.id_to_course[course_id]}", callback_data=f"unenroll:{course_id}")],
+        [InlineKeyboardButton(f"Перестать получать уведомления о {constants.id_to_course[course_id]}",
+                              callback_data=f"unenroll:{course_id}")],
     ])
 
     with Session(engine) as session:
@@ -330,7 +331,7 @@ async def register_ddia_prompt_to_connect_patreon_notifications(app):
         time=datetime.time(hour=9, minute=53, tzinfo=cet_winter_time),  # morning before DDIA call
         days=(4,),  # 0 = Sunday, 4 = Thursday
         name=f"ddia_prompt_to_connect_patreon_notification",
-        data={"course_id": constants.ddia_4_course_id}
+        data={"course_id": constants.ddia_5_course_id}
     )
 
 
