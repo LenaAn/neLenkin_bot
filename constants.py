@@ -151,6 +151,7 @@ id_to_unenroll_description = {
 
 before_call_reminders = {
     ddia_4_course_id: "Обсуждаем Designing Data-Intensive Applications через 5 минут!",
+    ddia_5_course_id: "Обсуждаем Designing Data-Intensive Applications через 5 минут!",
     grind_course_id: "Прорешивание Leetcode через 5 минут!",
     sre_course_id: "SRE book cозвон через 5 минут! <a "
                    "href='https://us06web.zoom.us/j/89699825499?pwd=252HFSD6l5TH2GYm7qDlI3QRahZNIZ.1'>Ссылка на "

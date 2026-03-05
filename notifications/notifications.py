@@ -162,7 +162,7 @@ async def handle_aoc_notification(context: ContextTypes.DEFAULT_TYPE):
 
 async def handle_notification_for_course(context: ContextTypes.DEFAULT_TYPE):
     course_id: int = context.job.data["course_id"]
-    if course_id == constants.ddia_4_course_id and not models.ddia_notification_on:
+    if course_id == constants.ddia_5_course_id and not models.ddia_notification_on:
         notifications_logger.info("DDIA notification is turned off, skipping sending DDIA notification")
         return
     if course_id == constants.dmls_course_id and not models.dmls_notification_on:
@@ -354,7 +354,7 @@ async def register_ddia_notifications(app):
         time=datetime.time(hour=17, minute=53, tzinfo=cet_winter_time),
         days=(4,),  # 0 = Sunday, 4 = Thursday
         name=f"ddia_notification",
-        data={"course_id": constants.ddia_4_course_id}
+        data={"course_id": constants.ddia_5_course_id}
     )
 
 
