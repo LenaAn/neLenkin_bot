@@ -41,6 +41,7 @@ aoc_course_id: int = 13
 dmls_course_id: int = 14
 codecrafters_kafka_course_id: int = 15
 ddia_5_course_id: int = 16
+leetcode_grind_3_course_id: int = 17
 
 id_to_course = {
     leetcode_course_id: "Leetcode",
@@ -52,6 +53,7 @@ id_to_course = {
     dmls_course_id: "Designing-ML-Systems",
     codecrafters_kafka_course_id: "CodeCrafters-Kafka",
     ddia_5_course_id: "DDIA-5",
+    leetcode_grind_3_course_id: "Leetcode-Grind-3",
 }
 
 id_to_description = {
@@ -102,6 +104,14 @@ id_to_description = {
                       "\n\nТаблица с расписанием и докладчиками <a "
                       "href='https://docs.google.com/spreadsheets/d/1Q1brVbkrS-PDNRrmigOVN_AF8yGGHslLsBzVumkv9-0/edit"
                       "?gid=0#gid=0'>вот</a>.",
+    leetcode_grind_3_course_id: "Мы собираемся вместе чтобы прорешать <a "
+                                "href='https://neetcode.io/practice/practice/blind75'>Blind-75</a>  — список из 75 "
+                                "задач на самые популярные темы на собеседованиях. Каждую неделю участники "
+                                "прорешивают задачи на определенную тему до звонка в своем темпе, на звонке докладчик "
+                                "показывает свои решения и отвечает на вопросы.\n\nЗвонки проходят по понедельникам в "
+                                "18:00 по Берлину. Первый созвон — 16 марта 2026.\n\nТаблица с расписанием и "
+                                "докладчиками <a "
+                                "href='https://docs.google.com/spreadsheets/d/1ddCs4c4km3qFeyzyvzuQn6a9lC_V5M2ocyT8w9ShBwg/edit?usp=sharing'>вот</a>.",
 }
 
 id_to_cta = {
@@ -120,6 +130,8 @@ id_to_cta = {
                         "каждый четверг напоминал зарегистрироваться, чтобы участвовать в мок-собеседовании в выходные.",
     ddia_5_course_id: "Нажми кнопку \"Хочу участвовать\", и бот будет присылать тебе новости о чтении Designing Data "
                       "Intensive Applications и ссылку на звонок",
+    leetcode_grind_3_course_id: "Нажми кнопку \"Хочу участвовать\" чтобы получать тему недели, ссылку на звонок и "
+                                "новости о потоке!",
 }
 
 id_to_enroll_description = {
@@ -136,6 +148,8 @@ id_to_enroll_description = {
                         "четвергам!",
     ddia_5_course_id: "Бот будет присылать тебе новости о чтении Designing Data Intensive Applications и ссылку на "
                       "звоноки за пять минут до звонка!",
+    leetcode_grind_3_course_id: "Бот будет присылать тебе новости о Leetcode Grind и ссылку на Zoom за пять минут до "
+                                "звонка!",
 }
 
 id_to_unenroll_description = {
@@ -147,6 +161,7 @@ id_to_unenroll_description = {
     ddia_4_course_id: "Бот больше не будет присылать тебе новости о DDIA",
     leetcode_course_id: "Бот больше не будет присылать тебе напоминания о Leetcode моках",
     ddia_5_course_id: "Бот больше не будет присылать тебе новости о DDIA",
+    leetcode_grind_3_course_id: "Бот больше не будет присылать тебе новости о Leetcode Grind",
 }
 
 before_call_reminders = {
@@ -163,6 +178,7 @@ before_call_reminders = {
     codecrafters_kafka_course_id: "Kafka CodeCrafters cозвон через 5 минут! <a "
                    "href='https://us06web.zoom.us/j/87020105960?pwd=ck7KEnlRjbFTQpf9Cdqea3UBN4vShH.1'>Ссылка на "
                    "зум!</a>",
+    leetcode_grind_3_course_id: "Прорешивание Leetcode через 5 минут!",
 }
 
 leetcode_register_ask_timeslots = ("В какое время можешь созвониться? Чем больше слотов отметишь, тем больше "
