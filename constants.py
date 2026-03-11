@@ -44,8 +44,8 @@ ddia_5_course_id: int = 16
 leetcode_grind_3_course_id: int = 17
 
 id_to_course = {
-    leetcode_course_id: "Leetcode",
-    sre_course_id: "SRE",
+    leetcode_course_id: "Leetcode-Mocks",
+    sre_course_id: "SRE-Book",
     ddia_4_course_id: "DDIA-4",
     grind_course_id: "Leetcode-Grind-2",
     codecrafters_course_id: "CodeCrafters-Redis",
