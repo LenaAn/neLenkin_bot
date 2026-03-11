@@ -343,14 +343,26 @@ async def do_broadcast_course(update: Update, context: ContextTypes.DEFAULT_TYPE
 
     successful_count = 0
     fail_count = 0
+    msg = update.message
+    signature = f"\n\n---\n@{helpers.get_user(update).username} для курса {constants.id_to_course[course_id]}"
+
     for tg_id in tg_ids:
         try:
-            await context.bot.copy_message(
-                chat_id=tg_id,
-                from_chat_id=update.effective_chat.id,
-                message_id=update.message.message_id,
-                reply_markup=reply_markup
-            )
+            if msg.photo:
+                await context.bot.send_photo(
+                    chat_id=tg_id,
+                    photo=msg.photo[-1].file_id,
+                    caption=(msg.caption or "") + signature,
+                    caption_entities=msg.caption_entities,
+                    reply_markup=reply_markup
+                )
+            else:
+                await context.bot.send_message(
+                    chat_id=tg_id,
+                    text=(msg.text or "") + signature,
+                    entities=msg.entities,
+                    reply_markup=reply_markup
+                )
             successful_count += 1
         except Exception as e:
             logging.info(f"couldn't send {constants.id_to_course[course_id]} broadcast message to {tg_id}: {e}")
