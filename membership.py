@@ -193,7 +193,8 @@ def is_course_pro(course_id: int):
             (course_id == constants.dmls_course_id))
 
 
-async def reply_for_patreon_members(update: Update, membership_info: UserMembershipInfo) -> None:
+async def reply_for_patreon_members(update: Update, context: ContextTypes.DEFAULT_TYPE,
+                                    membership_info: UserMembershipInfo) -> None:
     membership_logger.info(f"reply_for_patreon_members triggered by {helpers.get_user(update)}")
 
     msg: str = membership_info.get_overall_level().description
@@ -204,13 +205,15 @@ async def reply_for_patreon_members(update: Update, membership_info: UserMembers
         InlineKeyboardButton("Отвязать профиль Patreon", callback_data="disconnect_patreon"),
     ]])
 
-    await update.callback_query.edit_message_text(
+    await context.bot.send_message(
+        chat_id=update.effective_chat.id,
         text=msg,
         reply_markup=reply_markup,
     )
 
 
-async def reply_for_boosty_members(update: Update, membership_info: UserMembershipInfo) -> None:
+async def reply_for_boosty_members(update: Update, context: ContextTypes.DEFAULT_TYPE,
+                                   membership_info: UserMembershipInfo) -> None:
     membership_logger.info(f"reply_for_boosty_members triggered by {helpers.get_user(update)}")
 
     msg: str = membership_info.get_overall_level().description
@@ -220,13 +223,16 @@ async def reply_for_boosty_members(update: Update, membership_info: UserMembersh
     reply_markup = InlineKeyboardMarkup([[
         InlineKeyboardButton("Отвязать профиль Boosty", callback_data="disconnect_boosty"),
     ]])
-    await update.callback_query.edit_message_text(
+
+    await context.bot.send_message(
+        chat_id=update.effective_chat.id,
         text=msg,
         reply_markup=reply_markup,
     )
 
 
-async def reply_for_activity_members(update: Update, membership_info: UserMembershipInfo) -> None:
+async def reply_for_activity_members(update: Update, context: ContextTypes.DEFAULT_TYPE,
+                                     membership_info: UserMembershipInfo) -> None:
     membership_logger.info(f"reply_for_activity_members triggered by {helpers.get_user(update)}")
 
     msg: str = membership_info.get_overall_level().description
@@ -253,26 +259,10 @@ async def reply_for_activity_members(update: Update, membership_info: UserMember
         buttons.append(InlineKeyboardButton("Отвязать профиль Boosty", callback_data="disconnect_boosty"))
     menu = [buttons[i:i + 1] for i in range(0, len(buttons), 1)]
 
-    await update.callback_query.edit_message_text(
+    await context.bot.send_message(
+        chat_id=update.effective_chat.id,
         text=msg,
         reply_markup=InlineKeyboardMarkup(menu),
-        parse_mode="HTML"
-    )
-
-
-async def reply_for_basic(update: Update, membership_info: UserMembershipInfo) -> None:
-    membership_logger.info(f"reply_for_basic triggered by {helpers.get_user(update)}")
-
-    msg: str = membership_info.get_overall_level().description
-    msg += ("\n\nЧтобы улучшить подписку, сделай презентацию либо подпишись на "
-            "<a href='https://www.patreon.com/c/LenaAnyusha'>Patreon</a> хотя бы на $15 в месяц")
-    reply_markup = InlineKeyboardMarkup([
-        [InlineKeyboardButton("Привязать профиль Patreon", callback_data="connect_patreon")],
-        [InlineKeyboardButton("Привязать профиль Boosty", callback_data="connect_boosty")],
-    ])
-    await update.callback_query.edit_message_text(
-        text=msg,
-        reply_markup=reply_markup,
         parse_mode="HTML"
     )
 
@@ -311,15 +301,15 @@ async def handle_membership(update: Update, context: ContextTypes.DEFAULT_TYPE) 
     membership_info = get_user_membership_info(tg_user.id, tg_user.username)
 
     if membership_info.get_patreon_level() == pro:
-        await reply_for_patreon_members(update, membership_info)
+        await reply_for_patreon_members(update, context, membership_info)
         return
 
     if membership_info.get_boosty_level() == pro:
-        await reply_for_boosty_members(update, membership_info)
+        await reply_for_boosty_members(update, context, membership_info)
         return
 
     if membership_info.member_level_by_activity == pro:
-        await reply_for_activity_members(update, membership_info)
+        await reply_for_activity_members(update, context, membership_info)
         return
 
     # otherwise user has basic level
