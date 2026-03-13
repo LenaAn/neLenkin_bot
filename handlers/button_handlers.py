@@ -349,7 +349,7 @@ async def handle_how_to_present(update: Update, _: ContextTypes.DEFAULT_TYPE) ->
 async def error_handler(update: object, context: ContextTypes.DEFAULT_TYPE) -> None:
     # todo: ignore "Message is not modified" and "Query is too old" errors?
     if not isinstance(update, Update):
-        logging.info(f"error with invalid update", exc_info=context.error)
+        logging.info(f"error with invalid update")
     else:
         logging.info(f"error triggered by {update}", exc_info=context.error)
         try:
