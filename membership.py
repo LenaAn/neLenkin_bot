@@ -13,6 +13,9 @@ import helpers
 import models
 from patreon import fetch_patrons, fetch_boosty_patrons
 
+membership_logger = logging.getLogger(__name__)
+membership_logger.setLevel(logging.INFO)
+
 
 @dataclass(order=True)
 class MembershipLevel:
@@ -101,7 +104,7 @@ class UserMembershipInfo:
 
 
 def load_membership_by_activity(tg_id: int, tg_username: str = None) -> tuple[MembershipLevel, date]:
-    logging.info(f"load_membership_by_activity triggered by {tg_username}")
+    membership_logger.debug(f"load_membership_by_activity triggered by {tg_username}")
 
     level_by_activity: MembershipLevel = basic
     level_by_activity_expiration: date = date(year=1970, month=1, day=1)
@@ -113,14 +116,15 @@ def load_membership_by_activity(tg_id: int, tg_username: str = None) -> tuple[Me
             .one_or_none()
         )
         if result:
-            logging.info(f"Got member by activity for {tg_username if tg_username else tg_id} with expiration at: {result}")
+            membership_logger.debug(f"Got member by activity for {tg_username if tg_username else tg_id} with "
+                                    f"expiration at: {result}")
             level_by_activity = pro
             level_by_activity_expiration = result[0]
     return level_by_activity, level_by_activity_expiration
 
 
 def load_patreon_membership(tg_id: int, tg_username: str = None) -> tuple[str, int]:
-    logging.info(f"load_patreon_membership triggered by {tg_username}")
+    membership_logger.debug(f"load_patreon_membership triggered by {tg_username}")
 
     patreon_email: str = ""
     sum_of_entitled_tiers_amount_cents: int = 0
@@ -132,7 +136,7 @@ def load_patreon_membership(tg_id: int, tg_username: str = None) -> tuple[str, i
             .one_or_none()
         )
         if result:
-            logging.info(f"Got patreon linking for user {tg_username if tg_username else tg_id} : {result}")
+            membership_logger.debug(f"Got patreon linking for user {tg_username if tg_username else tg_id} : {result}")
             patreon_email = result[0]
 
     if patreon_email != "":
@@ -140,13 +144,13 @@ def load_patreon_membership(tg_id: int, tg_username: str = None) -> tuple[str, i
         if patreon_info:
             sum_of_entitled_tiers_amount_cents = int(patreon_info["sum_of_entitled_tiers_amount_cents"])
         else:
-            logging.warning(f"Patreon Linking exists in DB, but not in Redis for user "
-                            f"{tg_username if tg_username else tg_id}, patreon email is {patreon_email}")
+            membership_logger.warning(f"Patreon Linking exists in DB, but not in Redis for user "
+                                      f"{tg_username if tg_username else tg_id}, patreon email is {patreon_email}")
     return patreon_email, sum_of_entitled_tiers_amount_cents
 
 
 def load_boosty_membership(tg_id: int, tg_username: str = None) -> tuple[str, str, str, int]:
-    logging.info(f"load_boosty_membership triggered by {tg_username}")
+    membership_logger.debug(f"load_boosty_membership triggered by {tg_username}")
 
     boosty_user_id: str = ""
     boosty_email: str = ""
@@ -160,7 +164,7 @@ def load_boosty_membership(tg_id: int, tg_username: str = None) -> tuple[str, st
             .one_or_none()
         )
         if result:
-            logging.info(f"Got Boosty linking for user {tg_username if tg_username else tg_id} : {result}")
+            membership_logger.debug(f"Got Boosty linking for user {tg_username if tg_username else tg_id} : {result}")
             boosty_user_id = result[0]
 
     if boosty_user_id != "":
@@ -170,13 +174,13 @@ def load_boosty_membership(tg_id: int, tg_username: str = None) -> tuple[str, st
             boosty_name = boosty_info["name"]
             boosty_price = int(boosty_info["price"])
         else:
-            logging.warning(f"Boosty Linking exists in DB, but not in Redis for user "
-                            f"{tg_username if tg_username else tg_id}, boosty id is {boosty_user_id}")
+            membership_logger.warning(f"Boosty Linking exists in DB, but not in Redis for user "
+                                      f"{tg_username if tg_username else tg_id}, boosty id is {boosty_user_id}")
     return boosty_user_id, boosty_email, boosty_name, boosty_price
 
 
 def get_user_membership_info(tg_id: int, tg_username: str = None) -> UserMembershipInfo:
-    logging.info(f"get_user_membership_info triggered by {tg_username}")
+    membership_logger.debug(f"get_user_membership_info triggered by {tg_username}")
 
     info = UserMembershipInfo()
     info.member_level_by_activity, info.member_level_by_activity_expiration = (
@@ -271,7 +275,7 @@ async def reply_for_activity_members(update: Update, context: ContextTypes.DEFAU
 
 
 def get_patreon_reply(update: Update, membership_info: UserMembershipInfo) -> tuple[str, Optional[InlineKeyboardButton]]:
-    logging.info(f"get_patreon_reply triggered by {helpers.get_user(update)}")
+    membership_logger.info(f"get_patreon_reply triggered by {helpers.get_user(update)}")
     if membership_info.patreon_email == "":
         return "", InlineKeyboardButton("Привязать профиль Patreon", callback_data="connect_patreon")
     else:
@@ -284,7 +288,7 @@ def get_patreon_reply(update: Update, membership_info: UserMembershipInfo) -> tu
 
 
 def get_boosty_reply(update: Update, membership_info: UserMembershipInfo) -> tuple[str, Optional[InlineKeyboardButton]]:
-    logging.info(f"get_boosty_reply triggered by {helpers.get_user(update)}")
+    membership_logger.info(f"get_boosty_reply triggered by {helpers.get_user(update)}")
 
     if membership_info.boosty_user_id == "":
         return "", InlineKeyboardButton("Привязать профиль Boosty", callback_data="connect_boosty")
@@ -299,7 +303,7 @@ def get_boosty_reply(update: Update, membership_info: UserMembershipInfo) -> tup
 
 async def handle_membership(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     tg_user = helpers.get_user(update)
-    logging.info(f"handle_membership triggered by {tg_user}")
+    membership_logger.info(f"handle_membership triggered by {tg_user}")
 
     membership_info = get_user_membership_info(tg_user.id, tg_user.username)
 
