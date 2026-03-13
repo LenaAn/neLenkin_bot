@@ -11,7 +11,7 @@ from telegram import Bot
 import settings
 
 patreon_logger = logging.getLogger(__name__)
-patreon_logger.setLevel(logging.DEBUG)
+patreon_logger.setLevel(logging.INFO)
 
 r = redis.Redis(host='localhost', port=6379, db=0)
 
@@ -119,7 +119,7 @@ def get_patrons_from_redis(status_filter: str) -> list[(str, str)]:
         user_data = {k.decode(): v.decode() for k, v in user_data.items()}
 
         if user_data.get("patron_status") == status_filter:
-            patreon_logger.info(f"active patron is {user_data}")
+            patreon_logger.debug(f"active patron is {user_data}")
             active_patron_info = [user_data.get("full_name"), user_data.get("sum_of_entitled_tiers_amount_cents")]
             if user_data.get("is_gifted") == "True":
                 active_patron_info.append("is_gifted")

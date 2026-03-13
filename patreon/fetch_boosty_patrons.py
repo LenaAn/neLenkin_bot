@@ -8,7 +8,7 @@ from boosty_api import BoostyAPI
 import settings
 
 boosty_logger = logging.getLogger(__name__)
-boosty_logger.setLevel(logging.DEBUG)
+boosty_logger.setLevel(logging.INFO)
 
 r = redis.Redis(host='localhost', port=6379, db=0)
 
@@ -35,7 +35,7 @@ async def fetch_boosty_patrons(bot: Bot) -> Optional[list[dict]]:
         stats = await boosty_api.get_subscribers()
 
         if stats["total"] != len(stats["data"]):
-            boosty_logger.warning(f"Couldn't get all subscribers from Boosty, need pagination! Total is "
+            boosty_logger.error(f"Couldn't get all subscribers from Boosty, need pagination! Total is "
                                   f"{stats['total']}, got {len(stats['data'])} subscribers.")
             await bot.send_message(
                 chat_id=settings.ADMIN_CHAT_ID,
@@ -105,7 +105,7 @@ def get_boosty_patrons_from_redis(min_price_rub: int) -> list[(str, str)]:
         user_data = {k.decode(): v.decode() for k, v in user_data.items()}
 
         if int(user_data.get("price")) > 0:
-            boosty_logger.info(f"paid boosty subscriber is {user_data}")
+            boosty_logger.debug(f"paid boosty subscriber is {user_data}")
             boosty_patron_info = [user_data.get("name"), user_data.get("email"), user_data.get("price")]
             active_boosty_patrons.append(boosty_patron_info)
 
