@@ -13,6 +13,9 @@ from models import MembershipByActivity, User, engine
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     logging.info(f"start triggered by {helpers.repr_user_from_update(update)}")
+    # todo: just return the description and available commands
+    # don't return the menu
+    # the behavior will be the same as /help
     await context.bot.send_message(
         chat_id=update.effective_chat.id,
         text=constants.club_description,

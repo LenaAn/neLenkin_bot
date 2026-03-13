@@ -1,12 +1,19 @@
 import logging
 from dataclasses import dataclass
 from datetime import date
+from typing import Optional
 
 from sqlalchemy.orm import Session
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
+from telegram.ext import ContextTypes
 
 import constants
+import helpers
 import models
 from patreon import fetch_patrons, fetch_boosty_patrons
+
+membership_logger = logging.getLogger(__name__)
+membership_logger.setLevel(logging.INFO)
 
 
 @dataclass(order=True)
@@ -90,7 +97,7 @@ class UserMembershipInfo:
 
 
 def load_membership_by_activity(tg_id: int, tg_username: str = None) -> tuple[MembershipLevel, date]:
-    logging.info(f"load_membership_by_activity triggered by {tg_username}")
+    membership_logger.debug(f"load_membership_by_activity triggered by {tg_username}")
 
     level_by_activity: MembershipLevel = basic
     level_by_activity_expiration: date = date(year=1970, month=1, day=1)
@@ -102,14 +109,15 @@ def load_membership_by_activity(tg_id: int, tg_username: str = None) -> tuple[Me
             .one_or_none()
         )
         if result:
-            logging.info(f"Got member by activity for {tg_username if tg_username else tg_id} with expiration at: {result}")
+            membership_logger.debug(f"Got member by activity for {tg_username if tg_username else tg_id} with "
+                                    f"expiration at: {result}")
             level_by_activity = pro
             level_by_activity_expiration = result[0]
     return level_by_activity, level_by_activity_expiration
 
 
 def load_patreon_membership(tg_id: int, tg_username: str = None) -> tuple[str, int]:
-    logging.info(f"load_patreon_membership triggered by {tg_username}")
+    membership_logger.debug(f"load_patreon_membership triggered by {tg_username}")
 
     patreon_email: str = ""
     sum_of_entitled_tiers_amount_cents: int = 0
@@ -121,7 +129,7 @@ def load_patreon_membership(tg_id: int, tg_username: str = None) -> tuple[str, i
             .one_or_none()
         )
         if result:
-            logging.info(f"Got patreon linking for user {tg_username if tg_username else tg_id} : {result}")
+            membership_logger.debug(f"Got patreon linking for user {tg_username if tg_username else tg_id} : {result}")
             patreon_email = result[0]
 
     if patreon_email != "":
@@ -129,13 +137,13 @@ def load_patreon_membership(tg_id: int, tg_username: str = None) -> tuple[str, i
         if patreon_info:
             sum_of_entitled_tiers_amount_cents = int(patreon_info["sum_of_entitled_tiers_amount_cents"])
         else:
-            logging.warning(f"Patreon Linking exists in DB, but not in Redis for user "
-                            f"{tg_username if tg_username else tg_id}, patreon email is {patreon_email}")
+            membership_logger.warning(f"Patreon Linking exists in DB, but not in Redis for user "
+                                      f"{tg_username if tg_username else tg_id}, patreon email is {patreon_email}")
     return patreon_email, sum_of_entitled_tiers_amount_cents
 
 
 def load_boosty_membership(tg_id: int, tg_username: str = None) -> tuple[str, str, str, int]:
-    logging.info(f"load_boosty_membership triggered by {tg_username}")
+    membership_logger.debug(f"load_boosty_membership triggered by {tg_username}")
 
     boosty_user_id: str = ""
     boosty_email: str = ""
@@ -149,7 +157,7 @@ def load_boosty_membership(tg_id: int, tg_username: str = None) -> tuple[str, st
             .one_or_none()
         )
         if result:
-            logging.info(f"Got Boosty linking for user {tg_username if tg_username else tg_id} : {result}")
+            membership_logger.debug(f"Got Boosty linking for user {tg_username if tg_username else tg_id} : {result}")
             boosty_user_id = result[0]
 
     if boosty_user_id != "":
@@ -159,13 +167,13 @@ def load_boosty_membership(tg_id: int, tg_username: str = None) -> tuple[str, st
             boosty_name = boosty_info["name"]
             boosty_price = int(boosty_info["price"])
         else:
-            logging.warning(f"Boosty Linking exists in DB, but not in Redis for user "
-                            f"{tg_username if tg_username else tg_id}, boosty id is {boosty_user_id}")
+            membership_logger.warning(f"Boosty Linking exists in DB, but not in Redis for user "
+                                      f"{tg_username if tg_username else tg_id}, boosty id is {boosty_user_id}")
     return boosty_user_id, boosty_email, boosty_name, boosty_price
 
 
 def get_user_membership_info(tg_id: int, tg_username: str = None) -> UserMembershipInfo:
-    logging.info(f"get_user_membership_info triggered by {tg_username}")
+    membership_logger.debug(f"get_user_membership_info triggered by {tg_username}")
 
     info = UserMembershipInfo()
     info.member_level_by_activity, info.member_level_by_activity_expiration = (
@@ -183,3 +191,153 @@ def is_course_pro(course_id: int):
     # todo: don't hardcode pro courses
     return ((course_id == constants.ddia_4_course_id) or (course_id == constants.grind_course_id) or
             (course_id == constants.dmls_course_id))
+
+
+async def reply_for_patreon_members(update: Update, context: ContextTypes.DEFAULT_TYPE,
+                                    membership_info: UserMembershipInfo) -> None:
+    membership_logger.info(f"reply_for_patreon_members triggered by {helpers.get_user(update)}")
+
+    msg: str = membership_info.get_overall_level().description
+    msg += (f"\n\n • Привязанный профиль Patreon: {membership_info.patreon_email}. Ты донатишь "
+            f"${membership_info.sum_of_entitled_tiers_amount_cents // 100}. Спасибо! ❤️")
+
+    reply_markup = InlineKeyboardMarkup([[
+        InlineKeyboardButton("Отвязать профиль Patreon", callback_data="disconnect_patreon"),
+    ]])
+
+    await context.bot.send_message(
+        chat_id=update.effective_chat.id,
+        text=msg,
+        reply_markup=reply_markup,
+    )
+
+
+async def reply_for_boosty_members(update: Update, context: ContextTypes.DEFAULT_TYPE,
+                                   membership_info: UserMembershipInfo) -> None:
+    membership_logger.info(f"reply_for_boosty_members triggered by {helpers.get_user(update)}")
+
+    msg: str = membership_info.get_overall_level().description
+    msg += (f"\n\n • Привязанный профиль Boosty: {membership_info.repr_boosty_profile()}. Ты донатишь "
+            f"{membership_info.boosty_price} рублей. Спасибо! ❤️")
+
+    reply_markup = InlineKeyboardMarkup([[
+        InlineKeyboardButton("Отвязать профиль Boosty", callback_data="disconnect_boosty"),
+    ]])
+
+    await context.bot.send_message(
+        chat_id=update.effective_chat.id,
+        text=msg,
+        reply_markup=reply_markup,
+    )
+
+
+async def reply_for_activity_members(update: Update, context: ContextTypes.DEFAULT_TYPE,
+                                     membership_info: UserMembershipInfo) -> None:
+    membership_logger.info(f"reply_for_activity_members triggered by {helpers.get_user(update)}")
+
+    msg: str = membership_info.get_overall_level().description
+    if not membership_info.member_level_by_activity_expiration:
+        msg += f"\n\nУ тебя вечная подписка за активное участие в клубе!"
+    else:
+        if membership_info.member_level_by_activity_expiration < date.today():
+            msg += f"\n\nТвоя подписка за активное участие закончилась :("
+        else:
+            msg += (f"\n\nТвоя подписка за активное участие истечет "
+                    f"{membership_info.member_level_by_activity_expiration}."
+                    f"\n\nЧтобы сохранить 💜Pro подписку, сделай презентацию либо подпишись на "
+                    f"<a href='https://www.patreon.com/c/LenaAnyusha'>Patreon</a> хотя бы на $15 в месяц.\n\n")
+
+    buttons = []
+    if membership_info.patreon_email == "":
+        buttons.append(InlineKeyboardButton("Привязать профиль Patreon", callback_data="connect_patreon"))
+    else:
+        buttons.append(InlineKeyboardButton("Отвязать профиль Patreon", callback_data="disconnect_patreon"))
+
+    if membership_info.boosty_user_id == "":
+        buttons.append(InlineKeyboardButton("Привязать профиль Boosty", callback_data="connect_boosty"))
+    else:
+        buttons.append(InlineKeyboardButton("Отвязать профиль Boosty", callback_data="disconnect_boosty"))
+    menu = [buttons[i:i + 1] for i in range(0, len(buttons), 1)]
+
+    await context.bot.send_message(
+        chat_id=update.effective_chat.id,
+        text=msg,
+        reply_markup=InlineKeyboardMarkup(menu),
+        parse_mode="HTML"
+    )
+
+
+def get_patreon_reply(update: Update, membership_info: UserMembershipInfo) -> tuple[str, Optional[InlineKeyboardButton]]:
+    membership_logger.info(f"get_patreon_reply triggered by {helpers.get_user(update)}")
+    if membership_info.patreon_email == "":
+        return "", InlineKeyboardButton("Привязать профиль Patreon", callback_data="connect_patreon")
+    else:
+        msg = f"\n\n • Привязанный профиль Patreon: {membership_info.patreon_email}."
+        if membership_info.sum_of_entitled_tiers_amount_cents > 0:
+            msg += f" Ты донатишь ${membership_info.sum_of_entitled_tiers_amount_cents // 100}. Спасибо! ❤️"
+        else:
+            msg += f" Ты не донатишь мне на Patreon️"
+        return msg, InlineKeyboardButton("Отвязать профиль Patreon", callback_data="disconnect_patreon")
+
+
+def get_boosty_reply(update: Update, membership_info: UserMembershipInfo) -> tuple[str, Optional[InlineKeyboardButton]]:
+    membership_logger.info(f"get_boosty_reply triggered by {helpers.get_user(update)}")
+
+    if membership_info.boosty_user_id == "":
+        return "", InlineKeyboardButton("Привязать профиль Boosty", callback_data="connect_boosty")
+    else:
+        msg = f"\n\n • Привязанный профиль Boosty: {membership_info.repr_boosty_profile()}."
+        if membership_info.boosty_price > 0:
+            msg += f" Ты донатишь {membership_info.boosty_price} рублей. Спасибо! ❤️"
+        else:
+            msg += f" Ты не донатишь мне на Boosty"
+        return msg, InlineKeyboardButton("Отвязать профиль Boosty", callback_data="disconnect_boosty")
+
+
+async def handle_membership(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    tg_user = helpers.get_user(update)
+    membership_logger.info(f"handle_membership triggered by {tg_user}")
+
+    membership_info = get_user_membership_info(tg_user.id, tg_user.username)
+
+    if membership_info.get_patreon_level() == pro:
+        await reply_for_patreon_members(update, context, membership_info)
+        return
+
+    if membership_info.get_boosty_level() == pro:
+        await reply_for_boosty_members(update, context, membership_info)
+        return
+
+    if membership_info.member_level_by_activity == pro:
+        await reply_for_activity_members(update, context, membership_info)
+        return
+
+    # otherwise user has basic level
+    # they may have 1 of 4 options:
+    # 1. No Accounts Connected -> Show them two buttons
+    # 2. Only Patreon Connected (but not enough money donating) -> Show then how much they are donating, don't mention Boosty
+    # 3. Only Boosty Connected (but not enough money donating) -> Show them how much they are donating, don't mention Patreon
+    # 4. Both Boosty and Patreon Connected -> Shouldn't happen, but can happen since not enforced on DB level. Show both and add buttons to unlink any of this
+
+    msg: str = membership_info.get_overall_level().description
+    patreon_message, patreon_button = get_patreon_reply(update, membership_info)
+    boosty_message, boosty_button = get_boosty_reply(update, membership_info)
+
+    msg += patreon_message
+    msg += boosty_message
+
+    button_list = []
+    if patreon_button:
+        button_list.append(patreon_button)
+    if boosty_button:
+        button_list.append(boosty_button)
+    menu = [button_list[i:i + 1] for i in range(0, len(button_list), 1)]
+
+    await context.bot.send_message(
+        chat_id=update.effective_chat.id,
+        text=msg,
+        reply_markup=InlineKeyboardMarkup(menu),
+        parse_mode="HTML",
+        disable_web_page_preview=True,
+    )
+    return
