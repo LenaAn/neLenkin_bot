@@ -13,6 +13,9 @@ from models import MembershipByActivity, User, engine
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     logging.info(f"start triggered by {helpers.repr_user_from_update(update)}")
+    # todo: just return the description and available commands
+    # don't return the menu
+    # the behavior will be the same as /help
     await context.bot.send_message(
         chat_id=update.effective_chat.id,
         text=constants.club_description,
@@ -59,15 +62,20 @@ async def command_help(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
     logging.info(f"help triggered by {helpers.repr_user_from_update(update)}")
     await context.bot.send_message(
         chat_id=update.effective_chat.id,
-        text="Бот находится в стадии разработки, пожалуйста не ломайте его 🥺.\n"
-             "Если бот плохо себя ведет, пожалуйста напишите Ленке @lenka_colenka.\n\n"
-             "Поддерживаемые команды:\n"
+        text="<b>Поддерживаемые команды:</b>\n"
              "/start — Главное меню\n"
-             "/help — Справка\n"
-             "/cancel — Прервать любой диалог\n"
-             "/leetcode_register — Записаться на мок собеседование по Leetcode\n"
-             "/cancel_leetcode_register — Отменить запись на мок собеседование по Leetcode\n"
-             "/connect_patreon — Привязать Patreon аккаунт"
+             "/membership — Подписка 🌟\n\n"
+
+             "Если бот запутался в диалоге, поможет\n"
+             "/cancel — Прервать любой диалог\n\n"
+
+             "Запись на моки по Leetcode:\n"
+             "/leetcode_register — Записаться на мок собеседование\n"
+             "/cancel_leetcode_register — Отменить запись на мок собеседование\n\n"
+
+             "/help — Справка\n\n"
+             "По любым вопросам пишите Лене @lenka_colenka.",
+        parse_mode="HTML",
     )
 
 
@@ -75,7 +83,19 @@ async def private_message(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
     logging.info(f"private message handler triggered by {helpers.repr_user_from_update(update)}")
     await context.bot.send_message(
         chat_id=update.effective_chat.id,
-        text="Я не понимаю сообщения, только эти две команды:\n"
+        text="Я не понимаю сообщения, только эти команды:\n\n"
+             "<b>Поддерживаемые команды:</b>\n"
              "/start — Главное меню\n"
-             "/help — Справка"
+             "/membership — Подписка 🌟\n\n"
+
+             "Если бот запутался в диалоге, поможет\n"
+             "/cancel — Прервать любой диалог\n\n"
+
+             "Запись на моки по Leetcode:\n"
+             "/leetcode_register — Записаться на мок собеседование\n"
+             "/cancel_leetcode_register — Отменить запись на мок собеседование\n\n"
+
+             "/help — Справка\n\n"
+             "По любым вопросам пишите Лене @lenka_colenka.",
+        parse_mode="HTML",
     )

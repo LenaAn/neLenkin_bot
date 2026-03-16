@@ -5,6 +5,7 @@ from telegram.ext import (filters, ApplicationBuilder, CommandHandler, MessageHa
 from handlers import admin_commands, button_handlers, menu, leetcode_mock_handlers, boosty_handlers, patreon_handlers
 from notifications import notifications
 from patreon import fetch_patrons, fetch_boosty_patrons
+import membership
 import settings
 from leetcode_pairs import leetcode_notifications
 
@@ -50,6 +51,8 @@ if __name__ == '__main__':
         CommandHandler('start', menu.start, filters.ChatType.PRIVATE))
     application.add_handler(
         CommandHandler('help', menu.command_help, filters.ChatType.PRIVATE))
+    application.add_handler(
+        CommandHandler('membership', membership.handle_membership, filters.ChatType.PRIVATE))
     application.add_handler(
         CommandHandler('get_users', admin_commands.get_users_handler, filters.ChatType.PRIVATE))
     application.add_handler(

@@ -7,10 +7,10 @@ from telegram.ext import (CallbackQueryHandler, CommandHandler, ContextTypes, Co
                           filters)
 
 import helpers
+import membership
 import models
 import settings
 from patreon import fetch_patrons
-from handlers import button_handlers
 
 CONNECT_PATREON = 1
 
@@ -133,4 +133,4 @@ async def disconnect_patreon_handler(update: Update, context: ContextTypes.DEFAU
         session.query(models.PatreonLink).filter(models.PatreonLink.tg_id == str(tg_user.id)).delete()
         session.commit()
         logging.info(f"Deleted Patreon linking for {tg_user.username}")
-        await button_handlers.handle_membership(update, context)
+        await membership.handle_membership(update, context)
