@@ -26,7 +26,7 @@ async def register_notifications(application):
     await register_ddia_notifications(application)
     # await register_ddia_prompt_to_connect_patreon_notifications(application)
     # todo: disable courses nicely
-    # await register_leetcode_grind_notifications(application)
+    await register_leetcode_grind_notifications(application)
     # await register_leetcode_grind_prompt_to_connect_patreon_notifications(application)
     # await register_codecrafters_notifications(application)
     await register_codecrafters_kafka_notifications(application)
@@ -377,9 +377,9 @@ async def register_leetcode_grind_notifications(app):
     app.job_queue.run_daily(
         callback=handle_notification_for_course,
         time=datetime.time(hour=17, minute=53, tzinfo=cet_winter_time),
-        days=(3,),  # 0 = Sunday, 3 = Wednesday
+        days=(1,),  # 0 = Sunday, 1 = Monday
         name=f"leetcode_grind_notification",
-        data={"course_id": constants.grind_course_id}
+        data={"course_id": constants.leetcode_grind_3_course_id}
     )
 
 
