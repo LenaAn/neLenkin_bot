@@ -1,3 +1,4 @@
+import datetime
 import logging
 from dataclasses import dataclass
 from datetime import date
@@ -68,8 +69,14 @@ class UserMembershipInfo:
     def get_boosty_level(self) -> MembershipLevel:
         return pro if self.boosty_price >= 1500 else basic
 
+    def get_activity_level(self) -> MembershipLevel:
+        if self.member_level_by_activity == pro:
+            if self.member_level_by_activity_expiration is None or self.member_level_by_activity_expiration >= datetime.datetime.now().date():
+                return pro
+        return basic
+
     def get_overall_level(self) -> MembershipLevel:
-        return max(self.member_level_by_activity, self.get_patreon_level(), self.get_boosty_level(),
+        return max(self.get_activity_level(), self.get_patreon_level(), self.get_boosty_level(),
                    key=lambda level: level.number)
 
     def repr_boosty_profile(self) -> str:

@@ -841,5 +841,5 @@ async def get_status_handler(update: Update, context: ContextTypes.DEFAULT_TYPE)
             return
 
     membership_info = membership.get_user_membership_info(tg_id, username)
-    logging.info(f"Status for {username}: {membership_info}")
-    await update.message.reply_text(f"Status for {username}:\n\n{membership_info}")
+    logging.info(f"{username} has {membership_info.get_overall_level().name} subscription")
+    await update.message.reply_text(f"{username} has {membership_info.get_overall_level().name} subscription:\n\n{membership_info}")
