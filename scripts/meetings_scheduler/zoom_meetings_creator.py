@@ -47,7 +47,7 @@ def create_meeting(topic: str, start_time: str):
         "agenda": "Created automatically by nelenkin-bot",
         "settings": {
             "join_before_host": True,
-            "approval_type": 0,
+            "approval_type": 2,  # no registration required
             "waiting_room": False
         }
     }
