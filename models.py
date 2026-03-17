@@ -53,6 +53,7 @@ class Course(Base):
     date_end = Column(sqlalchemy.Date, nullable=True)
     curator_tg_id = Column(sqlalchemy.Text, nullable=True)
     is_active = Column(sqlalchemy.Boolean, nullable=False)
+    is_pro = Column(sqlalchemy.Boolean, nullable=True)
 
     def __repr__(self):
         return f"Course(id={self.id}, name={self.name}"
