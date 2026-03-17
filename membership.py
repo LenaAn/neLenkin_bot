@@ -275,8 +275,8 @@ async def reply_for_activity_members(update: Update, context: ContextTypes.DEFAU
 
 
 def get_patreon_reply(update: Update, membership_info: UserMembershipInfo) -> tuple[str, Optional[InlineKeyboardButton]]:
-    membership_logger.info(f"get_patreon_reply triggered by {helpers.get_user(update)}")
     if membership_info.patreon_email == "":
+        membership_logger.debug(f"{helpers.repr_user_from_update(update)} doesn't have Patreon connected")
         return "", InlineKeyboardButton("Привязать профиль Patreon", callback_data="connect_patreon")
     else:
         msg = f"\n\n • Привязанный профиль Patreon: {membership_info.patreon_email}."
@@ -284,13 +284,13 @@ def get_patreon_reply(update: Update, membership_info: UserMembershipInfo) -> tu
             msg += f" Ты донатишь ${membership_info.sum_of_entitled_tiers_amount_cents // 100}. Спасибо! ❤️"
         else:
             msg += f" Ты не донатишь мне на Patreon️"
+        membership_logger.debug(f"{helpers.repr_user_from_update(update)} has Patreon connected")
         return msg, InlineKeyboardButton("Отвязать профиль Patreon", callback_data="disconnect_patreon")
 
 
 def get_boosty_reply(update: Update, membership_info: UserMembershipInfo) -> tuple[str, Optional[InlineKeyboardButton]]:
-    membership_logger.info(f"get_boosty_reply triggered by {helpers.get_user(update)}")
-
     if membership_info.boosty_user_id == "":
+        membership_logger.debug(f"{helpers.repr_user_from_update(update)} doesn't have Boosty connected")
         return "", InlineKeyboardButton("Привязать профиль Boosty", callback_data="connect_boosty")
     else:
         msg = f"\n\n • Привязанный профиль Boosty: {membership_info.repr_boosty_profile()}."
@@ -298,6 +298,7 @@ def get_boosty_reply(update: Update, membership_info: UserMembershipInfo) -> tup
             msg += f" Ты донатишь {membership_info.boosty_price} рублей. Спасибо! ❤️"
         else:
             msg += f" Ты не донатишь мне на Boosty"
+        membership_logger.debug(f"{helpers.repr_user_from_update(update)} has Boosty connected")
         return msg, InlineKeyboardButton("Отвязать профиль Boosty", callback_data="disconnect_boosty")
 
 
@@ -340,6 +341,8 @@ async def handle_membership(update: Update, context: ContextTypes.DEFAULT_TYPE) 
         button_list.append(boosty_button)
     menu = [button_list[i:i + 1] for i in range(0, len(button_list), 1)]
 
+    membership_logger.info(f"{helpers.repr_user_from_update(update)} has {membership_info.get_overall_level().name} "
+                           f"subscription")
     await context.bot.send_message(
         chat_id=update.effective_chat.id,
         text=msg,
@@ -347,4 +350,3 @@ async def handle_membership(update: Update, context: ContextTypes.DEFAULT_TYPE) 
         parse_mode="HTML",
         disable_web_page_preview=True,
     )
-    return

@@ -14,7 +14,9 @@ async def do_send_notifications(context: ContextTypes.DEFAULT_TYPE, notification
     successful_count = 0
     fail_count = 0
     for chat_id in notification_chat_ids:
-        notifications_logger.info(f"notification_chat_ids for chat {chat_id}")
+        if (successful_count + fail_count) % 50 == 0:
+            notifications_logger.info(f"Notification broadcast in progress: {successful_count} successful, "
+                                      f"{fail_count} failed so far")
         try:
             await context.bot.send_message(
                 chat_id=chat_id,
@@ -23,7 +25,6 @@ async def do_send_notifications(context: ContextTypes.DEFAULT_TYPE, notification
                 reply_markup=menu)
             successful_count += 1
         except Exception as e:
-            notifications_logger.info(f"failed to send notification to chat {chat_id}: {e}")
             fail_count += 1
 
     notifications_logger.info(
