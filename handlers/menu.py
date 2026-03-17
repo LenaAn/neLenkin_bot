@@ -11,16 +11,25 @@ import helpers
 from models import MembershipByActivity, User, engine
 
 
+# todo: add a command /how_to_join
+HELP_TEXT = ("<b>Поддерживаемые команды:</b>\n"
+             "/start — Главное меню\n"
+             "/membership — Подписка 🌟\n"
+             "/courses — Активные курсы 🐙\n\n"
+             ""
+             "Если бот запутался в диалоге, поможет\n"
+             "/cancel — Прервать любой диалог\n\n"
+             ""
+             "Запись на моки по Leetcode:\n"
+             "/leetcode_register — Записаться на мок собеседование\n"
+             "/cancel_leetcode_register — Отменить запись на мок собеседование\n\n"
+             ""
+             "По любым вопросам пишите Лене @lenka_colenka")
+
+
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     logging.info(f"start triggered by {helpers.repr_user_from_update(update)}")
-    # todo: just return the description and available commands
-    # don't return the menu
-    # the behavior will be the same as /help
-    await context.bot.send_message(
-        chat_id=update.effective_chat.id,
-        text=constants.club_description,
-        reply_markup=helpers.main_menu()
-    )
+
     tg_user = helpers.get_user(update)
     with Session(engine) as session:
         user = User(
@@ -57,24 +66,18 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
                 logging.info(f"User {helpers.repr_user_from_update(update)} has a membership by activity, back-filling "
                              f"tg_id in MembershipByActivity")
 
+    await context.bot.send_message(
+        chat_id=update.effective_chat.id,
+        text=constants.club_description + HELP_TEXT,
+        parse_mode="HTML",
+    )
+
 
 async def command_help(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     logging.info(f"help triggered by {helpers.repr_user_from_update(update)}")
     await context.bot.send_message(
         chat_id=update.effective_chat.id,
-        text="<b>Поддерживаемые команды:</b>\n"
-             "/start — Главное меню\n"
-             "/membership — Подписка 🌟\n\n"
-
-             "Если бот запутался в диалоге, поможет\n"
-             "/cancel — Прервать любой диалог\n\n"
-
-             "Запись на моки по Leetcode:\n"
-             "/leetcode_register — Записаться на мок собеседование\n"
-             "/cancel_leetcode_register — Отменить запись на мок собеседование\n\n"
-
-             "/help — Справка\n\n"
-             "По любым вопросам пишите Лене @lenka_colenka.",
+        text=HELP_TEXT,
         parse_mode="HTML",
     )
 
@@ -83,19 +86,6 @@ async def private_message(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
     logging.info(f"private message handler triggered by {helpers.repr_user_from_update(update)}: {update.message.text}")
     await context.bot.send_message(
         chat_id=update.effective_chat.id,
-        text="Я не понимаю сообщения, только эти команды:\n\n"
-             "<b>Поддерживаемые команды:</b>\n"
-             "/start — Главное меню\n"
-             "/membership — Подписка 🌟\n\n"
-
-             "Если бот запутался в диалоге, поможет\n"
-             "/cancel — Прервать любой диалог\n\n"
-
-             "Запись на моки по Leetcode:\n"
-             "/leetcode_register — Записаться на мок собеседование\n"
-             "/cancel_leetcode_register — Отменить запись на мок собеседование\n\n"
-
-             "/help — Справка\n\n"
-             "По любым вопросам пишите Лене @lenka_colenka.",
+        text="Я не понимаю сообщения, только эти команды:\n\n" + HELP_TEXT,
         parse_mode="HTML",
     )
