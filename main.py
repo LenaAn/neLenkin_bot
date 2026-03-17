@@ -2,9 +2,9 @@ import logging
 from telegram.ext import (filters, ApplicationBuilder, CommandHandler, MessageHandler, CallbackQueryHandler,
                           PicklePersistence)
 
-from handlers import admin_commands, button_handlers, menu, leetcode_mock_handlers, boosty_handlers, patreon_handlers
+from handlers import admin_commands, button_handlers, menu, leetcode_mock_handlers
 from notifications import notifications
-from membership import fetch_patrons, fetch_boosty_patrons, membership
+from membership import boosty_handlers, fetch_patrons, fetch_boosty_patrons, membership, patreon_handlers
 import settings
 from leetcode_pairs import leetcode_notifications
 
