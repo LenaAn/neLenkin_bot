@@ -17,6 +17,7 @@ async def button_click(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
 
     handlers_dict = {
         "back": handle_back_to_start,
+        "back_to_courses": course_handlers.handle_active_courses,
         "how_to_join": handle_how_to_join,
         "course_info": course_handlers.handle_course_info,
         "back_to_ddia": handle_back_to_ddia,

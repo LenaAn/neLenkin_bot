@@ -37,7 +37,7 @@ async def handle_course_info(update: Update, context: ContextTypes.DEFAULT_TYPE)
     if user_is_enrolled(tg_user, course_id):
         button_list = [
             InlineKeyboardButton("Перестать получать уведомления", callback_data=f"unenroll:{course_id}"),
-            InlineKeyboardButton("Назад", callback_data="back"),
+            InlineKeyboardButton("Назад", callback_data="back_to_courses"),
         ]
         menu = [button_list[i:i + 1] for i in range(0, len(button_list), 1)]
         await update.callback_query.edit_message_text(
@@ -47,13 +47,44 @@ async def handle_course_info(update: Update, context: ContextTypes.DEFAULT_TYPE)
     else:
         button_list = [
             InlineKeyboardButton("Хочу участвовать!", callback_data=f"enroll:{course_id}"),
-            InlineKeyboardButton("Назад", callback_data="back"),
+            InlineKeyboardButton("Назад", callback_data="back_to_courses"),
         ]
         menu = [button_list[i:i + 1] for i in range(0, len(button_list), 1)]
         await update.callback_query.edit_message_text(
             text=constants.id_to_description[course_id] + "\n\n" + constants.id_to_cta[course_id],
             reply_markup=InlineKeyboardMarkup(menu),
             parse_mode="HTML")
+
+
+async def handle_active_courses(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    logging.info(f"handle_active_courses triggered by {helpers.repr_user_from_update(update)}")
+
+    with Session(models.engine) as session:
+        active_courses = session.query(models.Course).filter(models.Course.is_active.is_(True)).all()
+        logging.info(f"{active_courses=}")
+
+    button_list = []
+    for course in active_courses:
+        button_list.append([InlineKeyboardButton(course.one_liner if course.one_liner else f"{course.name}",
+                                                 callback_data=f"course_info:{course.id}")])
+
+    if update.callback_query:
+        await update.callback_query.edit_message_text(
+            text='Потоки которые идут прямо сейчас!\n\n'
+                 'Можно подписаться на поток и получать новости об этом потоке! '
+                 'Некоторые курсы открыты всем, для некоторых нужна 💜Pro подписка.\n\n'
+                 'Узнать свой уровень подписки и оформить 💜Pro можно по команде /membership',
+            reply_markup=InlineKeyboardMarkup(button_list)
+        )
+    else:
+        await context.bot.send_message(
+            chat_id=update.effective_chat.id,
+            text='Потоки которые идут прямо сейчас!\n\n'
+                 'Можно подписаться на поток и получать новости об этом потоке! '
+                 'Некоторые курсы открыты всем, для некоторых нужна 💜Pro подписка.\n\n'
+                 'Узнать свой уровень подписки и оформить 💜Pro можно по команде /membership',
+            reply_markup=InlineKeyboardMarkup(button_list)
+        )
 
 
 async def handle_enroll(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -81,7 +112,7 @@ async def handle_enroll(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
             logging.warning(f"Couldn't add user enrollment to {constants.id_to_course[course_id]}: {e}")
     button_list = [
         InlineKeyboardButton("Перестать получать уведомления", callback_data=f"unenroll:{course_id}"),
-        InlineKeyboardButton("Назад", callback_data="back"),
+        InlineKeyboardButton("Назад", callback_data="back_to_courses"),
     ]
     menu = [button_list[i:i + 1] for i in range(0, len(button_list), 1)]
     await update.callback_query.edit_message_text(
@@ -110,7 +141,7 @@ async def handle_unenroll(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
             raise e  # to propagate it to error handler
 
     button_list = [
-        InlineKeyboardButton("Назад", callback_data="back"),
+        InlineKeyboardButton("Назад", callback_data="back_to_courses"),
     ]
     menu = [button_list[i:i + 1] for i in range(0, len(button_list), 1)]
     await update.callback_query.edit_message_text(

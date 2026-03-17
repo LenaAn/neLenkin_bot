@@ -2,6 +2,7 @@ import logging
 from telegram.ext import (filters, ApplicationBuilder, CommandHandler, MessageHandler, CallbackQueryHandler,
                           PicklePersistence)
 
+from courses import course_handlers
 from handlers import admin_commands, button_handlers, menu, leetcode_mock_handlers
 from notifications import notifications
 from membership import boosty_handlers, fetch_patrons, fetch_boosty_patrons, membership, patreon_handlers
@@ -52,6 +53,8 @@ if __name__ == '__main__':
         CommandHandler('help', menu.command_help, filters.ChatType.PRIVATE))
     application.add_handler(
         CommandHandler('membership', membership.handle_membership, filters.ChatType.PRIVATE))
+    application.add_handler(
+        CommandHandler('courses', course_handlers.handle_active_courses, filters.ChatType.PRIVATE))
     application.add_handler(
         CommandHandler('get_users', admin_commands.get_users_handler, filters.ChatType.PRIVATE))
     application.add_handler(
