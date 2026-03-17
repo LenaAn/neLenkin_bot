@@ -11,11 +11,11 @@ import helpers
 from models import MembershipByActivity, User, engine
 
 
-# todo: add a command /how_to_join
 HELP_TEXT = ("<b>Поддерживаемые команды:</b>\n"
              "/start — Главное меню\n"
+             "/courses — Активные курсы 🐙\n"
              "/membership — Подписка 🌟\n"
-             "/courses — Активные курсы 🐙\n\n"
+             "/join — Вступить в клуб 🎩\n\n"
              ""
              "Если бот запутался в диалоге, поможет\n"
              "/cancel — Прервать любой диалог\n\n"
