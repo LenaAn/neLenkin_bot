@@ -59,15 +59,25 @@ async def handle_course_info(update: Update, context: ContextTypes.DEFAULT_TYPE)
 async def handle_active_courses(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     logging.info(f"handle_active_courses triggered by {helpers.repr_user_from_update(update)}")
 
+    tg_id = str(update.effective_user.id)
+
     with Session(models.engine) as session:
         active_courses = session.query(models.Course).filter(models.Course.is_active.is_(True)).all()
+        user_enrollments = session.query(models.Enrollment.course_id).filter(models.Enrollment.tg_id == tg_id).all()
+        enrolled_course_ids = {e.course_id for e in user_enrollments}
+
         logging.info(f"{active_courses=}")
+        logging.info(f"{enrolled_course_ids=}")
 
     button_list = []
     for course in active_courses:
-        course_name = course.one_liner if course.one_liner else f"{course.name}"
+        course_name = course.one_liner if course.one_liner else course.name
         course_level = "🔒" if course.is_pro else "🆓"
-        button_list.append([InlineKeyboardButton(f"{course_name} {course_level}",
+
+        is_enrolled = course.id in enrolled_course_ids
+        enrollment_marker = "➕" if is_enrolled else "➖"
+
+        button_list.append([InlineKeyboardButton(f"{enrollment_marker} {course_name} {course_level}",
                                                  callback_data=f"course_info:{course.id}")])
 
     courses_description = ('Потоки которые идут прямо сейчас!\n\n'
