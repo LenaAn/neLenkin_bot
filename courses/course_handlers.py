@@ -65,24 +65,25 @@ async def handle_active_courses(update: Update, context: ContextTypes.DEFAULT_TY
 
     button_list = []
     for course in active_courses:
-        button_list.append([InlineKeyboardButton(course.one_liner if course.one_liner else f"{course.name}",
+        course_name = course.one_liner if course.one_liner else f"{course.name}"
+        course_level = "🔒" if course.is_pro else "🆓"
+        button_list.append([InlineKeyboardButton(f"{course_name} {course_level}",
                                                  callback_data=f"course_info:{course.id}")])
+
+    courses_description = ('Потоки которые идут прямо сейчас!\n\n'
+                           'Можно подписаться на поток и получать новости об этом потоке! '
+                           'Некоторые курсы открыты всем 🆓, для некоторых нужна подписка 🔒.\n\n'
+                           'Узнать свой уровень подписки и оформить 💜Pro можно по команде /membership')
 
     if update.callback_query:
         await update.callback_query.edit_message_text(
-            text='Потоки которые идут прямо сейчас!\n\n'
-                 'Можно подписаться на поток и получать новости об этом потоке! '
-                 'Некоторые курсы открыты всем, для некоторых нужна 💜Pro подписка.\n\n'
-                 'Узнать свой уровень подписки и оформить 💜Pro можно по команде /membership',
+            text=courses_description,
             reply_markup=InlineKeyboardMarkup(button_list)
         )
     else:
         await context.bot.send_message(
             chat_id=update.effective_chat.id,
-            text='Потоки которые идут прямо сейчас!\n\n'
-                 'Можно подписаться на поток и получать новости об этом потоке! '
-                 'Некоторые курсы открыты всем, для некоторых нужна 💜Pro подписка.\n\n'
-                 'Узнать свой уровень подписки и оформить 💜Pro можно по команде /membership',
+            text=courses_description,
             reply_markup=InlineKeyboardMarkup(button_list)
         )
 
