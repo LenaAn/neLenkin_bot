@@ -249,6 +249,9 @@ async def broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE, reply_ma
     successful_count = 0
     fail_count = 0
     for user in users:
+        if (successful_count + fail_count) % 50 == 0:
+            logging.info(f"Notification broadcast in progress: {successful_count} successful, "
+                         f"{fail_count} failed so far")
         try:
             await context.bot.copy_message(
                 chat_id=user.tg_id,
@@ -258,7 +261,6 @@ async def broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE, reply_ma
             )
             successful_count += 1
         except Exception as e:
-            logging.info(f"couldn't send broadcast message to {user.tg_username} {user.tg_id}: {e}")
             fail_count += 1
 
     logging.info(f"Successfully broadcast message to {successful_count} users, failed {fail_count} users.")
@@ -347,6 +349,8 @@ async def do_broadcast_course(update: Update, context: ContextTypes.DEFAULT_TYPE
     signature = f"\n\n---\n@{helpers.get_user(update).username} для курса {constants.id_to_course[course_id]}"
 
     for tg_id in tg_ids:
+        if (successful_count + fail_count) % 50 == 0:
+            logging.info(f"Course broadcast in progress: {successful_count} successful, {fail_count} failed so far")
         try:
             if msg.photo:
                 await context.bot.send_photo(
@@ -365,7 +369,6 @@ async def do_broadcast_course(update: Update, context: ContextTypes.DEFAULT_TYPE
                 )
             successful_count += 1
         except Exception as e:
-            logging.info(f"couldn't send {constants.id_to_course[course_id]} broadcast message to {tg_id}: {e}")
             fail_count += 1
 
     logging.info(f"Successfully {constants.id_to_course[course_id]} broadcast to {successful_count} users, "
