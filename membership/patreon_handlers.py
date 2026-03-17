@@ -7,10 +7,9 @@ from telegram.ext import (CallbackQueryHandler, CommandHandler, ContextTypes, Co
                           filters)
 
 import helpers
-import membership
 import models
 import settings
-from patreon import fetch_patrons
+from membership import fetch_patrons, membership
 
 CONNECT_PATREON = 1
 

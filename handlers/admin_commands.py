@@ -13,8 +13,7 @@ from telegram.ext import CallbackQueryHandler, CommandHandler, ContextTypes, Con
 import constants
 import helpers
 import models
-from patreon import fetch_patrons, fetch_boosty_patrons
-import membership
+from membership import fetch_patrons, fetch_boosty_patrons, membership
 
 
 def is_admin_id(tg_id: int) -> bool:

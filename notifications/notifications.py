@@ -12,7 +12,7 @@ from telegram.ext import ContextTypes
 import constants
 import models
 from models import Enrollment, ScheduledPartMessages, engine
-import membership
+from membership import membership
 import settings
 from . import notifications_helpers
 

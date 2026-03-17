@@ -1,5 +1,4 @@
 import logging
-from typing import Optional
 
 from sqlalchemy import exists, select
 from sqlalchemy.exc import IntegrityError
@@ -11,7 +10,7 @@ from telegram.ext import ContextTypes
 import constants
 import helpers
 import models
-from handlers import boosty_handlers, patreon_handlers
+from membership import boosty_handlers, patreon_handlers
 import settings
 
 

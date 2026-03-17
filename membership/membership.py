@@ -11,7 +11,7 @@ from telegram.ext import ContextTypes
 import constants
 import helpers
 import models
-from patreon import fetch_patrons, fetch_boosty_patrons
+from . import fetch_patrons, fetch_boosty_patrons
 
 membership_logger = logging.getLogger(__name__)
 membership_logger.setLevel(logging.INFO)
