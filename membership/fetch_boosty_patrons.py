@@ -1,5 +1,6 @@
 import logging
 from typing import Optional
+from pathlib import Path
 
 import redis
 from telegram import Bot
@@ -18,7 +19,11 @@ blog_href: Optional[str] = None
 
 async def init():
     global boosty_api, blog_href
-    boosty_api = await BoostyAPI.create("auth.json")
+
+    base_dir = Path(__file__).resolve().parent
+    auth_path = base_dir / "auth.json"
+
+    boosty_api = await BoostyAPI.create(str(auth_path))
     blog_href = await boosty_api.get_blog_href()
 
 
