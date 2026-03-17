@@ -80,7 +80,7 @@ async def command_help(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
 
 
 async def private_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    logging.info(f"private message handler triggered by {helpers.repr_user_from_update(update)}")
+    logging.info(f"private message handler triggered by {helpers.repr_user_from_update(update)}: {update.message.text}")
     await context.bot.send_message(
         chat_id=update.effective_chat.id,
         text="Я не понимаю сообщения, только эти команды:\n\n"
