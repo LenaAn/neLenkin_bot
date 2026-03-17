@@ -4,6 +4,7 @@ from telegram.ext import (filters, ApplicationBuilder, CommandHandler, MessageHa
 
 from courses import course_handlers
 from handlers import admin_commands, button_handlers, menu, leetcode_mock_handlers
+from intro import intro_handler
 from notifications import notifications
 from membership import boosty_handlers, fetch_patrons, fetch_boosty_patrons, membership, patreon_handlers
 import settings
@@ -40,6 +41,7 @@ if __name__ == '__main__':
     application.add_handler(admin_commands.course_get_users_conv_handler)
     application.add_handler(admin_commands.leetcode_new_topic_broadcast)
     application.add_handler(leetcode_mock_handlers.leetcode_register_handler)
+    application.add_handler(intro_handler.intro_conv_handler)
     application.add_handler(patreon_handlers.connect_patreon_handler)
     application.add_handler(boosty_handlers.connect_boosty_handler)
 
