@@ -16,9 +16,7 @@ async def button_click(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
     await query.answer()  # Acknowledge the callback
 
     handlers_dict = {
-        "back": handle_back_to_start,
         "back_to_courses": course_handlers.handle_active_courses,
-        "how_to_join": handle_how_to_join,
         "course_info": course_handlers.handle_course_info,
         "back_to_ddia": handle_back_to_ddia,
         "enroll": course_handlers.handle_enroll,
@@ -38,21 +36,6 @@ async def button_click(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
         await handler(update, context)
     else:
         logging.warning(f"Unhandled callback query data: {command} by {helpers.repr_user_from_update(update)}")
-
-
-async def handle_back_to_start(update: Update, _: ContextTypes.DEFAULT_TYPE) -> None:
-    logging.info(f"back_to_start triggered by {helpers.repr_user_from_update(update)}")
-    await update.callback_query.edit_message_text(
-        text=constants.club_description,
-        reply_markup=helpers.main_menu()
-    )
-
-
-async def handle_how_to_join(update: Update, _: ContextTypes.DEFAULT_TYPE) -> None:
-    logging.info(f"how_to_join triggered by {helpers.repr_user_from_update(update)}")
-    await update.callback_query.edit_message_text(
-        text=constants.how_to_join_description,
-        reply_markup=helpers.join_menu())
 
 
 async def handle_back_to_ddia(update: Update, _: ContextTypes.DEFAULT_TYPE) -> None:
