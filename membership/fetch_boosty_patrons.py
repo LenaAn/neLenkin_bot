@@ -37,7 +37,7 @@ async def fetch_boosty_patrons(bot: Bot) -> Optional[list[dict]]:
     boosty_all_members = []
 
     try:
-        stats = await boosty_api.get_subscribers()
+        stats = await boosty_api.get_subscribers(limit=40)
 
         if stats["total"] != len(stats["data"]):
             boosty_logger.error(f"Couldn't get all subscribers from Boosty, need pagination! Total is "
