@@ -44,6 +44,7 @@ async def start_join(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
 
 
 async def handle_intro(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    intro_logger.info(f"handle_intro triggered by {helpers.repr_user_from_update(update)}: {update.message.text}")
     user = update.effective_user
 
     admin_chat_id = int(os.getenv('ADMIN_CHAT_ID'))
