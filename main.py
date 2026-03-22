@@ -9,6 +9,7 @@ from notifications import notifications
 from membership import boosty_handlers, fetch_patrons, fetch_boosty_patrons, membership, patreon_handlers
 import settings
 from leetcode_pairs import leetcode_notifications
+from monitoring import push_monitoring
 
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -23,6 +24,7 @@ async def post_init(app):
     await fetch_patrons.load_patrons(app.bot)
     await fetch_boosty_patrons.init()
     await fetch_boosty_patrons.load_boosty_patrons(app.bot)
+    await push_monitoring.push_dau()
 
 
 async def post_shutdown(_unused_arg):
