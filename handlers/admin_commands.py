@@ -140,18 +140,18 @@ async def get_users_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) 
     )
 
 
-async def get_patreon_summary(context: ContextTypes.DEFAULT_TYPE) -> str:
+async def get_patreon_summary(context: ContextTypes.DEFAULT_TYPE) -> (int, str):
     await fetch_patrons.load_patrons(context.bot)
     active_patreon_patrons = fetch_patrons.get_patrons_from_redis("active_patron")
     logging.info(f"active_patrons are {active_patreon_patrons}")
     active_patrons_count = len(active_patreon_patrons)
     patreon_total_sum = sum(int(patron[1]) for patron in active_patreon_patrons)
     patreon_subscribers_str = "\n - ".join([', '.join(patron) for patron in active_patreon_patrons])
-    return (f"You have {active_patrons_count} active Patreon patrons with total sum of "
-            f"${patreon_total_sum // 100}:\n\n - {patreon_subscribers_str}")
+    return active_patrons_count, (f"You have {active_patrons_count} active Patreon patrons with total sum of "
+                                  f"${patreon_total_sum // 100}:\n\n - {patreon_subscribers_str}")
 
 
-async def get_boosty_summary(context: ContextTypes.DEFAULT_TYPE) -> str:
+async def get_boosty_summary(context: ContextTypes.DEFAULT_TYPE) -> (int, str):
     await fetch_boosty_patrons.load_boosty_patrons(context.bot)
     active_boosty_patrons = fetch_boosty_patrons.get_boosty_patrons_from_redis(min_price_rub=1500)
 
@@ -159,15 +159,18 @@ async def get_boosty_summary(context: ContextTypes.DEFAULT_TYPE) -> str:
     active_boosty_patrons_count = len(active_boosty_patrons)
     boosty_total_sum = sum(int(patron[2]) for patron in active_boosty_patrons)
     boosty_subscribers_str = "\n - ".join([', '.join(patron) for patron in active_boosty_patrons])
-    return (f"You have {active_boosty_patrons_count} paid Boosty patrons with total sum of "
-            f"{boosty_total_sum} RUB:\n\n - {boosty_subscribers_str}")
+    return active_boosty_patrons_count, (f"You have {active_boosty_patrons_count} paid Boosty patrons with total sum "
+                                         f"of {boosty_total_sum} RUB:\n\n - {boosty_subscribers_str}")
 
 
 @is_admin
 async def get_patrons_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     logging.info(f"get_patrons handler triggered by {helpers.repr_user_from_update(update)}")
-    patreon_summary: str = await get_patreon_summary(context)
-    boosty_summary: str = await get_boosty_summary(context)
+    patreon_count, patreon_summary = await get_patreon_summary(context)
+    boosty_count, boosty_summary = await get_boosty_summary(context)
+
+    await push_monitoring.push_patreon_patrons(patreon_count)
+    await push_monitoring.push_boosty_patrons(boosty_count)
 
     await context.bot.send_message(
         chat_id=update.effective_chat.id,
