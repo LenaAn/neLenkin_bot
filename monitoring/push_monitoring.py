@@ -11,45 +11,32 @@ monitoring_logger.setLevel(logging.DEBUG)
 class MetricsPusher:
     def __init__(self):
         self.registry = CollectorRegistry()
-        self.users_started_bot_gauge = Gauge(
-            'users_started_bot',
-            'Total users who started the bot',
-            registry=self.registry)
-        self.users_failed_broadcast_gauge = Gauge(
-            'users_failed_broadcast',
-            'Users failed during a broadcast out of all users who started the bot',
-            registry=self.registry)
-        self.patreon_patrons_gauge = Gauge(
-            'patreon_patrons',
-            'Active paying > 0 Patreon patrons',
-            registry=self.registry)
-        self.boosty_patrons_gauge = Gauge(
-            'boosty_patrons',
-            'Active paying > 0 Boosty patrons',
-            registry=self.registry)
+        self._gauges = {
+            "users_started_bot": Gauge(
+                'users_started_bot',
+                'Total users who started the bot',
+                registry=self.registry),
+            "users_failed_broadcast": Gauge(
+                'users_failed_broadcast',
+                'Users failed during a broadcast out of all users who started the bot',
+                registry=self.registry),
+            "patreon_patrons": Gauge(
+                'patreon_patrons',
+                'Active paying > 0 Patreon patrons',
+                registry=self.registry),
+            "boosty_patrons": Gauge(
+                'boosty_patrons',
+                'Active paying > 0 Boosty patrons',
+                registry=self.registry),
+        }
+
+    def set(self, metric_name: str, value: int):
+        if metric_name not in self._gauges:
+            raise ValueError(f"Unknown metric: {metric_name}")
+        self._gauges[metric_name].set(value)
 
     def push(self):
         push_to_gateway('localhost:9091', job='nelenkin-bot', registry=self.registry)
-
-    async def push_users_started_bot(self, users_count: int) -> None:
-        monitoring_logger.debug(f'pushing users_started_bot: {users_count}')
-        self.users_started_bot_gauge.set(users_count)
-        self.push()
-
-    async def push_users_failed_broadcast(self, users_count: int) -> None:
-        monitoring_logger.debug(f'pushing users_failed_broadcast: {users_count}')
-        self.users_failed_broadcast_gauge.set(users_count)
-        self.push()
-
-    async def push_patreon_patrons(self, users_count: int) -> None:
-        monitoring_logger.debug(f'pushing patreon_patrons: {users_count}')
-        self.patreon_patrons_gauge.set(users_count)
-        self.push()
-
-    async def push_boosty_patrons(self, users_count: int) -> None:
-        monitoring_logger.debug(f'pushing boosty_patrons: {users_count}')
-        self.boosty_patrons_gauge.set(users_count)
-        self.push()
 
 
 metrics = MetricsPusher()
