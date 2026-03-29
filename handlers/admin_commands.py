@@ -13,7 +13,7 @@ from telegram.ext import CallbackQueryHandler, CommandHandler, ContextTypes, Con
 import constants
 import helpers
 import models
-from monitoring import push_monitoring
+from monitoring.push_monitoring import metrics
 from membership import fetch_patrons, fetch_boosty_patrons, membership
 
 
@@ -132,7 +132,7 @@ async def get_users_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) 
     with Session(models.engine) as session:
         users_count = session.query(models.User).count()
 
-    await push_monitoring.push_users_started_bot(users_count)
+    await metrics.push_users_started_bot(users_count)
 
     await context.bot.send_message(
         chat_id=update.effective_chat.id,
@@ -169,8 +169,8 @@ async def get_patrons_handler(update: Update, context: ContextTypes.DEFAULT_TYPE
     patreon_count, patreon_summary = await get_patreon_summary(context)
     boosty_count, boosty_summary = await get_boosty_summary(context)
 
-    await push_monitoring.push_patreon_patrons(patreon_count)
-    await push_monitoring.push_boosty_patrons(boosty_count)
+    await metrics.push_patreon_patrons(patreon_count)
+    await metrics.push_boosty_patrons(boosty_count)
 
     await context.bot.send_message(
         chat_id=update.effective_chat.id,
@@ -246,7 +246,7 @@ async def broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE, reply_ma
         users = session.query(models.User).all()
         logging.info(f"got {len(users)} users from db for broadcast")
 
-    await push_monitoring.push_users_started_bot(len(users))
+    await metrics.push_users_started_bot(len(users))
 
     if membership_filter:
         users = [user for user in users if
@@ -270,7 +270,7 @@ async def broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE, reply_ma
         except Exception as e:
             fail_count += 1
 
-    await push_monitoring.push_users_failed_broadcast(fail_count)
+    await metrics.push_users_failed_broadcast(fail_count)
     logging.info(f"Successfully broadcast message to {successful_count} users, failed {fail_count} users.")
     await context.bot.send_message(
         chat_id=update.effective_chat.id,
