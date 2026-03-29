@@ -132,7 +132,8 @@ async def get_users_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) 
     with Session(models.engine) as session:
         users_count = session.query(models.User).count()
 
-    await push_monitoring.metrics.push_users_started_bot(users_count)
+    push_monitoring.metrics.set("users_started_bot", users_count)
+    push_monitoring.metrics.push()
 
     await context.bot.send_message(
         chat_id=update.effective_chat.id,
@@ -169,8 +170,9 @@ async def get_patrons_handler(update: Update, context: ContextTypes.DEFAULT_TYPE
     patreon_count, patreon_summary = await get_patreon_summary(context)
     boosty_count, boosty_summary = await get_boosty_summary(context)
 
-    await push_monitoring.metrics.push_patreon_patrons(patreon_count)
-    await push_monitoring.metrics.push_boosty_patrons(boosty_count)
+    push_monitoring.metrics.set("patreon_patrons", patreon_count)
+    push_monitoring.metrics.set("boosty_patrons", boosty_count)
+    push_monitoring.metrics.push()
 
     await context.bot.send_message(
         chat_id=update.effective_chat.id,
@@ -246,8 +248,6 @@ async def broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE, reply_ma
         users = session.query(models.User).all()
         logging.info(f"got {len(users)} users from db for broadcast")
 
-    await push_monitoring.metrics.push_users_started_bot(len(users))
-
     if membership_filter:
         users = [user for user in users if
                  membership.get_user_membership_info(user.tg_id).get_overall_level() == membership_filter]
@@ -275,7 +275,10 @@ async def broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE, reply_ma
 
     # todo: maybe don't push metrics here. I recorded in db to whom failed, maybe that's enough
     # will push metrics later in batch?
-    await push_monitoring.metrics.push_users_failed_broadcast(len(failed_ids))
+    push_monitoring.metrics.set("users_started_bot", len(users))
+    push_monitoring.metrics.set("users_failed_broadcast", len(failed_ids))
+    push_monitoring.metrics.push()
+
     logging.info(f"Successfully broadcast message to {successful_count} users, failed {len(failed_ids)} users.")
     await context.bot.send_message(
         chat_id=update.effective_chat.id,
