@@ -17,6 +17,9 @@ class User(Base):
     last_name = Column(sqlalchemy.Text, nullable=True)
     date_joined = Column(sqlalchemy.JSON, nullable=True)
     date_membership_started = Column(sqlalchemy.JSON, nullable=True)
+    is_last_message_successful = Column(sqlalchemy.Boolean, nullable=True)
+    # time in UTC
+    last_message_try_time = Column(sqlalchemy.DateTime, nullable=True)
 
     __table_args__ = (
         sqlalchemy.UniqueConstraint('tg_id', name='Users_unique_tg_id'),
