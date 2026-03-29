@@ -102,14 +102,14 @@ async def load_boosty_patrons(bot: Bot):
         store_boosty_patrons_to_cache(boosty_patrons)
 
 
-def get_boosty_patrons_from_redis(min_price_rub: int) -> list[(str, str)]:
+def get_boosty_patrons_from_redis(min_price_rub: int = 1) -> list[(str, str)]:
     active_boosty_patrons = []
 
     for key in r.scan_iter("boosty:user:*"):
         user_data = r.hgetall(key)
         user_data = {k.decode(): v.decode() for k, v in user_data.items()}
 
-        if int(user_data.get("price")) > 0:
+        if int(user_data.get("price")) >= min_price_rub:
             boosty_logger.debug(f"paid boosty subscriber is {user_data}")
             boosty_patron_info = [user_data.get("name"), user_data.get("email"), user_data.get("price")]
             active_boosty_patrons.append(boosty_patron_info)
