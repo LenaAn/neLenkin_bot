@@ -13,7 +13,7 @@ from telegram.ext import CallbackQueryHandler, CommandHandler, ContextTypes, Con
 import constants
 import helpers
 import models
-from monitoring.push_monitoring import metrics
+from monitoring import push_monitoring, update_users_in_db
 from membership import fetch_patrons, fetch_boosty_patrons, membership
 
 
@@ -132,7 +132,7 @@ async def get_users_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) 
     with Session(models.engine) as session:
         users_count = session.query(models.User).count()
 
-    await metrics.push_users_started_bot(users_count)
+    await push_monitoring.metrics.push_users_started_bot(users_count)
 
     await context.bot.send_message(
         chat_id=update.effective_chat.id,
@@ -169,8 +169,8 @@ async def get_patrons_handler(update: Update, context: ContextTypes.DEFAULT_TYPE
     patreon_count, patreon_summary = await get_patreon_summary(context)
     boosty_count, boosty_summary = await get_boosty_summary(context)
 
-    await metrics.push_patreon_patrons(patreon_count)
-    await metrics.push_boosty_patrons(boosty_count)
+    await push_monitoring.metrics.push_patreon_patrons(patreon_count)
+    await push_monitoring.metrics.push_boosty_patrons(boosty_count)
 
     await context.bot.send_message(
         chat_id=update.effective_chat.id,
@@ -246,7 +246,7 @@ async def broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE, reply_ma
         users = session.query(models.User).all()
         logging.info(f"got {len(users)} users from db for broadcast")
 
-    await metrics.push_users_started_bot(len(users))
+    await push_monitoring.metrics.push_users_started_bot(len(users))
 
     if membership_filter:
         users = [user for user in users if
@@ -254,11 +254,11 @@ async def broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE, reply_ma
         logging.info(f"got {len(users)} after filtering for {membership_filter} membership")
 
     successful_count = 0
-    fail_count = 0
+    failed_ids = []
     for user in users:
-        if (successful_count + fail_count) % 50 == 0:
+        if (successful_count + len(failed_ids)) % 50 == 0:
             logging.info(f"Notification broadcast in progress: {successful_count} successful, "
-                         f"{fail_count} failed so far")
+                         f"{len(failed_ids)} failed so far")
         try:
             await context.bot.copy_message(
                 chat_id=user.tg_id,
@@ -268,13 +268,18 @@ async def broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE, reply_ma
             )
             successful_count += 1
         except Exception as e:
-            fail_count += 1
+            failed_ids.append(user.tg_id)
 
-    await metrics.push_users_failed_broadcast(fail_count)
-    logging.info(f"Successfully broadcast message to {successful_count} users, failed {fail_count} users.")
+    success_ids = list(set([user.tg_id for user in users]) - set(failed_ids))
+    await update_users_in_db.update_users_after_broadcast(success_ids, failed_ids)
+
+    # todo: maybe don't push metrics here. I recorded in db to whom failed, maybe that's enough
+    # will push metrics later in batch?
+    await push_monitoring.metrics.push_users_failed_broadcast(len(failed_ids))
+    logging.info(f"Successfully broadcast message to {successful_count} users, failed {len(failed_ids)} users.")
     await context.bot.send_message(
         chat_id=update.effective_chat.id,
-        text=f"Successfully broadcast to {successful_count} users, failed {fail_count} users."
+        text=f"Successfully broadcast to {successful_count} users, failed {len(failed_ids)} users."
     )
     return ConversationHandler.END
 
@@ -352,13 +357,14 @@ async def do_broadcast_course(update: Update, context: ContextTypes.DEFAULT_TYPE
         logging.info(f"got {len(tg_ids)} users from db for {constants.id_to_course[course_id]} broadcast")
 
     successful_count = 0
-    fail_count = 0
+    failed_ids = []
     msg = update.message
     signature = f"\n\n---\n@{helpers.get_user(update).username} для курса {constants.id_to_course[course_id]}"
 
     for tg_id in tg_ids:
-        if (successful_count + fail_count) % 50 == 0:
-            logging.info(f"Course broadcast in progress: {successful_count} successful, {fail_count} failed so far")
+        if (successful_count + len(failed_ids)) % 50 == 0:
+            logging.info(f"Course broadcast in progress: {successful_count} successful, "
+                         f"{len(failed_ids)} failed so far")
         try:
             if msg.photo:
                 await context.bot.send_photo(
@@ -377,14 +383,18 @@ async def do_broadcast_course(update: Update, context: ContextTypes.DEFAULT_TYPE
                 )
             successful_count += 1
         except Exception as e:
-            fail_count += 1
+            failed_ids.append(tg_id)
 
     logging.info(f"Successfully {constants.id_to_course[course_id]} broadcast to {successful_count} users, "
-                 f"failed {fail_count} users.")
+                 f"failed {len(failed_ids)} users.")
+
+    success_ids = list(set(tg_ids) - set(failed_ids))
+    await update_users_in_db.update_users_after_broadcast(success_ids, failed_ids)
+
     await context.bot.send_message(
         chat_id=update.effective_chat.id,
         text=f"Successfully {constants.id_to_course[course_id]} broadcast to {successful_count} users, "
-             f"failed {fail_count} users."
+             f"failed {len(failed_ids)} users."
     )
     return ConversationHandler.END
 
