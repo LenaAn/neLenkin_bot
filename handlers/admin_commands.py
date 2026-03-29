@@ -357,13 +357,14 @@ async def do_broadcast_course(update: Update, context: ContextTypes.DEFAULT_TYPE
         logging.info(f"got {len(tg_ids)} users from db for {constants.id_to_course[course_id]} broadcast")
 
     successful_count = 0
-    fail_count = 0
+    failed_ids = []
     msg = update.message
     signature = f"\n\n---\n@{helpers.get_user(update).username} для курса {constants.id_to_course[course_id]}"
 
     for tg_id in tg_ids:
-        if (successful_count + fail_count) % 50 == 0:
-            logging.info(f"Course broadcast in progress: {successful_count} successful, {fail_count} failed so far")
+        if (successful_count + len(failed_ids)) % 50 == 0:
+            logging.info(f"Course broadcast in progress: {successful_count} successful, "
+                         f"{len(failed_ids)} failed so far")
         try:
             if msg.photo:
                 await context.bot.send_photo(
@@ -382,14 +383,18 @@ async def do_broadcast_course(update: Update, context: ContextTypes.DEFAULT_TYPE
                 )
             successful_count += 1
         except Exception as e:
-            fail_count += 1
+            failed_ids.append(tg_id)
 
     logging.info(f"Successfully {constants.id_to_course[course_id]} broadcast to {successful_count} users, "
-                 f"failed {fail_count} users.")
+                 f"failed {len(failed_ids)} users.")
+
+    success_ids = list(set(tg_ids) - set(failed_ids))
+    await update_users_in_db.update_users_after_broadcast(success_ids, failed_ids)
+
     await context.bot.send_message(
         chat_id=update.effective_chat.id,
         text=f"Successfully {constants.id_to_course[course_id]} broadcast to {successful_count} users, "
-             f"failed {fail_count} users."
+             f"failed {len(failed_ids)} users."
     )
     return ConversationHandler.END
 
