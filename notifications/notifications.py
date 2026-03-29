@@ -28,7 +28,7 @@ async def register_notifications(application):
     await register_ddia_prompt_to_connect_patreon_notifications(application)
     # todo: disable courses nicely
     await register_leetcode_grind_notifications(application)
-    # await register_leetcode_grind_prompt_to_connect_patreon_notifications(application)
+    await register_leetcode_grind_prompt_to_connect_patreon_notifications(application)
     # await register_codecrafters_notifications(application)
     await register_codecrafters_kafka_notifications(application)
     await register_aoc_notifications(application)
@@ -245,10 +245,10 @@ async def prompt_to_connect_patreon_notifications(context: ContextTypes.DEFAULT_
                     "привяжи почту по кнопке ⬇️"
                     "\n\n2. Либо оформи подписку на 1500 рублей на мой <a href='https://boosty.to/lenaan'>Boosty</a> и привяжи почту по кнопке ⬇️"                    "\n\n3. Если возникнут какие-то сложности, напиши @lenka_colenka!"
                     "\n\n4. Ты можешь отписаться от новостей про DDIA, чтобы больше не получать уведомления.")
-    elif course_id == constants.leetcode_course_id:
+    elif course_id == constants.leetcode_grind_3_course_id:
         message: str = (
             "Привет! Сегодня вечером будет звонок с обсуждением задач из списка Leetcode-75! Тему "
-            "сегодняшнего звонка можешь посмотреть <a href='https://docs.google.com/spreadsheets/d/1PpDAt6tRd9LNmMIxRBP3Qb8So06beKaAhYoe3ySXI9Y/edit?gid=0#gid=0'>здесь</a>. "
+            "сегодняшнего звонка можешь посмотреть <a href='https://docs.google.com/spreadsheets/d/1ddCs4c4km3qFeyzyvzuQn6a9lC_V5M2ocyT8w9ShBwg/edit?gid=0'>здесь</a>. "
             "\n\n<b>Обсуждение Leetcode Grind — это 💜Pro курс, и чтобы сегодня вечером тебе пришла ссылка на звонок, нужна 💜Pro подписка!</b>"
             "\n\n1. Чтобы оформить Pro подписку, подпишись на донат в $15 в месяц на моем "
             "<a href='https://www.patreon.com/c/LenaAnyusha'>Patreon</a>."
@@ -358,9 +358,9 @@ async def register_leetcode_grind_prompt_to_connect_patreon_notifications(app):
     app.job_queue.run_daily(
         callback=prompt_to_connect_patreon_notifications,
         time=datetime.time(hour=9, minute=55, tzinfo=berlin_tz),  # morning before Leetcode Grind call
-        days=(3,),  # 0 = Sunday, 3 = Wednesday
+        days=(1,),  # 0 = Sunday, 1 = Monday
         name=f"leetcode_grind_prompt_to_connect_patreon_notification",
-        data={"course_id": constants.grind_course_id}
+        data={"course_id": constants.leetcode_grind_3_course_id}
     )
 
 
