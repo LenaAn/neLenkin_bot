@@ -7,6 +7,7 @@ import models
 from leetcode_pairs import generate_graph
 import helpers
 import settings
+from zoneinfo import ZoneInfo
 
 
 async def send_leetcode_pairs_to_group(context: ContextTypes.DEFAULT_TYPE,
@@ -56,11 +57,13 @@ async def leetcode_notifications(context: ContextTypes.DEFAULT_TYPE):
 
 
 async def register_leetcode_pairs_notification(app):
-    cet_winter_time = datetime.timezone(datetime.timedelta(hours=1))
+    # no matter winter or summer time in Europe.
+    # In theory should work without restart when the time changes
+    berlin_tz = ZoneInfo("Europe/Berlin")
 
     app.job_queue.run_daily(
         callback=leetcode_notifications,
-        time=datetime.time(hour=9, minute=3, tzinfo=cet_winter_time),
+        time=datetime.time(hour=9, minute=3, tzinfo=berlin_tz),
         days=(5,),  # 0 = Sunday, ..., 4 = Friday
         name=f"leetcode_notification",
     )

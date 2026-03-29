@@ -2,6 +2,7 @@ import datetime
 import logging
 import os
 from dotenv import load_dotenv
+from zoneinfo import ZoneInfo
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -27,7 +28,7 @@ async def register_notifications(application):
     await register_ddia_prompt_to_connect_patreon_notifications(application)
     # todo: disable courses nicely
     await register_leetcode_grind_notifications(application)
-    # await register_leetcode_grind_prompt_to_connect_patreon_notifications(application)
+    await register_leetcode_grind_prompt_to_connect_patreon_notifications(application)
     # await register_codecrafters_notifications(application)
     await register_codecrafters_kafka_notifications(application)
     await register_aoc_notifications(application)
@@ -244,10 +245,10 @@ async def prompt_to_connect_patreon_notifications(context: ContextTypes.DEFAULT_
                     "привяжи почту по кнопке ⬇️"
                     "\n\n2. Либо оформи подписку на 1500 рублей на мой <a href='https://boosty.to/lenaan'>Boosty</a> и привяжи почту по кнопке ⬇️"                    "\n\n3. Если возникнут какие-то сложности, напиши @lenka_colenka!"
                     "\n\n4. Ты можешь отписаться от новостей про DDIA, чтобы больше не получать уведомления.")
-    elif course_id == constants.leetcode_course_id:
+    elif course_id == constants.leetcode_grind_3_course_id:
         message: str = (
             "Привет! Сегодня вечером будет звонок с обсуждением задач из списка Leetcode-75! Тему "
-            "сегодняшнего звонка можешь посмотреть <a href='https://docs.google.com/spreadsheets/d/1PpDAt6tRd9LNmMIxRBP3Qb8So06beKaAhYoe3ySXI9Y/edit?gid=0#gid=0'>здесь</a>. "
+            "сегодняшнего звонка можешь посмотреть <a href='https://docs.google.com/spreadsheets/d/1ddCs4c4km3qFeyzyvzuQn6a9lC_V5M2ocyT8w9ShBwg/edit?gid=0'>здесь</a>. "
             "\n\n<b>Обсуждение Leetcode Grind — это 💜Pro курс, и чтобы сегодня вечером тебе пришла ссылка на звонок, нужна 💜Pro подписка!</b>"
             "\n\n1. Чтобы оформить Pro подписку, подпишись на донат в $15 в месяц на моем "
             "<a href='https://www.patreon.com/c/LenaAnyusha'>Patreon</a>."
@@ -293,13 +294,15 @@ async def prompt_to_connect_patreon_notifications(context: ContextTypes.DEFAULT_
     await notifications_helpers.do_send_notifications(context, notification_chat_ids, message, menu,
                                                       f"{constants.id_to_course[course_id]} Patreon prompt")
 
+# no matter winter or summer time in Europe.
+# In theory should work without restart when the time changes
+berlin_tz = ZoneInfo("Europe/Berlin")
+
 
 async def register_leetcode_notifications(app):
-    cet_winter_time = datetime.timezone(datetime.timedelta(hours=1))
-
     app.job_queue.run_daily(
         callback=handle_leetcode_reminder,
-        time=datetime.time(hour=17, minute=6, tzinfo=cet_winter_time),
+        time=datetime.time(hour=17, minute=6, tzinfo=berlin_tz),
         days=(4,),  # 0 = Sunday, ..., 4 = Thursday
         name=f"leetcode_notification",
         data={
@@ -312,11 +315,9 @@ async def register_leetcode_notifications(app):
 
 
 async def register_sre_notifications(app):
-    cet_winter_time = datetime.timezone(datetime.timedelta(hours=1))
-
     app.job_queue.run_daily(
         callback=handle_sre_notification,
-        time=datetime.time(hour=17, minute=55, tzinfo=cet_winter_time),
+        time=datetime.time(hour=17, minute=55, tzinfo=berlin_tz),
         days=(2,),  # 0 = Sunday, 2 = Tuesday
         name=f"sre_notification",
         data={"course_id": constants.sre_course_id}
@@ -324,11 +325,9 @@ async def register_sre_notifications(app):
 
 
 async def register_ddia_prompt_to_connect_patreon_notifications(app):
-    cet_winter_time = datetime.timezone(datetime.timedelta(hours=1))
-
     app.job_queue.run_daily(
         callback=prompt_to_connect_patreon_notifications,
-        time=datetime.time(hour=9, minute=53, tzinfo=cet_winter_time),  # morning before DDIA call
+        time=datetime.time(hour=9, minute=53, tzinfo=berlin_tz),  # morning before DDIA call
         days=(4,),  # 0 = Sunday, 4 = Thursday
         name=f"ddia_prompt_to_connect_patreon_notification",
         data={"course_id": constants.ddia_5_course_id}
@@ -336,11 +335,9 @@ async def register_ddia_prompt_to_connect_patreon_notifications(app):
 
 
 async def register_dmls_prompt_to_connect_patreon_notifications(app):
-    cet_winter_time = datetime.timezone(datetime.timedelta(hours=1))
-
     app.job_queue.run_daily(
         callback=prompt_to_connect_patreon_notifications,
-        time=datetime.time(hour=9, minute=53, tzinfo=cet_winter_time),  # morning before DMLS call
+        time=datetime.time(hour=9, minute=53, tzinfo=berlin_tz),  # morning before DMLS call
         days=(2,),  # 0 = Sunday, 2 = Tuesday
         name=f"dmls_prompt_to_connect_patreon_notification",
         data={"course_id": constants.dmls_course_id}
@@ -348,11 +345,9 @@ async def register_dmls_prompt_to_connect_patreon_notifications(app):
 
 
 async def register_ddia_notifications(app):
-    cet_winter_time = datetime.timezone(datetime.timedelta(hours=1))
-
     app.job_queue.run_daily(
         callback=handle_notification_for_course,
-        time=datetime.time(hour=17, minute=53, tzinfo=cet_winter_time),
+        time=datetime.time(hour=17, minute=53, tzinfo=berlin_tz),
         days=(4,),  # 0 = Sunday, 4 = Thursday
         name=f"ddia_notification",
         data={"course_id": constants.ddia_5_course_id}
@@ -360,23 +355,19 @@ async def register_ddia_notifications(app):
 
 
 async def register_leetcode_grind_prompt_to_connect_patreon_notifications(app):
-    cet_winter_time = datetime.timezone(datetime.timedelta(hours=1))
-
     app.job_queue.run_daily(
         callback=prompt_to_connect_patreon_notifications,
-        time=datetime.time(hour=9, minute=55, tzinfo=cet_winter_time),  # morning before Leetcode Grind call
-        days=(3,),  # 0 = Sunday, 3 = Wednesday
+        time=datetime.time(hour=9, minute=55, tzinfo=berlin_tz),  # morning before Leetcode Grind call
+        days=(1,),  # 0 = Sunday, 1 = Monday
         name=f"leetcode_grind_prompt_to_connect_patreon_notification",
-        data={"course_id": constants.grind_course_id}
+        data={"course_id": constants.leetcode_grind_3_course_id}
     )
 
 
 async def register_leetcode_grind_notifications(app):
-    cet_winter_time = datetime.timezone(datetime.timedelta(hours=1))
-
     app.job_queue.run_daily(
         callback=handle_notification_for_course,
-        time=datetime.time(hour=17, minute=53, tzinfo=cet_winter_time),
+        time=datetime.time(hour=17, minute=53, tzinfo=berlin_tz),
         days=(1,),  # 0 = Sunday, 1 = Monday
         name=f"leetcode_grind_notification",
         data={"course_id": constants.leetcode_grind_3_course_id}
@@ -384,11 +375,9 @@ async def register_leetcode_grind_notifications(app):
 
 
 async def register_codecrafters_notifications(app):
-    cet_winter_time = datetime.timezone(datetime.timedelta(hours=1))
-
     app.job_queue.run_daily(
         callback=handle_codecrafters_notification,
-        time=datetime.time(hour=17, minute=55, tzinfo=cet_winter_time),
+        time=datetime.time(hour=17, minute=55, tzinfo=berlin_tz),
         days=(2,),  # 0 = Sunday, 2 = Tuesday
         name=f"codecrafters_notification",
         data={"course_id": constants.codecrafters_course_id}
@@ -396,11 +385,9 @@ async def register_codecrafters_notifications(app):
 
 
 async def register_codecrafters_kafka_notifications(app):
-    cet_winter_time = datetime.timezone(datetime.timedelta(hours=1))
-
     app.job_queue.run_daily(
         callback=handle_codecrafters_kafka_notification,
-        time=datetime.time(hour=17, minute=55, tzinfo=cet_winter_time),
+        time=datetime.time(hour=17, minute=55, tzinfo=berlin_tz),
         days=(3,),  # 0 = Sunday, 3 = Wednesday
         name=f"codecrafters_kafka_notification",
         data={"course_id": constants.codecrafters_kafka_course_id}
@@ -408,12 +395,10 @@ async def register_codecrafters_kafka_notifications(app):
 
 
 async def register_aoc_notifications(app):
-    eu_winter_time = datetime.timezone(datetime.timedelta(hours=1))
-
     # should not hit API more than once every 15 minutes. Daily is fine
     app.job_queue.run_daily(
         callback=handle_aoc_notification,
-        time=datetime.time(hour=20, minute=20, tzinfo=eu_winter_time),
+        time=datetime.time(hour=20, minute=20, tzinfo=berlin_tz),
         days=(0, 1, 2, 3, 4, 5, 6),  # 0 = Sunday
         name=f"aoc_notification",
         data={"course_id": constants.aoc_course_id}
@@ -421,11 +406,9 @@ async def register_aoc_notifications(app):
 
 
 async def register_dmls_notifications(app):
-    cet_winter_time = datetime.timezone(datetime.timedelta(hours=1))
-
     app.job_queue.run_daily(
         callback=handle_notification_for_course,
-        time=datetime.time(hour=18, minute=53, tzinfo=cet_winter_time),
+        time=datetime.time(hour=18, minute=53, tzinfo=berlin_tz),
         days=(2,),  # 0 = Sunday, 2 = Tuesday
         name=f"dmls_notification",
         data={"course_id": constants.dmls_course_id}
