@@ -1,10 +1,13 @@
+import asyncio
 import logging
 from monitoring.push_monitoring import metrics
 
 from sqlalchemy.orm import Session
+from telegram import Bot
 from membership import fetch_boosty_patrons, fetch_patrons
 
 import models
+import settings
 
 logger = logging.getLogger("metrics_reporter")
 logger.setLevel(logging.INFO)
@@ -28,8 +31,7 @@ def users_failed_broadcast_count() -> int:
     return failed_users_count
 
 
-# this will be run periodically on cron
-if __name__ == "__main__":
+async def calculate_metrics_and_report(bot: Bot = None) -> None:
     logger.info("Starting metrics collection")
     try:
         metrics.set("users_started_bot", users_started_bot_count())
@@ -39,4 +41,13 @@ if __name__ == "__main__":
         metrics.push()
         logger.info("Metrics successfully pushed")
     except Exception as e:
-        logger.exception("Failed to collect or push metrics")
+        logger.error("Failed to collect or push metrics")
+        if bot:
+            await bot.send_message(
+                chat_id=settings.ADMIN_CHAT_ID,
+                text=f"Failed to collect or push metrics: {e}")
+
+
+# this will be run periodically on cron
+if __name__ == "__main__":
+    asyncio.run(calculate_metrics_and_report())

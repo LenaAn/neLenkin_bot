@@ -7,6 +7,7 @@ from handlers import admin_commands, button_handlers, menu, leetcode_mock_handle
 from intro import intro_handler
 from notifications import notifications
 from membership import boosty_handlers, fetch_patrons, fetch_boosty_patrons, membership, patreon_handlers
+from monitoring import calculate_metrics_and_report
 import settings
 from leetcode_pairs import leetcode_notifications
 
@@ -23,6 +24,7 @@ async def post_init(app):
     await fetch_patrons.load_patrons(app.bot)
     await fetch_boosty_patrons.init()
     await fetch_boosty_patrons.load_boosty_patrons(app.bot)
+    await calculate_metrics_and_report.calculate_metrics_and_report(app.bot)
 
 
 async def post_shutdown(_unused_arg):
