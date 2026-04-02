@@ -866,4 +866,20 @@ async def get_status_handler(update: Update, context: ContextTypes.DEFAULT_TYPE)
 
     membership_info = membership.get_user_membership_info(tg_id, username)
     logging.info(f"{username} has {membership_info.get_overall_level().name} subscription")
-    await update.message.reply_text(f"{username} has {membership_info.get_overall_level().name} subscription:\n\n{membership_info}")
+
+    with (Session(models.engine) as session):
+        result = session \
+            .query(models.Course)\
+            .join(models.Enrollment, models.Enrollment.course_id == models.Course.id)\
+            .filter(models.Enrollment.tg_id == tg_id).all()
+
+    courses = sorted([(course.id, course.name, 'active' if course.is_active else 'inactive') for course in result])
+    courses = [f"{course[0]}, {course[1]}, {course[2]}" for course in courses]
+
+    logging.info(f"{username} is subscribed to {' '.join([str(x) for x in courses])}")
+
+    courses_str = "\n - ".join(courses)
+    await update.message.reply_text(
+        f"<b>{username} has {membership_info.get_overall_level().name} subscription:</b>\n\n{membership_info}\n\n"
+        f"<b>{username} is subscribed to</b>\n - {courses_str}",
+        parse_mode="HTML")
