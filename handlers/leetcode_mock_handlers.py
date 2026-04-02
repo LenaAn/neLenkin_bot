@@ -195,15 +195,21 @@ async def leetcode_english(update: Update, context: ContextTypes.DEFAULT_TYPE) -
             )
             return ConversationHandler.END
 
-    await context.bot.send_message(
-        chat_id=settings.ADMIN_CHAT_ID,
-        text=f"Sign up to leetcode mocks: {helpers.repr_user_from_update(update)}",
-        parse_mode="HTML")
-
     english_string = 'Мок будет на английском, если партнер тоже может на англиском, иначе на русском' \
         if context.user_data['leetcode_english'] else 'Мок будет на русском языке'
     timeslots_string = ", ".join(
         [constants.leetcode_register_timeslots[i] for i in context.user_data['selected_timeslots']])
+
+    await context.bot.send_message(
+        chat_id=settings.ADMIN_CHAT_ID,
+        text=f"<b>Sign up to leetcode mocks: {helpers.repr_user_from_update(update)}</b>\n\n"
+             f"Основная задача: {context.user_data['first_problem']}\n"
+             f"Запасная задача: {context.user_data['second_problem']}\n"
+             f"Выбранные таймслоты: {timeslots_string + ' по Московскому времени'}\n"
+             f"Язык программирования: {context.user_data['leetcode_programming_language']}\n"
+             f"{english_string}",
+        parse_mode="HTML")
+
     await context.bot.send_message(
         chat_id=update.effective_chat.id,
         text=f"<b>Твой выбор</b>\n\n"

@@ -10,6 +10,7 @@ import helpers
 import models
 import settings
 from membership import fetch_boosty_patrons, membership
+from monitoring import calculate_metrics_and_report
 
 CONNECT_BOOSTY = 1
 
@@ -90,6 +91,7 @@ async def do_connect_boosty(update: Update, context: ContextTypes.DEFAULT_TYPE) 
                 chat_id=update.effective_chat.id,
                 text=msg,
             )
+            await calculate_metrics_and_report.calculate_metrics_and_report(context.bot)
         else:
             return ConversationHandler.END
     else:
