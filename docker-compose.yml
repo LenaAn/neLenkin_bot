@@ -20,8 +20,8 @@ services:
   adminer:
     image: adminer
     restart: always
-    # ports:
-    #   - 127.0.0.1:8080:8080
+    ports:
+      - 127.0.0.1:8080:8080
 
   redis:
     image: redis:8
@@ -33,8 +33,8 @@ services:
     platform: linux/amd64
     container_name: redis-commander
     restart: unless-stopped
-    # ports:
-    #   - 127.0.0.1:8081:8081
+    ports:
+      - 127.0.0.1:8081:8081
     environment:
       - REDIS_HOSTS=local:redis:6379
     depends_on:
