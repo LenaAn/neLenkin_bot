@@ -41,11 +41,11 @@ services:
       - redis
 
   nelenkin-bot:
-    image: nelenkin-club/bot
+    image: nelenkin-club/bot:${BOT_VERSION:-latest}
+    env_file: "${BOT_ENV_FILE:-bot.env}"
     depends_on:
       db:
         condition: service_healthy
-        restart: true
       redis:
         condition: service_started
 

@@ -1,24 +1,35 @@
 services:
 
   db:
-    image: postgres:17
+    image: postgres:${PG_VERSION:-17}
     container_name: bot_postgres
     restart: always
     environment:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
       - POSTGRES_DB=nelenkin_club
-    ports:
-      - 5432:5432
     volumes:
       - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 10s
+      retries: 5
+      start_period: 30s
+      timeout: 10s
 
   redis:
     image: redis:8
     container_name: redis
     restart: unless-stopped
-    ports:
-      - "6379:6379"
+
+  nelenkin-bot:
+    image: nelenkin-club/bot:${BOT_VERSION:-latest}
+    env_file: "${BOT_ENV_FILE:-bot.env}"
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
 
 volumes:
   pgdata:
