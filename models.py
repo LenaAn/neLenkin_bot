@@ -29,6 +29,17 @@ class User(Base):
         return f"User(username={self.tg_username}, telegram_id={self.tg_id})"
 
 
+class UserEmail(Base):
+    __tablename__ = "UserEmail"
+    tg_id = Column(sqlalchemy.Text, nullable=False, primary_key=True)
+    contact_email = Column(sqlalchemy.Text, nullable=False)
+
+    __table_args__ = (
+        sqlalchemy.UniqueConstraint('contact_email', name='User_contact_email_is_unique'),
+        sqlalchemy.ForeignKeyConstraint(['tg_id'], ['Users.tg_id'], name='fk_valid_tg_id')
+    )
+
+
 class Enrollment(Base):
     __tablename__ = 'Enrollments'
 
