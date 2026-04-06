@@ -753,10 +753,19 @@ async def pro_courses_off(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
 @is_admin
 async def add_days_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     args = context.args
+    silent = False
 
-    if len(args) != 2:
-        await update.message.reply_text("Usage: /add_days <username> <number>")
+    if len(args) not in (2, 3):
+        await update.message.reply_text("Usage: /add_days <username> <number> [-silent]")
         return
+
+    if len(args) == 3:
+        if args[2] == "-silent":
+            silent = True
+        else:
+            await update.message.reply_text(
+                f"Unknown option: {args[2]}\nUsage: /add_days <username> <number> [-silent]")
+            return
 
     username = args[0]
     try:
@@ -822,20 +831,21 @@ async def add_days_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         session.commit()
         logging.info(f"new membership expiry for {username}: {new_expiry}")
 
-    try:
-        await context.bot.send_message(
-            chat_id=tg_id,
-            text=f"Тебе добавили {days} дней 💜Pro подписки за активное участие в клубе!\n\n"
-                 f"Твоя Pro подписка за активность истекает {new_expiry}.\n\n"
-                 f"💜Pro подписка дает доступ ко всем возможностям клуба: неограниченные звонки с обсуждениями книг, "
-                 f"leetcode моки, Random Coffee встречи и другое!\n\n"
-                 f"Чтобы сохранить 💜Pro подписку, сделай презентацию либо подпишись на "
-                 f"<a href='https://www.patreon.com/c/LenaAnyusha'>Patreon</a> хотя бы на $15 в месяц.\n\n"
-                 f" Спасибо и keep being amazing!",
-            parse_mode="HTML"
-        )
-    except Exception as e:
-        await update.message.reply_text(f"Couldn't send an update to {username}: {e}")
+    if not silent:
+        try:
+            await context.bot.send_message(
+                chat_id=tg_id,
+                text=f"Тебе добавили {days} дней 💜Pro подписки за активное участие в клубе!\n\n"
+                     f"Твоя Pro подписка за активность истекает {new_expiry}.\n\n"
+                     f"💜Pro подписка дает доступ ко всем возможностям клуба: неограниченные звонки с обсуждениями книг, "
+                     f"leetcode моки, Random Coffee встречи и другое!\n\n"
+                     f"Чтобы сохранить 💜Pro подписку, сделай презентацию либо подпишись на "
+                     f"<a href='https://www.patreon.com/c/LenaAnyusha'>Patreon</a> хотя бы на $15 в месяц.\n\n"
+                     f" Спасибо и keep being amazing!",
+                parse_mode="HTML"
+            )
+        except Exception as e:
+            await update.message.reply_text(f"Couldn't send an update to {username}: {e}")
 
     await update.message.reply_text(f"Added {days} days to {username}'s membership, new membership expiration is "
                                     f"{new_expiry}")
