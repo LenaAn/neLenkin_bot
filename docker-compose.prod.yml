@@ -24,7 +24,12 @@ services:
 
   nelenkin-bot:
     image: nelenkin-club/bot:${BOT_VERSION:-latest}
-    env_file: "${BOT_ENV_FILE:-bot.env}"
+    env_file: ".env"
+    restart: always
+    logging:
+      options:
+        max-size: "10m"
+        max-file: "3"
     depends_on:
       db:
         condition: service_healthy

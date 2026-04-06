@@ -45,6 +45,7 @@ services:
   nelenkin-bot:
     image: nelenkin-club/bot:${BOT_VERSION:-latest}
     env_file: "${BOT_ENV_FILE:-bot.env}"
+    restart: unless-stopped
     depends_on:
       db:
         condition: service_healthy
