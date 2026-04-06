@@ -4,7 +4,7 @@ from telegram.ext import (filters, ApplicationBuilder, CommandHandler, MessageHa
 
 from courses import course_handlers
 from handlers import admin_commands, button_handlers, menu, leetcode_mock_handlers
-from intro import intro_handler
+from users import intro_handler
 from notifications import notifications
 from membership import boosty_handlers, fetch_patrons, fetch_boosty_patrons, membership, patreon_handlers
 from monitoring import calculate_metrics_and_report
