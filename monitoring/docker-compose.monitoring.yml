@@ -12,13 +12,13 @@ services:
       - ./prometheus.yml:/etc/prometheus/prometheus.yml
       - prometheus_data:/prometheus
     ports:
-      - "9090:9090"
+      - "127.0.0.1:9090:9090"
 
   pushgateway:
     image: prom/pushgateway
     container_name: pushgateway
     ports:
-      - "9091:9091"
+      - "127.0.0.1:9091:9091"
 
   grafana:
     image: grafana/grafana
@@ -26,7 +26,7 @@ services:
     volumes:
       - grafana_data:/var/lib/grafana
     ports:
-      - "3000:3000"
+      - "127.0.0.1:3000:3000"
     environment:
       - GF_SECURITY_ADMIN_USER=admin
       - GF_SECURITY_ADMIN_PASSWORD=strongpassword123
