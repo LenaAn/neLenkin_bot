@@ -44,3 +44,28 @@ Python, Docker, Postgres, Redis, Patreon API
     $ python3 main.py
     ```
    This will start your test bot. Try `/start` command in your bot!
+
+## 🎁 Contributing
+
+Donate monthly on [Patreon](https://www.patreon.com/c/LenaAnyusha) or [Boosty](boosty.to/lenaan).
+
+If you are not yet a member, join the club via [Telegram Bot](https://t.me/neLenkin_bot), use command `/join`.
+
+### Participate in club discussions
+
+The best way to contribute to the club is to present the topic of the week in courses you participate in. (Command 
+`/courses` in [Telegram Bot](https://t.me/neLenkin_bot)). If you have learned something exciting that is not covered in 
+any book we are reading and you what to share it, reach out to Lena to set up an ad-hoc presentation.
+
+### Tell your friends about the Club
+
+Please do! Bring more passionate smart humble nice people to the club.
+
+### If you really what to write some code
+
+Choose any of the [Issues](https://github.com/LenaAn/neLenkin_bot/issues)
+
+Discuss what you want implement with Lena before opening a Pull Request. Any PR without prior discussion most likely 
+will not get reviewed.
+
+If you have a bug report, security issue or feature request, please also discuss it with Lena.
