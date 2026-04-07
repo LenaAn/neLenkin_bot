@@ -110,6 +110,8 @@ async def handle_notification(context: ContextTypes.DEFAULT_TYPE):
 
     await notifications_helpers.do_send_notifications(context, notification_chat_ids, message, menu,
                                                       constants.id_to_course[course_id])
+    await notifications_helpers.email_notifications(context, notification_chat_ids, message, menu,
+                                                      constants.id_to_course[course_id])
 
 
 async def handle_sre_notification(context: ContextTypes.DEFAULT_TYPE):
