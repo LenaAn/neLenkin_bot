@@ -2,9 +2,12 @@ import logging
 import os
 from dotenv import load_dotenv
 
+from sqlalchemy import select
+from sqlalchemy.orm import Session
 from telegram import InlineKeyboardMarkup
 from telegram.ext import ContextTypes
 
+import models
 from monitoring import update_users_in_db
 
 notifications_logger = logging.getLogger(__name__)
@@ -43,4 +46,31 @@ async def do_send_notifications(context: ContextTypes.DEFAULT_TYPE, notification
         chat_id=admin_chat_id,
         text=f"Successfully sent {notification_name} notifications to {successful_count} users, "
              f"failed {len(failed_ids)} users."
+    )
+
+
+# this just sends the message and emails to broadcast to admin
+# in future that will be SES email sending from club email
+async def email_notifications(context: ContextTypes.DEFAULT_TYPE, notification_chat_ids: list[str], message: str,
+                              menu: InlineKeyboardMarkup, notification_name: str) -> None:
+    notifications_logger.info(f"triggered email_notifications for {notification_name}")
+    with Session(models.engine) as session:
+        stmt = (
+            select(models.UserEmail.contact_email)
+            .where(models.UserEmail.tg_id.in_(notification_chat_ids))
+        )
+        result = session.execute(stmt).scalars().all()
+        emails = list(result)
+
+    notifications_logger.info(f"got {len(emails)} emails for {notification_name}")
+    admin_chat_id = int(os.getenv('ADMIN_CHAT_ID'))
+    await context.bot.send_message(
+        chat_id=admin_chat_id,
+        text=message,
+        parse_mode="HTML",
+        reply_markup=menu)
+
+    await context.bot.send_message(
+        chat_id=admin_chat_id,
+        text=f"👆You should send this message to {', '.join(emails)}."
     )
