@@ -2,3 +2,4 @@
 docker-compose.yml
 docker-compose.prod.yml
 README.md
+alembic.ini
