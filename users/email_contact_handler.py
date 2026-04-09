@@ -16,7 +16,7 @@ async def set_email_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     args = context.args
     if len(args) != 1:
-        await update.message.reply_text("Введи email сразу в команде, вот так: /set_email email@example.com")
+        await update.effective_message.reply_text("Введи email сразу в команде, вот так: /set_email email@example.com")
         return
 
     email = args[0]
@@ -36,9 +36,10 @@ async def set_email_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         session.execute(stmt)
         session.commit()
     logging.info(f"New contact email for {helpers.repr_user_from_update(update)}: {email}")
-    await update.message.reply_text(f"Твой email сохранен: {email}.\n\nТеперь ссылка на звонки клуба будет приходить и "
-                                    f"на этот email за 5 минут до встречи.\n\nЧтобы поменять email, вызови команду "
-                                    f"заново.\n\nЧтобы удалить email, напиши @lenka_colenka")
+    await update.effective_message.reply_text(f"Твой email сохранен: {email}.\n\nТеперь ссылка на звонки клуба будет "
+                                              f"приходить и на этот email за 5 минут до встречи.\n\nЧтобы поменять "
+                                              f"email, вызови команду заново."
+                                              f"\n\nЧтобы удалить email, напиши @lenka_colenka")
 
     admin_chat_id = int(os.getenv('ADMIN_CHAT_ID'))
     await context.bot.send_message(
