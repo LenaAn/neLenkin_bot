@@ -68,7 +68,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 
     await context.bot.send_message(
         chat_id=update.effective_chat.id,
-        text=constants.club_description + HELP_TEXT,
+        text=constants.club_description + "\n\n" + HELP_TEXT,
         parse_mode="HTML",
     )
 
