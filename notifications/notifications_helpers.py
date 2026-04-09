@@ -2,6 +2,8 @@ import logging
 import os
 from dotenv import load_dotenv
 
+import aiosmtplib
+from email.message import EmailMessage
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 from telegram import InlineKeyboardMarkup
@@ -9,6 +11,7 @@ from telegram.ext import ContextTypes
 
 import models
 from monitoring import update_users_in_db
+import settings
 
 notifications_logger = logging.getLogger(__name__)
 notifications_logger.setLevel(logging.DEBUG)
@@ -49,8 +52,26 @@ async def do_send_notifications(context: ContextTypes.DEFAULT_TYPE, notification
     )
 
 
-# this just sends the message and emails to broadcast to admin
-# in future that will be SES email sending from club email
+async def send_emails(subject: str, body: str, recipients: list[str]) -> None:
+    notifications_logger.info(f"triggered send_emails for {', '.join(recipients)}")
+    message = EmailMessage()
+    message["From"] = settings.EMAIL_FROM
+    message["To"] = settings.EMAIL_FROM
+    message["Subject"] = subject
+    message.set_content(body)
+
+    message["Bcc"] = ", ".join(recipients)
+
+    await aiosmtplib.send(
+        message,
+        hostname=settings.SMTP_HOST,
+        port=settings.SMTP_PORT,
+        username=settings.SMTP_USERNAME,
+        password=settings.SMTP_PASSWORD,
+        start_tls=True
+    )
+
+
 async def email_notifications(context: ContextTypes.DEFAULT_TYPE, notification_chat_ids: list[str], message: str,
                               menu: InlineKeyboardMarkup, notification_name: str) -> None:
     notifications_logger.info(f"triggered email_notifications for {notification_name}")
@@ -70,7 +91,9 @@ async def email_notifications(context: ContextTypes.DEFAULT_TYPE, notification_c
         parse_mode="HTML",
         reply_markup=menu)
 
-    await context.bot.send_message(
-        chat_id=admin_chat_id,
-        text=f"👆You should send this message to {', '.join(emails)}."
-    )
+    if emails:
+        await send_emails(
+            subject=f"Звонок {notification_name} через 5 минут!",
+            body=message,
+            recipients=emails
+        )
