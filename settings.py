@@ -24,3 +24,11 @@ AOC_LEADERBOARD_ID = os.getenv("AOC_LEADERBOARD_ID")
 AOC_TOPIC_ID = int(os.getenv("AOC_TOPIC_ID"))
 
 LEETCODE_MOCKS_THREAD_ID = int(os.getenv('LEETCODE_MOCKS_THREAD_ID'))
+
+# SMTP email settings
+SMTP_USERNAME = os.getenv("SMTP_USERNAME")
+SMTP_PASSWORD = os.getenv("SMTP_PASSWORD")
+
+SMTP_HOST = os.getenv("SMTP_HOST", "email-smtp.eu-north-1.amazonaws.com")
+SMTP_PORT = os.getenv("SMTP_PORT", 587)
+EMAIL_FROM = os.getenv("EMAIL_FROM", "hello@nelenkin.club")
