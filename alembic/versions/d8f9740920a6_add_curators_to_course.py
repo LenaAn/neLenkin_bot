@@ -20,9 +20,11 @@ depends_on: Union[str, Sequence[str], None] = None
 
 def upgrade() -> None:
     """Upgrade schema."""
+    op.create_unique_constraint(op.f('Users_unique_tg_id'), 'Users', ['tg_id'])
     op.add_column('Course', sa.Column('curator_tg_id', sa.Text(), nullable=True))
 
 
 def downgrade() -> None:
     """Downgrade schema."""
     op.drop_column('Course', 'curator_tg_id')
+    op.drop_constraint(op.f('Users_unique_tg_id'), 'Users', type_='unique')
