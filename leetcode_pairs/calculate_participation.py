@@ -30,6 +30,16 @@ def get_users_with_mock_counts(start_week: int, end_week: int) -> list:
         return results
 
 
+def get_number_all_registrations(start_week: int, end_week: int) -> int:
+    with Session(engine) as session:
+        number_of_registrations = session.query(MockSignUp).filter(
+                and_(
+                    MockSignUp.week_number >= start_week,
+                    MockSignUp.week_number <= end_week,
+                )).count()
+        return number_of_registrations
+
+
 if __name__ == "__main__":
     # todo: that will break when the year changes and the week number starts from 1 again
     if len(sys.argv) != 3:
@@ -41,6 +51,10 @@ if __name__ == "__main__":
     print(f"{start_week=}, {end_week=}")
 
     users = get_users_with_mock_counts(start_week, end_week)
+
+    registration_count = get_number_all_registrations(start_week, end_week)
+    print(f"In {end_week-start_week+1} weeks happened {registration_count} registartions, "
+          f"approximately {registration_count/2} mocks")
 
     for user in users:
         tg_id, tg_username, mock_count = user
