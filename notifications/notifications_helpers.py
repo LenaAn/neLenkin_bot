@@ -85,11 +85,6 @@ async def email_notifications(context: ContextTypes.DEFAULT_TYPE, notification_c
 
     notifications_logger.info(f"got {len(emails)} emails for {notification_name}")
     admin_chat_id = int(os.getenv('ADMIN_CHAT_ID'))
-    await context.bot.send_message(
-        chat_id=admin_chat_id,
-        text=message,
-        parse_mode="HTML",
-        reply_markup=menu)
 
     if emails:
         await send_emails(
@@ -97,3 +92,8 @@ async def email_notifications(context: ContextTypes.DEFAULT_TYPE, notification_c
             body=message,
             recipients=emails
         )
+    await context.bot.send_message(
+        chat_id=admin_chat_id,
+        text=f"Sent {notification_name} notification to {len(emails)} emails",
+        parse_mode="HTML",
+        reply_markup=menu)
