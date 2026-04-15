@@ -1,6 +1,6 @@
 import datetime
 import logging
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import date
 from typing import Optional
 
@@ -55,7 +55,7 @@ pro = MembershipLevel(
 
 @dataclass
 class UserMembershipInfo:
-    member_level_by_activity: MembershipLevel = basic
+    member_level_by_activity: MembershipLevel = field(default_factory=lambda: basic)
     member_level_by_activity_expiration: date = date(year=1970, month=1, day=1)
     patreon_email: str = ""
     sum_of_entitled_tiers_amount_cents: int = 0
