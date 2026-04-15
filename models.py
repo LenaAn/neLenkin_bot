@@ -163,7 +163,6 @@ engine = create_engine(DATABASE_URL)
 # todo: these are essentially feature flags, but are not persisted across restarts. Need a nicer way to work with
 #  feature flags.
 leetcode_status_on = True
-codecrafters_kafka_notification_on = True
 pro_courses_on=True
 aoc_notification_on = False
 dmls_notification_on = True
