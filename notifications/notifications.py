@@ -24,7 +24,6 @@ notifications_logger.setLevel(logging.DEBUG)
 async def register_notifications(application):
     await register_leetcode_notifications(application)
     await register_daily_notification_for_active_courses(application)
-    await register_sre_notifications(application)
     await register_ddia_prompt_to_connect_patreon_notifications(application)
     # todo: disable courses nicely
     await register_leetcode_grind_prompt_to_connect_patreon_notifications(application)
@@ -110,17 +109,6 @@ async def handle_notification(context: ContextTypes.DEFAULT_TYPE):
                                                       constants.id_to_course[course_id])
     await notifications_helpers.email_notifications(context, notification_chat_ids, message, menu,
                                                       constants.id_to_course[course_id])
-
-
-async def handle_sre_notification(context: ContextTypes.DEFAULT_TYPE):
-    # todo: we need more nice way of working with feature flags
-    # you can't do `from models import sre_notification_on` and use just `sre_notification_on` here
-    # because when you import variable from module, it creates a local copy
-    if models.sre_notification_on:
-        context.job.data["message"] = constants.before_call_reminders[constants.sre_course_id]
-        await handle_notification(context)
-    else:
-        notifications_logger.info("SRE notification is turned off, skipping sending SRE notifications")
 
 
 async def handle_codecrafters_notification(context: ContextTypes.DEFAULT_TYPE):
@@ -311,16 +299,6 @@ async def register_leetcode_notifications(app):
             "menu": InlineKeyboardMarkup(
                 [[InlineKeyboardButton("Записаться на моки!", callback_data="leetcode_register")]])
         }
-    )
-
-
-async def register_sre_notifications(app):
-    app.job_queue.run_daily(
-        callback=handle_sre_notification,
-        time=datetime.time(hour=17, minute=55, tzinfo=berlin_tz),
-        days=(2,),  # 0 = Sunday, 2 = Tuesday
-        name=f"sre_notification",
-        data={"course_id": constants.sre_course_id}
     )
 
 
