@@ -1,0 +1,2 @@
+0 2 * * * /usr/local/bin/nelenkin_club_backup.sh
+0 * * * * cd /home/ec2-user/neLenkin_bot && /home/ec2-user/.local/bin/uv run -m monitoring.calculate_metrics_and_report > /home/ec2-user/neLenkin_bot/logs/metrics_cron.log 2>&1
