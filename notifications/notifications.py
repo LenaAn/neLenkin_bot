@@ -23,16 +23,14 @@ notifications_logger.setLevel(logging.DEBUG)
 
 async def register_notifications(application):
     await register_leetcode_notifications(application)
+    await register_daily_notification_for_active_courses(application)
     await register_sre_notifications(application)
-    await register_ddia_notifications(application)
     await register_ddia_prompt_to_connect_patreon_notifications(application)
     # todo: disable courses nicely
-    await register_leetcode_grind_notifications(application)
     await register_leetcode_grind_prompt_to_connect_patreon_notifications(application)
     # await register_codecrafters_notifications(application)
     await register_codecrafters_kafka_notifications(application)
     await register_aoc_notifications(application)
-    await register_dmls_notifications(application)
     await register_dmls_prompt_to_connect_patreon_notifications(application)
 
 
@@ -346,32 +344,12 @@ async def register_dmls_prompt_to_connect_patreon_notifications(app):
     )
 
 
-async def register_ddia_notifications(app):
-    app.job_queue.run_daily(
-        callback=handle_notification_for_course,
-        time=datetime.time(hour=17, minute=53, tzinfo=berlin_tz),
-        days=(4,),  # 0 = Sunday, 4 = Thursday
-        name=f"ddia_notification",
-        data={"course_id": constants.ddia_5_course_id}
-    )
-
-
 async def register_leetcode_grind_prompt_to_connect_patreon_notifications(app):
     app.job_queue.run_daily(
         callback=prompt_to_connect_patreon_notifications,
         time=datetime.time(hour=9, minute=55, tzinfo=berlin_tz),  # morning before Leetcode Grind call
         days=(1,),  # 0 = Sunday, 1 = Monday
         name=f"leetcode_grind_prompt_to_connect_patreon_notification",
-        data={"course_id": constants.leetcode_grind_3_course_id}
-    )
-
-
-async def register_leetcode_grind_notifications(app):
-    app.job_queue.run_daily(
-        callback=handle_notification_for_course,
-        time=datetime.time(hour=17, minute=53, tzinfo=berlin_tz),
-        days=(1,),  # 0 = Sunday, 1 = Monday
-        name=f"leetcode_grind_notification",
         data={"course_id": constants.leetcode_grind_3_course_id}
     )
 
@@ -407,11 +385,31 @@ async def register_aoc_notifications(app):
     )
 
 
-async def register_dmls_notifications(app):
+async def get_active_courses_and_handle_notification(context: ContextTypes.DEFAULT_TYPE):
+    # in app.job_queue.run_daily 0 = Sunday, so in db 0 = Sunday, 1 = Monday
+    # but for datetime 0 = Monday
+    today_weekday: int = (datetime.datetime.now().weekday() + 1) % 7
+    notifications_logger.info(f"triggered get_active_courses_and_handle_notification for weekday {today_weekday}")
+
+    with Session(models.engine) as session:
+        active_courses_with_notification_today = session.query(models.Course).filter(
+            (models.Course.is_active.is_(True) & (models.Course.day_of_week == today_weekday))
+        ).all()
+
+    notifications_logger.info(f"active courses for weekday {today_weekday} are: "
+                              f"{active_courses_with_notification_today}")
+
+    for course in active_courses_with_notification_today:
+        context.job.data = {"course_id": course.id}
+        await handle_notification_for_course(context)
+
+
+# every day the job checks for active courses with today's day of the week
+# and send a notification at 17:53 Berlin time.
+# No need to restart when changing the set of active courses
+async def register_daily_notification_for_active_courses(app):
     app.job_queue.run_daily(
-        callback=handle_notification_for_course,
-        time=datetime.time(hour=18, minute=53, tzinfo=berlin_tz),
-        days=(2,),  # 0 = Sunday, 2 = Tuesday
-        name=f"dmls_notification",
-        data={"course_id": constants.dmls_course_id}
+        callback=get_active_courses_and_handle_notification,
+        time=datetime.time(hour=17, minute=53, tzinfo=berlin_tz),
+        name=f"get_active_course_and_send_notification",
     )

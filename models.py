@@ -68,7 +68,7 @@ class Course(Base):
     curator_tg_id = Column(sqlalchemy.Text, nullable=True)
     is_active = Column(sqlalchemy.Boolean, nullable=False)
     is_pro = Column(sqlalchemy.Boolean, nullable=True)
-    day_of_week = Column(sqlalchemy.Integer, nullable=True)
+    day_of_week = Column(sqlalchemy.Integer, nullable=True)  # 0 = Sunday
 
     __table_args__ = (
         sqlalchemy.CheckConstraint("day_of_week BETWEEN 0 AND 6", name="check_day_of_week_range"),
