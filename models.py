@@ -165,4 +165,3 @@ engine = create_engine(DATABASE_URL)
 leetcode_status_on = True
 pro_courses_on=True
 aoc_notification_on = False
-dmls_notification_on = True
