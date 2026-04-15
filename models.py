@@ -68,6 +68,11 @@ class Course(Base):
     curator_tg_id = Column(sqlalchemy.Text, nullable=True)
     is_active = Column(sqlalchemy.Boolean, nullable=False)
     is_pro = Column(sqlalchemy.Boolean, nullable=True)
+    day_of_week = Column(sqlalchemy.Integer, nullable=True)  # 0 = Sunday
+
+    __table_args__ = (
+        sqlalchemy.CheckConstraint("day_of_week BETWEEN 0 AND 6", name="check_day_of_week_range"),
+    )
 
     def __repr__(self):
         return f"Course(id={self.id}, name={self.name}"
@@ -158,10 +163,5 @@ engine = create_engine(DATABASE_URL)
 # todo: these are essentially feature flags, but are not persisted across restarts. Need a nicer way to work with
 #  feature flags.
 leetcode_status_on = True
-sre_notification_on = False
-ddia_notification_on = True
-codecrafters_notification_on = False
-codecrafters_kafka_notification_on = True
 pro_courses_on=True
 aoc_notification_on = False
-dmls_notification_on = True

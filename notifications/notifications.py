@@ -23,16 +23,10 @@ notifications_logger.setLevel(logging.DEBUG)
 
 async def register_notifications(application):
     await register_leetcode_notifications(application)
-    await register_sre_notifications(application)
-    await register_ddia_notifications(application)
+    await register_daily_notification_for_active_courses(application)
     await register_ddia_prompt_to_connect_patreon_notifications(application)
-    # todo: disable courses nicely
-    await register_leetcode_grind_notifications(application)
     await register_leetcode_grind_prompt_to_connect_patreon_notifications(application)
-    # await register_codecrafters_notifications(application)
-    await register_codecrafters_kafka_notifications(application)
     await register_aoc_notifications(application)
-    await register_dmls_notifications(application)
     await register_dmls_prompt_to_connect_patreon_notifications(application)
 
 
@@ -114,39 +108,6 @@ async def handle_notification(context: ContextTypes.DEFAULT_TYPE):
                                                       constants.id_to_course[course_id])
 
 
-async def handle_sre_notification(context: ContextTypes.DEFAULT_TYPE):
-    # todo: we need more nice way of working with feature flags
-    # you can't do `from models import sre_notification_on` and use just `sre_notification_on` here
-    # because when you import variable from module, it creates a local copy
-    if models.sre_notification_on:
-        context.job.data["message"] = constants.before_call_reminders[constants.sre_course_id]
-        await handle_notification(context)
-    else:
-        notifications_logger.info("SRE notification is turned off, skipping sending SRE notifications")
-
-
-async def handle_codecrafters_notification(context: ContextTypes.DEFAULT_TYPE):
-    # todo: we need more nice way of working with feature flags
-    # you can't do `from models import codecrafters_notification_on` and use just `codecrafters_notification_on` here
-    # because when you import variable from module, it creates a local copy
-    if models.codecrafters_notification_on:
-        context.job.data["message"] = constants.before_call_reminders[constants.codecrafters_course_id]
-        await handle_notification(context)
-    else:
-        notifications_logger.info("CodeCrafters notification is turned off, skipping sending CodeCrafters notifications")
-
-
-async def handle_codecrafters_kafka_notification(context: ContextTypes.DEFAULT_TYPE):
-    # todo: we need more nice way of working with feature flags
-    # you can't do `from models import codecrafters_notification_on` and use just `codecrafters_notification_on` here
-    # because when you import variable from module, it creates a local copy
-    if models.codecrafters_kafka_notification_on:
-        context.job.data["message"] = constants.before_call_reminders[constants.codecrafters_kafka_course_id]
-        await handle_notification(context)
-    else:
-        notifications_logger.info("CodeCrafters-Kafka notification is turned off, skipping sending CodeCrafters-Kafka notifications")
-
-
 async def handle_aoc_notification(context: ContextTypes.DEFAULT_TYPE):
     if models.aoc_notification_on:
         from aoc import fetch_leaderboard
@@ -165,12 +126,6 @@ async def handle_aoc_notification(context: ContextTypes.DEFAULT_TYPE):
 
 async def handle_notification_for_course(context: ContextTypes.DEFAULT_TYPE):
     course_id: int = context.job.data["course_id"]
-    if course_id == constants.ddia_5_course_id and not models.ddia_notification_on:
-        notifications_logger.info("DDIA notification is turned off, skipping sending DDIA notification")
-        return
-    if course_id == constants.dmls_course_id and not models.dmls_notification_on:
-        notifications_logger.info("DMLS notification is turned off, skipping sending DMLS notification")
-        return
     current_week: int = datetime.date.today().isocalendar().week
     with (Session(engine) as session):
         try:
@@ -204,26 +159,6 @@ async def handle_notification_for_course(context: ContextTypes.DEFAULT_TYPE):
 async def prompt_to_connect_patreon_notifications(context: ContextTypes.DEFAULT_TYPE):
     # todo: don't hardcode things, move table links and buttons to constants
     course_id: int = context.job.data["course_id"]
-
-    if course_id == constants.ddia_5_course_id and not models.ddia_notification_on:
-        notifications_logger.info(f"Skipping a prompt to connect Patreon for course {constants.id_to_course[course_id]}"
-                                  f" because DDIA is turned off")
-        await context.bot.send_message(
-            chat_id=settings.ADMIN_CHAT_ID,
-            text=f"Skipping {constants.id_to_course[course_id]} prompt to connect Patreon because DDIA course is "
-                 f"turned off",
-            parse_mode="HTML")
-        return
-
-    if course_id == constants.dmls_course_id and not models.dmls_notification_on:
-        notifications_logger.info(f"Skipping a prompt to connect Patreon for course {constants.id_to_course[course_id]}"
-                                  f" because DMLS is turned off")
-        await context.bot.send_message(
-            chat_id=settings.ADMIN_CHAT_ID,
-            text=f"Skipping {constants.id_to_course[course_id]} prompt to connect Patreon because DMLS course is "
-                 f"turned off",
-            parse_mode="HTML")
-        return
 
     if not models.pro_courses_on:
         notifications_logger.info(f"Skipping a prompt to connect Patreon for course {constants.id_to_course[course_id]}"
@@ -316,16 +251,6 @@ async def register_leetcode_notifications(app):
     )
 
 
-async def register_sre_notifications(app):
-    app.job_queue.run_daily(
-        callback=handle_sre_notification,
-        time=datetime.time(hour=17, minute=55, tzinfo=berlin_tz),
-        days=(2,),  # 0 = Sunday, 2 = Tuesday
-        name=f"sre_notification",
-        data={"course_id": constants.sre_course_id}
-    )
-
-
 async def register_ddia_prompt_to_connect_patreon_notifications(app):
     app.job_queue.run_daily(
         callback=prompt_to_connect_patreon_notifications,
@@ -346,16 +271,6 @@ async def register_dmls_prompt_to_connect_patreon_notifications(app):
     )
 
 
-async def register_ddia_notifications(app):
-    app.job_queue.run_daily(
-        callback=handle_notification_for_course,
-        time=datetime.time(hour=17, minute=53, tzinfo=berlin_tz),
-        days=(4,),  # 0 = Sunday, 4 = Thursday
-        name=f"ddia_notification",
-        data={"course_id": constants.ddia_5_course_id}
-    )
-
-
 async def register_leetcode_grind_prompt_to_connect_patreon_notifications(app):
     app.job_queue.run_daily(
         callback=prompt_to_connect_patreon_notifications,
@@ -363,36 +278,6 @@ async def register_leetcode_grind_prompt_to_connect_patreon_notifications(app):
         days=(1,),  # 0 = Sunday, 1 = Monday
         name=f"leetcode_grind_prompt_to_connect_patreon_notification",
         data={"course_id": constants.leetcode_grind_3_course_id}
-    )
-
-
-async def register_leetcode_grind_notifications(app):
-    app.job_queue.run_daily(
-        callback=handle_notification_for_course,
-        time=datetime.time(hour=17, minute=53, tzinfo=berlin_tz),
-        days=(1,),  # 0 = Sunday, 1 = Monday
-        name=f"leetcode_grind_notification",
-        data={"course_id": constants.leetcode_grind_3_course_id}
-    )
-
-
-async def register_codecrafters_notifications(app):
-    app.job_queue.run_daily(
-        callback=handle_codecrafters_notification,
-        time=datetime.time(hour=17, minute=55, tzinfo=berlin_tz),
-        days=(2,),  # 0 = Sunday, 2 = Tuesday
-        name=f"codecrafters_notification",
-        data={"course_id": constants.codecrafters_course_id}
-    )
-
-
-async def register_codecrafters_kafka_notifications(app):
-    app.job_queue.run_daily(
-        callback=handle_codecrafters_kafka_notification,
-        time=datetime.time(hour=17, minute=55, tzinfo=berlin_tz),
-        days=(3,),  # 0 = Sunday, 3 = Wednesday
-        name=f"codecrafters_kafka_notification",
-        data={"course_id": constants.codecrafters_kafka_course_id}
     )
 
 
@@ -407,11 +292,31 @@ async def register_aoc_notifications(app):
     )
 
 
-async def register_dmls_notifications(app):
+async def get_active_courses_and_handle_notification(context: ContextTypes.DEFAULT_TYPE):
+    # in app.job_queue.run_daily 0 = Sunday, so in db 0 = Sunday, 1 = Monday
+    # but for datetime 0 = Monday
+    today_weekday: int = (datetime.datetime.now().weekday() + 1) % 7
+    notifications_logger.info(f"triggered get_active_courses_and_handle_notification for weekday {today_weekday}")
+
+    with Session(models.engine) as session:
+        active_courses_with_notification_today = session.query(models.Course).filter(
+            (models.Course.is_active.is_(True) & (models.Course.day_of_week == today_weekday))
+        ).all()
+
+    notifications_logger.info(f"active courses for weekday {today_weekday} are: "
+                              f"{active_courses_with_notification_today}")
+
+    for course in active_courses_with_notification_today:
+        context.job.data = {"course_id": course.id}
+        await handle_notification_for_course(context)
+
+
+# every day the job checks for active courses with today's day of the week
+# and send a notification at 17:53 Berlin time.
+# No need to restart when changing the set of active courses
+async def register_daily_notification_for_active_courses(app):
     app.job_queue.run_daily(
-        callback=handle_notification_for_course,
-        time=datetime.time(hour=18, minute=53, tzinfo=berlin_tz),
-        days=(2,),  # 0 = Sunday, 2 = Tuesday
-        name=f"dmls_notification",
-        data={"course_id": constants.dmls_course_id}
+        callback=get_active_courses_and_handle_notification,
+        time=datetime.time(hour=17, minute=53, tzinfo=berlin_tz),
+        name=f"get_active_course_and_send_notification",
     )
