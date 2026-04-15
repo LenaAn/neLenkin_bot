@@ -27,7 +27,6 @@ async def register_notifications(application):
     await register_ddia_prompt_to_connect_patreon_notifications(application)
     # todo: disable courses nicely
     await register_leetcode_grind_prompt_to_connect_patreon_notifications(application)
-    await register_codecrafters_kafka_notifications(application)
     await register_aoc_notifications(application)
     await register_dmls_prompt_to_connect_patreon_notifications(application)
 
@@ -108,17 +107,6 @@ async def handle_notification(context: ContextTypes.DEFAULT_TYPE):
                                                       constants.id_to_course[course_id])
     await notifications_helpers.email_notifications(context, notification_chat_ids, message, menu,
                                                       constants.id_to_course[course_id])
-
-
-async def handle_codecrafters_kafka_notification(context: ContextTypes.DEFAULT_TYPE):
-    # todo: we need more nice way of working with feature flags
-    # you can't do `from models import codecrafters_notification_on` and use just `codecrafters_notification_on` here
-    # because when you import variable from module, it creates a local copy
-    if models.codecrafters_kafka_notification_on:
-        context.job.data["message"] = constants.before_call_reminders[constants.codecrafters_kafka_course_id]
-        await handle_notification(context)
-    else:
-        notifications_logger.info("CodeCrafters-Kafka notification is turned off, skipping sending CodeCrafters-Kafka notifications")
 
 
 async def handle_aoc_notification(context: ContextTypes.DEFAULT_TYPE):
@@ -317,16 +305,6 @@ async def register_leetcode_grind_prompt_to_connect_patreon_notifications(app):
         days=(1,),  # 0 = Sunday, 1 = Monday
         name=f"leetcode_grind_prompt_to_connect_patreon_notification",
         data={"course_id": constants.leetcode_grind_3_course_id}
-    )
-
-
-async def register_codecrafters_kafka_notifications(app):
-    app.job_queue.run_daily(
-        callback=handle_codecrafters_kafka_notification,
-        time=datetime.time(hour=17, minute=55, tzinfo=berlin_tz),
-        days=(3,),  # 0 = Sunday, 3 = Wednesday
-        name=f"codecrafters_kafka_notification",
-        data={"course_id": constants.codecrafters_kafka_course_id}
     )
 
 
