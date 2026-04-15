@@ -41,7 +41,7 @@ Python, Docker, Postgres, Redis, Patreon API
 7. Run
 
     ```sh
-    $ python3 main.py
+    $ uv run main.py
     ```
    This will start your test bot. Try `/start` command in your bot!
 
