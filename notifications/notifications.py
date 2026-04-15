@@ -25,7 +25,6 @@ async def register_notifications(application):
     await register_leetcode_notifications(application)
     await register_daily_notification_for_active_courses(application)
     await register_ddia_prompt_to_connect_patreon_notifications(application)
-    # todo: disable courses nicely
     await register_leetcode_grind_prompt_to_connect_patreon_notifications(application)
     await register_aoc_notifications(application)
     await register_dmls_prompt_to_connect_patreon_notifications(application)
