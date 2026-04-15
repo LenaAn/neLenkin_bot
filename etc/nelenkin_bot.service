@@ -1,0 +1,12 @@
+[Unit]
+Description=neLenkin Bot My App
+After=network.target
+
+[Service]
+ExecStart=/home/ec2-user/.local/bin/uv run /home/ec2-user/neLenkin_bot/main.py
+WorkingDirectory=/home/ec2-user/neLenkin_bot
+Restart=always
+User=ec2-user
+
+[Install]
+WantedBy=multi-user.target

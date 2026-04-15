@@ -80,7 +80,7 @@ def schedule_zoom_and_calendar(topic: str, start_time: str):
 
 if __name__ == "__main__":
     if len(sys.argv) < 7:
-        print("Usage: python3 meetings_creator.py <course_id> <year> <month> <day> <hour> <number of events>")
+        print("Usage: uv run meetings_creator.py <course_id> <year> <month> <day> <hour> <number of events>")
         sys.exit(1)
     course_id = int(sys.argv[1])
     first_meeeting_day = datetime(int(sys.argv[2]), int(sys.argv[3]), int(sys.argv[4]), int(sys.argv[5]))
