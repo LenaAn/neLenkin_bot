@@ -1,0 +1,7 @@
+[project]
+name = "nelenkin-bot"
+version = "0.1.0"
+description = "A telegram bot that support neLenkin Club"
+readme = "README.md"
+requires-python = ">=3.14"
+dependencies = []
