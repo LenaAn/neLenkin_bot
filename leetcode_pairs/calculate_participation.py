@@ -43,7 +43,7 @@ def get_number_all_registrations(start_week: int, end_week: int) -> int:
 if __name__ == "__main__":
     # todo: that will break when the year changes and the week number starts from 1 again
     if len(sys.argv) != 3:
-        print("Usage: python script.py <start_week_number> <end_week_number>  (both inclusive)")
+        print("Usage: uv run script.py <start_week_number> <end_week_number>  (both inclusive)")
         sys.exit(1)
 
     start_week = int(sys.argv[1])

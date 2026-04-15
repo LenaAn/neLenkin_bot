@@ -77,7 +77,7 @@ def main(users_file: str):
 
 if __name__ == '__main__':
     if len(sys.argv) < 2:
-        print("Usage: python3 load_users_to_db.py <filename>")
+        print("Usage: uv run load_users_to_db.py <filename>")
         sys.exit(1)
     filename = sys.argv[1]
     main(filename)
