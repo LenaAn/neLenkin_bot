@@ -3,6 +3,7 @@ import logging
 
 from telegram.ext import ContextTypes
 
+import constants
 import models
 from leetcode_pairs import generate_graph
 import helpers
@@ -43,19 +44,48 @@ async def send_leetcode_pairs_to_group(context: ContextTypes.DEFAULT_TYPE,
     )
 
 
+def format_info_about_partner(user: models.User, signup: models.MockSignUp, my_english: bool) -> str:
+    msg: str = f"Твоя пара на Leetcode мок: {print_user(user)}."
+
+    timeslots_string = "\n - ".join([constants.leetcode_register_timeslots[i] for i in signup.selected_timeslots])
+    msg += f"\n\nПартнеру удобны слоты (по Московскому времени):\n - {timeslots_string}"
+
+    if my_english and signup.english_choice:
+        msg += f"\n\nМок будет на английском языке."
+    else:
+        msg += f"\n\nМок будет на русском языке."
+
+    msg += f"\n\nПартнер будет решать задачу на языке {signup.programming_language}."
+    msg += "\n\nНапиши партнеру и договорись о времени!"
+    return msg
+
+
 async def unicast_leetcode_partner(context: ContextTypes.DEFAULT_TYPE,
-                                   generate_graph_obj: generate_graph.GenerateLeetcodeMocks):
+                                   generate_graph_obj: generate_graph.GenerateLeetcodeMocks) -> None:
     logging.info(f"in unicast_leetcode_partner: {generate_graph_obj.pairs=}")
-    # todo: add info about chosen timeslots
+
+    tg_id_to_signup = {}
+    for signup in generate_graph_obj.sign_ups:
+        tg_id_to_signup[signup.tg_id] = signup
+
     for pair in generate_graph_obj.pairs:
         await context.bot.send_message(
             chat_id=pair.first.tg_id,
-            text=f"Твоя пара на Leetcode мок: {print_user(pair.second)}. Напиши партнеру и договорись о времени!",
+            text=format_info_about_partner(pair.second, tg_id_to_signup[pair.second.tg_id],
+                                           tg_id_to_signup[pair.first.tg_id].english_choice),
             parse_mode="HTML")
         await context.bot.send_message(
             chat_id=pair.second.tg_id,
-            text=f"Твоя пара на Leetcode мок: {print_user(pair.first)}. Напиши партнеру и договорись о времени!",
+            text=format_info_about_partner(pair.first, tg_id_to_signup[pair.first.tg_id],
+                                           tg_id_to_signup[pair.second.tg_id].english_choice),
             parse_mode="HTML")
+
+    if len(generate_graph_obj.without_pairs) > 0:
+        for alone_user in generate_graph_obj.without_pairs:
+            await context.bot.send_message(
+                chat_id=alone_user.tg_id,
+                text="Тебе на этой неделе не досталось пары на Leetcode мок 😢\n\nПопробуй заново на следующей неделе!",
+                parse_mode="HTML")
 
 
 async def leetcode_notifications(context: ContextTypes.DEFAULT_TYPE):
