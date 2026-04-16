@@ -241,7 +241,7 @@ async def register_leetcode_notifications(app):
         callback=handle_leetcode_reminder,
         time=datetime.time(hour=17, minute=6, tzinfo=berlin_tz),
         days=(4,),  # 0 = Sunday, ..., 4 = Thursday
-        name=f"leetcode_notification",
+        name=f"leetcode_mocks_reminder",
         data={
             "course_id": constants.leetcode_course_id,
             "message": constants.mock_leetcode_reminder,
