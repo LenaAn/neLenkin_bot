@@ -64,6 +64,6 @@ async def register_leetcode_pairs_notification(app):
     app.job_queue.run_daily(
         callback=leetcode_notifications,
         time=datetime.time(hour=9, minute=3, tzinfo=berlin_tz),
-        days=(5,),  # 0 = Sunday, ..., 4 = Friday
-        name=f"leetcode_notification",
+        days=(5,),  # 0 = Sunday, ..., 5 = Friday
+        name=f"leetcode_pairs_notification",
     )
