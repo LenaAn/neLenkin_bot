@@ -22,6 +22,7 @@ async def send_leetcode_pairs_to_group(context: ContextTypes.DEFAULT_TYPE,
     else:
         notification_str += "Пар на этой неделе нет 😢\n\n"
 
+    # todo: handle NULL usernames
     if len(generate_graph_obj.without_pairs) > 0:
         notification_str += "Без пары на этой неделе "
         notification_str += ", ".join([f"@{user.tg_username}" for user in generate_graph_obj.without_pairs])
@@ -36,8 +37,18 @@ async def send_leetcode_pairs_to_group(context: ContextTypes.DEFAULT_TYPE,
 
 async def unicast_leetcode_partner(context: ContextTypes.DEFAULT_TYPE,
                                    generate_graph_obj: generate_graph.GenerateLeetcodeMocks):
-    # todo: fill it
-    pass
+    logging.info(f"in unicast_leetcode_partner: {generate_graph_obj.pairs=}")
+    # todo: handle NULL usernames
+    # todo: add info about chosen timeslots
+    for pair in generate_graph_obj.pairs:
+        await context.bot.send_message(
+            chat_id=pair.first.tg_id,
+            text=f"Твоя пара на Leetcode мок: @{pair.second.tg_username}. Напиши партнеру и договорись о времени!",
+            parse_mode="HTML")
+        await context.bot.send_message(
+            chat_id=pair.second.tg_id,
+            text=f"Твоя пара на Leetcode мок: @{pair.first.tg_username}. Напиши партнеру и договорись о времени!",
+            parse_mode="HTML")
 
 
 async def leetcode_notifications(context: ContextTypes.DEFAULT_TYPE):
