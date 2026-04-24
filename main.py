@@ -4,7 +4,7 @@ from telegram.ext import (filters, ApplicationBuilder, CommandHandler, MessageHa
 
 from courses import course_handlers
 from handlers import admin_commands, button_handlers, menu, leetcode_mock_handlers
-from users import intro_handler, email_contact_handler
+from users import intro_handler, email_contact_handler, location_handler
 from notifications import notifications
 from membership import boosty_handlers, fetch_patrons, fetch_boosty_patrons, membership, patreon_handlers
 from monitoring import calculate_metrics_and_report
@@ -61,6 +61,8 @@ if __name__ == '__main__':
         CommandHandler('courses', course_handlers.handle_active_courses, filters.ChatType.PRIVATE))
     application.add_handler(
         CommandHandler('set_email', email_contact_handler.set_email_handler, filters.ChatType.PRIVATE))
+    application.add_handler(
+        CommandHandler('add_location', location_handler.add_location_handler, filters.ChatType.PRIVATE))
     application.add_handler(
         CommandHandler('get_users', admin_commands.get_users_handler, filters.ChatType.PRIVATE))
     application.add_handler(
