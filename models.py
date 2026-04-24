@@ -158,6 +158,34 @@ class MembershipByActivity(Base):
     expires_at = Column(sqlalchemy.Date, nullable=True)
 
 
+class Location(Base):
+    __tablename__ = 'Location'
+    id = Column(sqlalchemy.Integer, primary_key=True, autoincrement=True)
+    country_name = Column(sqlalchemy.Text, nullable=False)
+    city_name = Column(sqlalchemy.Text, nullable=False)
+
+    __table_args__ = (
+        sqlalchemy.UniqueConstraint('country_name', 'city_name', name='Unique_city_per_country'),
+    )
+
+
+# User may subscribe to news about multiple locations
+class UserLocation(Base):
+    __tablename__ = 'UserLocation'
+
+    id = Column(sqlalchemy.Integer, primary_key=True, autoincrement=True)
+    tg_id = Column(sqlalchemy.Text, nullable=False)
+    location_id = Column(sqlalchemy.Integer, nullable=False)
+
+    __table_args__ = (
+        sqlalchemy.ForeignKeyConstraint(['location_id'], ['Location.id'],
+                                        name='user_location_valid_location_id'),
+        sqlalchemy.ForeignKeyConstraint(['tg_id'], ['Users.tg_id'],
+                                        name='user_location_valid_tg_id'),
+        sqlalchemy.UniqueConstraint('tg_id', 'location_id', name='Unique_location_per_user'),
+    )
+
+
 engine = create_engine(DATABASE_URL)
 
 # todo: these are essentially feature flags, but are not persisted across restarts. Need a nicer way to work with
