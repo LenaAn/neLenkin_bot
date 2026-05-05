@@ -11,12 +11,14 @@ services:
     volumes:
       - ./prometheus.yml:/etc/prometheus/prometheus.yml
       - prometheus_data:/prometheus
+    restart: unless-stopped
     ports:
       - "127.0.0.1:9090:9090"
 
   pushgateway:
     image: prom/pushgateway
     container_name: pushgateway
+    restart: unless-stopped
     ports:
       - "127.0.0.1:9091:9091"
 
@@ -25,6 +27,7 @@ services:
     container_name: grafana
     volumes:
       - grafana_data:/var/lib/grafana
+    restart: unless-stopped
     ports:
       - "127.0.0.1:3000:3000"
     environment:
