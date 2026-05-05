@@ -34,6 +34,7 @@ dmls_course_id: int = 14
 codecrafters_kafka_course_id: int = 15
 ddia_5_course_id: int = 16
 leetcode_grind_3_course_id: int = 17
+the_swe_guide_course_id: int = 18
 
 id_to_course = {
     leetcode_course_id: "Leetcode-Mocks",
@@ -46,6 +47,7 @@ id_to_course = {
     codecrafters_kafka_course_id: "CodeCrafters-Kafka",
     ddia_5_course_id: "DDIA-5",
     leetcode_grind_3_course_id: "Leetcode-Grind-3",
+    the_swe_guide_course_id: "The SWE's Guidebook"
 }
 
 id_to_description = {
@@ -104,6 +106,15 @@ id_to_description = {
                                 "18:00 по Берлину. Первый созвон — 16 марта 2026.\n\nТаблица с расписанием и "
                                 "докладчиками <a "
                                 "href='https://docs.google.com/spreadsheets/d/1ddCs4c4km3qFeyzyvzuQn6a9lC_V5M2ocyT8w9ShBwg/edit?usp=sharing'>вот</a>.",
+    the_swe_guide_course_id: "Мы читаем <a href='https://www.engguidebook.com/'>The Software Engineer's Guidebook</a>. "
+                             "Это книга, после которой мы не будем барахтаться как котята в огромном непонятном "
+                             "корпоративном мире, а поймем, какие есть компании (и их tiers), что ожидают от "
+                             "программиста на каждом этапе карьеры, как получить promotion и не выгореть.\n\n"
+                             "Звонки проходят по вторникам в 19:00 по Берлину. Первый звонок — 12 мая 2026 года."
+                             "\n\nТаблица с расписанием и докладчиками"
+                             " <a href='https://docs.google.com/spreadsheets/d/1yDqwxZrRYHwL_zp9l64khnQY2Y4IBgl9Pk85b51G0pg/edit?gid=0#gid=0'>"
+                             "вот</a>.",
+
 }
 
 id_to_cta = {
@@ -124,6 +135,8 @@ id_to_cta = {
                       "Intensive Applications и ссылку на звонок",
     leetcode_grind_3_course_id: "Нажми кнопку \"Хочу участвовать\" чтобы получать тему недели, ссылку на звонок и "
                                 "новости о потоке!",
+    the_swe_guide_course_id: "Нажми кнопку \"Хочу участвовать\", и бот будет присылать тебе новости о чтении The "
+                             "Software Engineer's Guidebook и ссылку на Zoom за 5 минут до звонка",
 }
 
 id_to_enroll_description = {
@@ -142,6 +155,8 @@ id_to_enroll_description = {
                       "звоноки за пять минут до звонка!",
     leetcode_grind_3_course_id: "Бот будет присылать тебе новости о Leetcode Grind и ссылку на Zoom за пять минут до "
                                 "звонка!",
+    the_swe_guide_course_id: "Бот будет присылать тебе новости о чтении The Software Engineer's Guidebook и ссылку на "
+                             "Zoom за пять минут до звонка!",
 }
 
 id_to_unenroll_description = {
@@ -154,6 +169,7 @@ id_to_unenroll_description = {
     leetcode_course_id: "Бот больше не будет присылать тебе напоминания о Leetcode моках",
     ddia_5_course_id: "Бот больше не будет присылать тебе новости о DDIA",
     leetcode_grind_3_course_id: "Бот больше не будет присылать тебе новости о Leetcode Grind",
+    the_swe_guide_course_id: "Бот больше не будет присылать тебе новости о The Software Engineer's Guidebook",
 }
 
 before_call_reminders = {
@@ -171,6 +187,7 @@ before_call_reminders = {
                    "href='https://us06web.zoom.us/j/87020105960?pwd=ck7KEnlRjbFTQpf9Cdqea3UBN4vShH.1'>Ссылка на "
                    "зум!</a>",
     leetcode_grind_3_course_id: "Прорешивание Leetcode через 5 минут!",
+    the_swe_guide_course_id:  "Обсуждаем The Software Engineer's Guidebook через 5 минут!",
 }
 
 leetcode_register_ask_timeslots = ("В какое время можешь созвониться? Чем больше слотов отметишь, тем больше "
