@@ -31,8 +31,9 @@ def get_current_locations(tg_id: str) -> list[str]:
         )
         result = session.execute(stmt).scalars().all()
         locations = list(result)
-    logging.info(f"{locations=}")
-    return [f"{location.city_name.capitalize()}, {location.country_name.capitalize()}" for location in locations]
+    locations_result = [f"{location.city_name.capitalize()}, {location.country_name.capitalize()}" for location in locations]
+    logging.info(f"{locations_result=}")
+    return locations_result
 
 
 async def add_location_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
