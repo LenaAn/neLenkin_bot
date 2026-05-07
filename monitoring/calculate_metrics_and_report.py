@@ -44,10 +44,13 @@ def enrolled_users_map() -> dict[str, int]:
             .group_by(models.Course.name)
             .all()
         )
-    return {
+
+    course_map = {
         course_name: enrolled_users
         for course_name, enrolled_users in results
     }
+    logger.info(f"{course_map=}")
+    return course_map
 
 
 async def calculate_metrics_and_report(bot: Bot = None) -> None:
