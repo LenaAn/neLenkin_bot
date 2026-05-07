@@ -1,4 +1,5 @@
 import asyncio
+from datetime import date
 import logging
 from monitoring.push_monitoring import metrics
 
@@ -30,6 +31,34 @@ def users_failed_broadcast_count() -> int:
         failed_users_count = session.query(models.User).filter(models.User.is_last_message_successful.is_(False)).count()
     logger.info(f"users_failed_broadcast_count: {failed_users_count}")
     return failed_users_count
+
+
+def set_activity_members() -> None:
+    with Session(models.engine) as session:
+        permanent_members = (
+            session.query(func.count(models.MembershipByActivity.id))
+            .filter(models.MembershipByActivity.expires_at.is_(None))
+            .scalar()
+        )
+
+        temporary_members = (
+            session.query(func.count(models.MembershipByActivity.id))
+            .filter(models.MembershipByActivity.expires_at >= date.today())
+            .scalar()
+        )
+    logger.info(f"permanent_activity_members: {permanent_members}")
+    logger.info(f"temporary_activity_members: {temporary_members}")
+
+    metrics.set(
+        "activity_members",
+        permanent_members,
+        temporary="temporary"
+    )
+    metrics.set(
+        "activity_members",
+        temporary_members,
+        temporary="permanent"
+    )
 
 
 def set_enrolled_users_map() -> None:
@@ -125,6 +154,7 @@ async def calculate_metrics_and_report(bot: Bot = None) -> None:
         metrics.set("users_failed_broadcast", users_failed_broadcast_count())
         metrics.set("patreon_patrons", len(fetch_patrons.get_patrons_from_redis("active_patron")))
         metrics.set("boosty_patrons", len(fetch_boosty_patrons.get_boosty_patrons_from_redis(1)))
+        set_activity_members()
 
         set_enrolled_users_map()
         set_enrolled_users_paid_map()
