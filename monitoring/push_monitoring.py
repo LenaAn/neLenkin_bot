@@ -40,6 +40,12 @@ class MetricsPusher:
                 ['course'],
                 registry=self.registry
             ),
+            "enrolled_activity_membership_users": Gauge(
+                'enrolled_activity_membership_users',
+                'How many users that have membership by activity are enrolled in a course',
+                ['course'],
+                registry=self.registry
+            ),
         }
 
     def set(self, metric_name: str, value: int, **labels):

@@ -84,6 +84,30 @@ def enrolled_users_paid_map() -> dict[str, int]:
     return course_paid_map
 
 
+# todo: forgive me gods of performance and DRY
+def enrolled_users_activity_membership_map() -> dict[str, int]:
+    with Session(models.engine) as session:
+        results = (
+            session.query(
+                models.Course.name,
+                models.Enrollment.tg_id,
+            )
+            .join(models.Course, models.Course.id == models.Enrollment.course_id)
+            .filter(models.Course.is_active.is_(True))
+            .all()
+        )
+
+    course_activity_membership_map: dict[str, int] = {}
+
+    for course_name, tg_id in results:
+        membership_info = membership.get_user_membership_info(tg_id)
+        if membership_info.get_activity_level() == membership.pro:
+            course_activity_membership_map[course_name] = course_activity_membership_map.get(course_name, 0) + 1
+
+    logger.info(f"{course_activity_membership_map=}")
+    return course_activity_membership_map
+
+
 async def calculate_metrics_and_report(bot: Bot = None) -> None:
     logger.info("Starting metrics collection")
     try:
@@ -104,6 +128,14 @@ async def calculate_metrics_and_report(bot: Bot = None) -> None:
         for course_name, enrolled_count in enrolled_paid_users.items():
             metrics.set(
                 "enrolled_paid_users",
+                enrolled_count,
+                course=course_name
+            )
+
+        enrolled_activity_users = enrolled_users_activity_membership_map()
+        for course_name, enrolled_count in enrolled_activity_users.items():
+            metrics.set(
+                "enrolled_activity_membership_users",
                 enrolled_count,
                 course=course_name
             )
