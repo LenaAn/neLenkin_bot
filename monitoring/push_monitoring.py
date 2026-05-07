@@ -28,12 +28,22 @@ class MetricsPusher:
                 'boosty_patrons',
                 'Active paying > 0 Boosty patrons',
                 registry=self.registry),
+            "enrolled_users": Gauge(
+                'enrolled_users',
+                'How many users are enrolled in a course',
+                ['course'],
+                registry=self.registry
+            ),
         }
 
-    def set(self, metric_name: str, value: int):
+    def set(self, metric_name: str, value: int, **labels):
         if metric_name not in self._gauges:
             raise ValueError(f"Unknown metric: {metric_name}")
-        self._gauges[metric_name].set(value)
+
+        if labels:
+            self._gauges[metric_name].labels(**labels).set(value)
+        else:
+            self._gauges[metric_name].set(value)
 
     def push(self):
         push_to_gateway('localhost:9091', job='nelenkin-bot', registry=self.registry)
