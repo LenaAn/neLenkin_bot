@@ -46,6 +46,11 @@ class MetricsPusher:
                 ['course'],
                 registry=self.registry
             ),
+            "activity_members": Gauge(
+                'activity_members',
+                'Users with membership by activity',
+                ['temporary'],
+                registry=self.registry),
         }
 
     def set(self, metric_name: str, value: int, **labels):

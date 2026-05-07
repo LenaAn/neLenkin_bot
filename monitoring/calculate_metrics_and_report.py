@@ -1,4 +1,5 @@
 import asyncio
+from datetime import date
 import logging
 from monitoring.push_monitoring import metrics
 
@@ -32,7 +33,35 @@ def users_failed_broadcast_count() -> int:
     return failed_users_count
 
 
-def enrolled_users_map() -> dict[str, int]:
+def set_activity_members() -> None:
+    with Session(models.engine) as session:
+        permanent_members = (
+            session.query(func.count(models.MembershipByActivity.id))
+            .filter(models.MembershipByActivity.expires_at.is_(None))
+            .scalar()
+        )
+
+        temporary_members = (
+            session.query(func.count(models.MembershipByActivity.id))
+            .filter(models.MembershipByActivity.expires_at >= date.today())
+            .scalar()
+        )
+    logger.info(f"permanent_activity_members: {permanent_members}")
+    logger.info(f"temporary_activity_members: {temporary_members}")
+
+    metrics.set(
+        "activity_members",
+        permanent_members,
+        temporary="temporary"
+    )
+    metrics.set(
+        "activity_members",
+        temporary_members,
+        temporary="permanent"
+    )
+
+
+def set_enrolled_users_map() -> None:
     with Session(models.engine) as session:
         results = (
             session.query(
@@ -50,10 +79,16 @@ def enrolled_users_map() -> dict[str, int]:
         for course_name, enrolled_users in results
     }
     logger.info(f"{course_map=}")
-    return course_map
+
+    for course_name, enrolled_count in course_map.items():
+        metrics.set(
+            "enrolled_users",
+            enrolled_count,
+            course=course_name
+        )
 
 
-def enrolled_users_paid_map() -> dict[str, int]:
+def set_enrolled_users_paid_map() -> None:
     with Session(models.engine) as session:
         results = (
             session.query(
@@ -70,22 +105,20 @@ def enrolled_users_paid_map() -> dict[str, int]:
     for course_name, tg_id in results:
         membership_info = membership.get_user_membership_info(tg_id)
 
-        is_paid = (
-            membership_info.get_patreon_level() == membership.pro
-            or membership_info.get_boosty_level() == membership.pro
-        )
-
-        if not is_paid:
-            continue
-
-        course_paid_map[course_name] = course_paid_map.get(course_name, 0) + 1
+        if membership_info.get_patreon_level() == membership.pro or membership_info.get_boosty_level() == membership.pro:
+            course_paid_map[course_name] = course_paid_map.get(course_name, 0) + 1
 
     logger.info(f"{course_paid_map=}")
-    return course_paid_map
+    for course_name, enrolled_count in course_paid_map.items():
+        metrics.set(
+            "enrolled_paid_users",
+            enrolled_count,
+            course=course_name
+        )
 
 
 # todo: forgive me gods of performance and DRY
-def enrolled_users_activity_membership_map() -> dict[str, int]:
+def set_enrolled_users_activity_membership_map() -> None:
     with Session(models.engine) as session:
         results = (
             session.query(
@@ -105,7 +138,13 @@ def enrolled_users_activity_membership_map() -> dict[str, int]:
             course_activity_membership_map[course_name] = course_activity_membership_map.get(course_name, 0) + 1
 
     logger.info(f"{course_activity_membership_map=}")
-    return course_activity_membership_map
+
+    for course_name, enrolled_count in course_activity_membership_map.items():
+        metrics.set(
+            "enrolled_activity_membership_users",
+            enrolled_count,
+            course=course_name
+        )
 
 
 async def calculate_metrics_and_report(bot: Bot = None) -> None:
@@ -115,30 +154,11 @@ async def calculate_metrics_and_report(bot: Bot = None) -> None:
         metrics.set("users_failed_broadcast", users_failed_broadcast_count())
         metrics.set("patreon_patrons", len(fetch_patrons.get_patrons_from_redis("active_patron")))
         metrics.set("boosty_patrons", len(fetch_boosty_patrons.get_boosty_patrons_from_redis(1)))
+        set_activity_members()
 
-        enrolled_users = enrolled_users_map()
-        for course_name, enrolled_count in enrolled_users.items():
-            metrics.set(
-                "enrolled_users",
-                enrolled_count,
-                course=course_name
-            )
-
-        enrolled_paid_users = enrolled_users_paid_map()
-        for course_name, enrolled_count in enrolled_paid_users.items():
-            metrics.set(
-                "enrolled_paid_users",
-                enrolled_count,
-                course=course_name
-            )
-
-        enrolled_activity_users = enrolled_users_activity_membership_map()
-        for course_name, enrolled_count in enrolled_activity_users.items():
-            metrics.set(
-                "enrolled_activity_membership_users",
-                enrolled_count,
-                course=course_name
-            )
+        set_enrolled_users_map()
+        set_enrolled_users_paid_map()
+        set_enrolled_users_activity_membership_map()
 
         metrics.push()
         logger.info("Metrics successfully pushed")
