@@ -2,6 +2,7 @@ import asyncio
 import logging
 from monitoring.push_monitoring import metrics
 
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 from telegram import Bot
 from membership import fetch_boosty_patrons, fetch_patrons
@@ -31,6 +32,24 @@ def users_failed_broadcast_count() -> int:
     return failed_users_count
 
 
+def enrolled_users_map() -> dict[str, int]:
+    with Session(models.engine) as session:
+        results = (
+            session.query(
+                models.Course.name,
+                func.count(models.Enrollment.id).label("enrolled_users")
+            )
+            .outerjoin(models.Enrollment, models.Course.id == models.Enrollment.course_id)
+            .filter(models.Course.is_active.is_(True))
+            .group_by(models.Course.name)
+            .all()
+        )
+    return {
+        course_name: enrolled_users
+        for course_name, enrolled_users in results
+    }
+
+
 async def calculate_metrics_and_report(bot: Bot = None) -> None:
     logger.info("Starting metrics collection")
     try:
@@ -38,10 +57,17 @@ async def calculate_metrics_and_report(bot: Bot = None) -> None:
         metrics.set("users_failed_broadcast", users_failed_broadcast_count())
         metrics.set("patreon_patrons", len(fetch_patrons.get_patrons_from_redis("active_patron")))
         metrics.set("boosty_patrons", len(fetch_boosty_patrons.get_boosty_patrons_from_redis(1)))
+        enrolled_users = enrolled_users_map()
+        for course_name, enrolled_count in enrolled_users.items():
+            metrics.set(
+                "enrolled_users",
+                enrolled_count,
+                course=course_name
+            )
         metrics.push()
         logger.info("Metrics successfully pushed")
     except Exception as e:
-        logger.error("Failed to collect or push metrics")
+        logger.error(f"Failed to collect or push metrics: {e}")
         if bot:
             await bot.send_message(
                 chat_id=settings.ADMIN_CHAT_ID,
