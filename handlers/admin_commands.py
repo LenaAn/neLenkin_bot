@@ -1,6 +1,7 @@
 import datetime
 import os
 import logging
+from typing import Callable
 
 from dotenv import load_dotenv
 
@@ -240,7 +241,7 @@ async def start_broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
 
 @is_admin
 async def broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE, reply_markup: InlineKeyboardMarkup = None,
-                    membership_filter: membership.MembershipLevel = None) \
+                    user_filter: Callable[[int], bool] = None) \
         -> int:
     logging.info(f"broadcast handler triggered by {helpers.repr_user_from_update(update)}")
 
@@ -248,10 +249,9 @@ async def broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE, reply_ma
         users = session.query(models.User).all()
         logging.info(f"got {len(users)} users from db for broadcast")
 
-    if membership_filter:
-        users = [user for user in users if
-                 membership.get_user_membership_info(user.tg_id).get_overall_level() == membership_filter]
-        logging.info(f"got {len(users)} after filtering for {membership_filter} membership")
+    if user_filter:
+        users = [user for user in users if user_filter(user.tg_id)]
+        logging.info(f"got {len(users)} after filtering")
 
     successful_count = 0
     failed_ids = []
@@ -272,12 +272,6 @@ async def broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE, reply_ma
 
     success_ids = list(set([user.tg_id for user in users]) - set(failed_ids))
     await update_users_in_db.update_users_after_broadcast(success_ids, failed_ids)
-
-    # todo: maybe don't push metrics here. I recorded in db to whom failed, maybe that's enough
-    # will push metrics later in batch?
-    push_monitoring.metrics.set("users_started_bot", len(users))
-    push_monitoring.metrics.set("users_failed_broadcast", len(failed_ids))
-    push_monitoring.metrics.push()
 
     logging.info(f"Successfully broadcast message to {successful_count} users, failed {len(failed_ids)} users.")
     await context.bot.send_message(
@@ -326,7 +320,8 @@ async def start_broadcast_basic_members(update: Update, context: ContextTypes.DE
 async def broadcast_basic_members(update: Update, context: ContextTypes.DEFAULT_TYPE, reply_markup: InlineKeyboardMarkup = None) \
         -> int:
     logging.info(f"broadcast_basic_members handler triggered by {helpers.repr_user_from_update(update)}")
-    return await broadcast(update, context, reply_markup, membership.basic)
+    return await broadcast(update, context, reply_markup, lambda tg_id: membership.get_user_membership_info(tg_id).
+                           get_overall_level() == membership.basic)
 
 
 @is_any_curator
@@ -345,6 +340,58 @@ basic_members_broadcast_conv_handler = ConversationHandler(
     fallbacks=[
         CommandHandler('cancel_broadcast', cancel_broadcast_basic_members),
         CommandHandler('cancel', cancel_broadcast_basic_members),
+    ],
+)
+
+BROADCAST_NO_ACTIVE_COURSE = 1
+
+
+@is_admin
+async def start_broadcast_no_active_course(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    logging.info(f"start_broadcast_no_active_course handler triggered by {helpers.repr_user_from_update(update)}")
+    await context.bot.send_message(
+        chat_id=update.effective_chat.id,
+        text=f"Send a message to broadcast to members without enrollment to active course"
+    )
+    return BROADCAST_NO_ACTIVE_COURSE
+
+
+@is_admin
+async def broadcast_no_active_course(update: Update, context: ContextTypes.DEFAULT_TYPE, reply_markup: InlineKeyboardMarkup = None) \
+        -> int:
+    logging.info(f"broadcast_no_active_course handler triggered by {helpers.repr_user_from_update(update)}")
+
+    with Session(models.engine) as session:
+        active_tg_ids = {
+            row[0]
+            for row in (
+                session.query(models.Enrollment.tg_id)
+                .join(models.Course, models.Course.id == models.Enrollment.course_id)
+                .filter(models.Course.is_active.is_(True))
+                .distinct()
+                .all()
+            )
+        }
+
+    return await broadcast(update, context, reply_markup, lambda tg_id: tg_id not in active_tg_ids)
+
+
+@is_any_curator
+async def cancel_broadcast_no_active_course(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    logging.info(f"cancel_broadcast_no_active_course handler triggered by {helpers.repr_user_from_update(update)}")
+    await context.bot.send_message(
+        chat_id=update.effective_chat.id,
+        text="Broadcast to members without active enrollment is cancelled",
+    )
+    return ConversationHandler.END
+
+
+broadcast_no_active_course_conv_handler = ConversationHandler(
+    entry_points=[CommandHandler('broadcast_no_active_course', start_broadcast_no_active_course, filters.ChatType.PRIVATE)],
+    states={BROADCAST_NO_ACTIVE_COURSE: [MessageHandler(~filters.COMMAND, broadcast_no_active_course)]},
+    fallbacks=[
+        CommandHandler('cancel_broadcast', cancel_broadcast_no_active_course),
+        CommandHandler('cancel', cancel_broadcast_no_active_course),
     ],
 )
 
