@@ -28,6 +28,16 @@ class MetricsPusher:
                 'boosty_patrons',
                 'Active paying > 0 Boosty patrons',
                 registry=self.registry),
+            "users_with_any_enrollment_total": Gauge(
+                "users_with_any_enrollment_total",
+                "Unique users enrolled in at least one course (active or inactive)",
+                registry=self.registry,
+            ),
+            "users_with_active_enrollment_total": Gauge(
+                "users_with_active_enrollment_total",
+                "Unique users enrolled in at least one currently active course",
+                registry=self.registry,
+            ),
             "enrolled_users": Gauge(
                 'enrolled_users',
                 'How many users are enrolled in a course',
