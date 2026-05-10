@@ -343,6 +343,58 @@ basic_members_broadcast_conv_handler = ConversationHandler(
     ],
 )
 
+BROADCAST_NO_ACTIVE_COURSE = 1
+
+
+@is_admin
+async def start_broadcast_no_active_course(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    logging.info(f"start_broadcast_no_active_course handler triggered by {helpers.repr_user_from_update(update)}")
+    await context.bot.send_message(
+        chat_id=update.effective_chat.id,
+        text=f"Send a message to broadcast to members without enrollment to active course"
+    )
+    return BROADCAST_NO_ACTIVE_COURSE
+
+
+@is_admin
+async def broadcast_no_active_course(update: Update, context: ContextTypes.DEFAULT_TYPE, reply_markup: InlineKeyboardMarkup = None) \
+        -> int:
+    logging.info(f"broadcast_no_active_course handler triggered by {helpers.repr_user_from_update(update)}")
+
+    with Session(models.engine) as session:
+        active_tg_ids = {
+            row[0]
+            for row in (
+                session.query(models.Enrollment.tg_id)
+                .join(models.Course, models.Course.id == models.Enrollment.course_id)
+                .filter(models.Course.is_active.is_(True))
+                .distinct()
+                .all()
+            )
+        }
+
+    return await broadcast(update, context, reply_markup, lambda tg_id: tg_id not in active_tg_ids)
+
+
+@is_any_curator
+async def cancel_broadcast_no_active_course(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    logging.info(f"cancel_broadcast_no_active_course handler triggered by {helpers.repr_user_from_update(update)}")
+    await context.bot.send_message(
+        chat_id=update.effective_chat.id,
+        text="Broadcast to members without active enrollment is cancelled",
+    )
+    return ConversationHandler.END
+
+
+broadcast_no_active_course_conv_handler = ConversationHandler(
+    entry_points=[CommandHandler('broadcast_no_active_course', start_broadcast_no_active_course, filters.ChatType.PRIVATE)],
+    states={BROADCAST_NO_ACTIVE_COURSE: [MessageHandler(~filters.COMMAND, broadcast_no_active_course)]},
+    fallbacks=[
+        CommandHandler('cancel_broadcast', cancel_broadcast_no_active_course),
+        CommandHandler('cancel', cancel_broadcast_no_active_course),
+    ],
+)
+
 
 async def do_broadcast_course(update: Update, context: ContextTypes.DEFAULT_TYPE, course_id: int,
                               reply_markup: InlineKeyboardMarkup = None) -> int:
