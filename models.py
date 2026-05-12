@@ -69,9 +69,13 @@ class Course(Base):
     is_active = Column(sqlalchemy.Boolean, nullable=False)
     is_pro = Column(sqlalchemy.Boolean, nullable=True)
     day_of_week = Column(sqlalchemy.Integer, nullable=True)  # 0 = Sunday
+    hour = Column(sqlalchemy.Integer, nullable=True)
 
     __table_args__ = (
         sqlalchemy.CheckConstraint("day_of_week BETWEEN 0 AND 6", name="check_day_of_week_range"),
+    )
+    __table_args__ = (
+        sqlalchemy.CheckConstraint("hour BETWEEN 0 AND 23", name="check_hour_of_day_range"),
     )
 
     def __repr__(self):
