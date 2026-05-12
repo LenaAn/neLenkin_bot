@@ -275,7 +275,7 @@ def get_active_courses_today(hour: int = None) -> list:
 
         active_courses_with_notification_today = query.all()
 
-    notifications_logger.info(f"active courses for weekday {today_weekday} are: "
+    notifications_logger.info(f"active courses for weekday {today_weekday} with hour {hour} are: "
                               f"{active_courses_with_notification_today}")
     return active_courses_with_notification_today
 
