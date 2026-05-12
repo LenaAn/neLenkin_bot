@@ -260,15 +260,20 @@ async def register_aoc_notifications(app):
     )
 
 
-def get_active_courses_today() -> list:
+def get_active_courses_today(hour: int = None) -> list:
     # in app.job_queue.run_daily 0 = Sunday, so in db 0 = Sunday, 1 = Monday
     # but for datetime 0 = Monday
     today_weekday: int = (datetime.datetime.now().weekday() + 1) % 7
 
     with Session(models.engine) as session:
-        active_courses_with_notification_today = session.query(models.Course).filter(
+        query = session.query(models.Course).filter(
             (models.Course.is_active.is_(True) & (models.Course.day_of_week == today_weekday))
-        ).all()
+        )
+
+        if hour is not None:
+            query = query.filter(models.Course.hour == hour)
+
+        active_courses_with_notification_today = query.all()
 
     notifications_logger.info(f"active courses for weekday {today_weekday} are: "
                               f"{active_courses_with_notification_today}")
@@ -278,7 +283,7 @@ def get_active_courses_today() -> list:
 async def get_active_courses_and_handle_notification(context: ContextTypes.DEFAULT_TYPE):
     notifications_logger.info(f"triggered get_active_courses_and_handle_notification")
 
-    active_courses_today: list = get_active_courses_today()
+    active_courses_today: list = get_active_courses_today(context.job.data["hour"])
     for course in active_courses_today:
         context.job.data = {"course_id": course.id}
         await handle_notification_for_course(context)
@@ -300,7 +305,18 @@ async def register_daily_notification_for_active_courses(app):
     app.job_queue.run_daily(
         callback=get_active_courses_and_handle_notification,
         time=datetime.time(hour=17, minute=53, tzinfo=berlin_tz),
-        name=f"get_active_course_and_send_notification",
+        name=f"get_active_course_and_send_notification_1753",
+        data={
+            "hour": 18,
+        }
+    )
+    app.job_queue.run_daily(
+        callback=get_active_courses_and_handle_notification,
+        time=datetime.time(hour=18, minute=53, tzinfo=berlin_tz),
+        name=f"get_active_course_and_send_notification_1853",
+        data={
+            "hour": 19,
+        }
     )
 
 
