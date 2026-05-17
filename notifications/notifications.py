@@ -275,7 +275,7 @@ def get_active_courses_today(hour: int = None) -> list:
 
         active_courses_with_notification_today = query.all()
 
-    notifications_logger.info(f"active courses for weekday {today_weekday} are: "
+    notifications_logger.info(f"active courses for weekday {today_weekday} with hour {hour} are: "
                               f"{active_courses_with_notification_today}")
     return active_courses_with_notification_today
 
@@ -292,10 +292,11 @@ async def get_active_courses_and_handle_notification(context: ContextTypes.DEFAU
 async def get_active_courses_and_prompt_to_get_pro(context: ContextTypes.DEFAULT_TYPE):
     notifications_logger.info(f"triggered get_active_courses_and_prompt_to_get_pro")
 
-    active_courses_today: list = get_active_courses_today()
+    active_courses_today: list[models.Course] = get_active_courses_today()
     for course in active_courses_today:
-        context.job.data = {"course_id": course.id}
-        await prompt_to_connect_patreon_notifications(context)
+        if course.is_pro:
+            context.job.data = {"course_id": course.id}
+            await prompt_to_connect_patreon_notifications(context)
 
 
 # every day the job checks for active courses with today's day of the week
