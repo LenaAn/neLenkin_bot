@@ -70,12 +70,12 @@ def set_activity_members() -> None:
     metrics.set(
         "activity_members",
         permanent_members,
-        temporary="temporary"
+        temporary="permanent"
     )
     metrics.set(
         "activity_members",
         temporary_members,
-        temporary="permanent"
+        temporary="temporary"
     )
 
 
