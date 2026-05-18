@@ -11,6 +11,7 @@ from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ContextTypes
 
 import constants
+from courses import course_handlers
 import models
 from models import Enrollment, ScheduledPartMessages, engine
 from membership import membership
@@ -84,7 +85,7 @@ async def handle_notification(context: ContextTypes.DEFAULT_TYPE):
     notifications_logger.debug(f"handling {constants.id_to_course[course_id]} notification, "
                                f"got {len(notification_chat_ids)} chat ids that are subscribed to the course")
 
-    if membership.is_course_pro(course_id):
+    if course_handlers.is_course_pro(course_id):
         if models.pro_courses_on:
             # only PRO subscribers will get a link for a PRO course
             # Basic subscribers who are subscribed to notifications about this course will get a Patreon link in the morning
@@ -99,6 +100,8 @@ async def handle_notification(context: ContextTypes.DEFAULT_TYPE):
                 chat_id=settings.ADMIN_CHAT_ID,
                 text=f"Sending a link to everyone because PRO courses are turned off",
                 parse_mode="HTML")
+    else:
+        notifications_logger.debug(f"Sending a link to everyone because course {course_id} is NOT Pro")
 
     await notifications_helpers.do_send_notifications(context, notification_chat_ids, message, menu,
                                                       constants.id_to_course[course_id])
