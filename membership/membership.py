@@ -196,12 +196,6 @@ def get_user_membership_info(tg_id: int, tg_username: str = None) -> UserMembers
     return info
 
 
-def is_course_pro(course_id: int):
-    # todo: don't hardcode pro courses
-    return ((course_id == constants.ddia_5_course_id) or (course_id == constants.leetcode_grind_3_course_id) or
-            (course_id == constants.dmls_course_id))
-
-
 async def reply_for_patreon_members(update: Update, context: ContextTypes.DEFAULT_TYPE,
                                     membership_info: UserMembershipInfo) -> None:
     membership_logger.info(f"reply_for_patreon_members triggered by {helpers.get_user(update)}")

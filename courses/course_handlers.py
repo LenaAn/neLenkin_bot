@@ -12,6 +12,21 @@ import helpers
 import models
 
 
+def is_course_pro(course_id: int) -> bool:
+    with Session(models.engine) as session:
+        query = session.query(models.Course).filter(
+            (models.Course.id == course_id) & (models.Course.is_pro.is_(True))
+        )
+
+        pro_courses = query.all()
+    if len(pro_courses) > 0:
+        logging.info(f"Course {course_id} is Pro")
+        return True
+    else:
+        logging.info(f"Course {course_id} is NOT Pro")
+        return False
+
+
 def user_is_enrolled(tg_user: User, course_id: int) -> bool:
     with Session(models.engine) as session:
         users_exists = session.scalar(
