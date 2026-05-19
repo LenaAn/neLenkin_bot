@@ -171,7 +171,7 @@ async def prompt_to_connect_patreon_notifications(context: ContextTypes.DEFAULT_
             parse_mode="HTML")
         return
 
-    notifications_logger.debug(f"prompt_to_connect_patreon_notifications for {constants.id_to_course[course_id]}")
+    notifications_logger.info(f"prompt_to_connect_patreon_notifications for {constants.id_to_course[course_id]}")
 
     if course_id == constants.ddia_5_course_id:
             message: str = ("Привет! Сегодня вечером будет звонок с обсуждением Designing Data-Intensive Applications. Тему "
@@ -220,14 +220,14 @@ async def prompt_to_connect_patreon_notifications(context: ContextTypes.DEFAULT_
     with Session(engine) as session:
         result = session.query(Enrollment.tg_id).filter(Enrollment.course_id == course_id).all()
         notification_chat_ids = [item[0] for item in result]
-    notifications_logger.debug(f"handling Patreon prompt for {constants.id_to_course[course_id]}, got "
-                               f"{len(notification_chat_ids)} chat ids that are subscribed to the course")
+    notifications_logger.info(f"handling Patreon prompt for {constants.id_to_course[course_id]}, got "
+                              f"{len(notification_chat_ids)} chat ids that are subscribed to the course")
 
     # only Basic subscribers will get a prompt to subscribe to Patreon
     notification_chat_ids = [tg_id for tg_id in notification_chat_ids
                              if membership.get_user_membership_info(tg_id).get_overall_level() == membership.basic]
-    notifications_logger.debug(f"handling Patreon prompt for {constants.id_to_course[course_id]}, got "
-                               f"{len(notification_chat_ids)} Basic subscribers to {constants.id_to_course[course_id]}")
+    notifications_logger.info(f"handling Patreon prompt for {constants.id_to_course[course_id]}, got "
+                              f"{len(notification_chat_ids)} Basic subscribers to {constants.id_to_course[course_id]}")
 
     await notifications_helpers.do_send_notifications(context, notification_chat_ids, message, menu,
                                                       f"{constants.id_to_course[course_id]} Patreon prompt")
@@ -269,13 +269,14 @@ def get_active_courses_today(hour: int = None) -> list:
     today_weekday: int = (datetime.datetime.now().weekday() + 1) % 7
 
     with Session(models.engine) as session:
-        query = session.query(models.Course).filter(
-            (models.Course.is_active.is_(True) & (models.Course.day_of_week == today_weekday))
+        query = session.query(models.Course, models.CourseNotification
+                              ).join(models.CourseNotification, models.Course.id == models.CourseNotification.course_id
+                                     ).filter(
+            (models.Course.is_active.is_(True) & (models.CourseNotification.day_of_week == today_weekday))
         )
 
         if hour is not None:
-            query = query.filter(models.Course.hour == hour)
-
+            query = query.filter(models.CourseNotification.hour == hour)
         active_courses_with_notification_today = query.all()
 
     notifications_logger.info(f"active courses for weekday {today_weekday} with hour {hour} are: "
@@ -296,10 +297,12 @@ async def get_active_courses_and_prompt_to_get_pro(context: ContextTypes.DEFAULT
     notifications_logger.info(f"triggered get_active_courses_and_prompt_to_get_pro")
 
     active_courses_today: list[models.Course] = get_active_courses_today()
-    for course in active_courses_today:
-        if course.is_pro:
+    for course, notification in active_courses_today:
+        if notification.send_patreon_reminder:
             context.job.data = {"course_id": course.id}
             await prompt_to_connect_patreon_notifications(context)
+        else:
+            notifications_logger.info(f"skipping patreon prompt for {course} since send_patreon_reminder is False")
 
 
 # every day the job checks for active courses with today's day of the week
