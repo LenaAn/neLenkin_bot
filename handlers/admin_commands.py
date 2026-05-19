@@ -97,7 +97,8 @@ def is_curator(course_id: int):
 
 def is_curator_for_course_in_context(callback):
     async def wrapper(update: Update, context: ContextTypes.DEFAULT_TYPE):
-        course_id = context.user_data["broadcast_to_course"]
+        course_id = context.user_data["broadcast_to_course"] if "broadcast_to_course" in context.user_data \
+            else context.user_data["broadcast_to_course_basic"]
         logging.info(f"is_curator_for_course_in_context triggered by {helpers.repr_user_from_update(update)} for "
                      f"{constants.id_to_course[course_id]}")
 
@@ -397,7 +398,8 @@ broadcast_no_active_course_conv_handler = ConversationHandler(
 
 
 async def do_broadcast_course(update: Update, context: ContextTypes.DEFAULT_TYPE, course_id: int,
-                              reply_markup: InlineKeyboardMarkup = None) -> int:
+                              reply_markup: InlineKeyboardMarkup = None,
+                              membership_filter: membership.MembershipLevel = None) -> int:
     logging.info(f"do_broadcast_course for {constants.id_to_course[course_id]} triggered by "
                  f"{helpers.repr_user_from_update(update)}")
     with Session(models.engine) as session:
@@ -405,6 +407,11 @@ async def do_broadcast_course(update: Update, context: ContextTypes.DEFAULT_TYPE
             models.Enrollment.course_id == course_id).all()
         tg_ids = [tg_id for (tg_id,) in course_enrollments]
         logging.info(f"got {len(tg_ids)} users from db for {constants.id_to_course[course_id]} broadcast")
+
+        if membership_filter:
+            tg_ids = [tg_id for tg_id in tg_ids if
+                      membership.get_user_membership_info(tg_id).get_overall_level() == membership_filter]
+            logging.info(f"got {len(tg_ids)} users after filtering for {membership_filter}")
 
     successful_count = 0
     failed_ids = []
@@ -557,6 +564,73 @@ course_broadcast_conv_handler = ConversationHandler(
         CommandHandler("cancel", cancel_broadcast),
     ],
     name="course_broadcast_conversation",
+    persistent=True
+)
+
+SELECT_COURSE_TO_BROADCAST_BASIC, COURSE_BROADCAST_BASIC = range(2)
+
+
+async def start_course_broadcast_basic(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    logging.info(f"start_course_broadcast_basic handler triggered by {helpers.repr_user_from_update(update)}")
+
+    courses = get_active_courses_for_curator(update)
+    if not courses:
+        await update.message.reply_text("Нет активных курсов, для которых ты куратор. Если они должны быть, напиши "
+                                        "@lenka_colenka!")
+        return ConversationHandler.END
+
+    keyboard = [
+        [InlineKeyboardButton(course.name, callback_data=f"broadcast_to_course_basic:{course.id}")]
+        for course in courses
+    ]
+
+    await context.bot.send_message(
+        chat_id=update.effective_chat.id,
+        text="Выбери курс, для которого сделать рассылку для Basic пользователей:",
+        reply_markup=InlineKeyboardMarkup(keyboard),
+    )
+
+    return SELECT_COURSE_TO_BROADCAST_BASIC
+
+
+async def select_course_to_broadcast_basic(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    await update.callback_query.answer()
+    logging.info(f"select_course_to_broadcast_basic handler triggered by {helpers.repr_user_from_update(update)}")
+
+    course_id = int(update.callback_query.data.split(":")[1])
+    context.user_data["broadcast_to_course_basic"] = course_id
+
+    await update.callback_query.edit_message_text(
+        text=f"Пришли сообщение, чтобы отправить BASIC пользователям в потоке {constants.id_to_course[course_id]}"
+    )
+    return COURSE_BROADCAST_BASIC
+
+
+@is_curator_for_course_in_context
+async def course_broadcast_basic(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    await do_broadcast_course(update, context, context.user_data["broadcast_to_course_basic"], reply_markup=None,
+                              membership_filter=membership.basic)
+    clear_state(context)
+    return ConversationHandler.END
+
+
+course_broadcast_basic_conv_handler = ConversationHandler(
+    entry_points=[
+        CommandHandler("course_broadcast_basic", start_course_broadcast_basic, filters.ChatType.PRIVATE)
+    ],
+    states={
+        SELECT_COURSE_TO_BROADCAST_BASIC: [CallbackQueryHandler(select_course_to_broadcast_basic,
+                                                                pattern=r"^broadcast_to_course_basic:\d+$")],
+        COURSE_BROADCAST_BASIC: [
+            MessageHandler(~filters.COMMAND, course_broadcast_basic),
+            CommandHandler("course_broadcast_basic", start_course_broadcast_basic, filters.ChatType.PRIVATE),
+        ]
+    },
+    fallbacks=[
+        CommandHandler('cancel_broadcast', cancel_broadcast),
+        CommandHandler("cancel", cancel_broadcast),
+    ],
+    name="course_broadcast_basic_conversation",
     persistent=True
 )
 
