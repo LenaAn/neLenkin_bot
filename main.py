@@ -83,10 +83,6 @@ if __name__ == '__main__':
         CommandHandler('aoc_notification_off', admin_commands.aoc_notification_off,
                        filters.ChatType.PRIVATE))
     application.add_handler(
-        CommandHandler('pro_courses_on', admin_commands.pro_courses_on, filters.ChatType.PRIVATE))
-    application.add_handler(
-        CommandHandler('pro_courses_off', admin_commands.pro_courses_off, filters.ChatType.PRIVATE))
-    application.add_handler(
         MessageHandler(filters.ChatType.PRIVATE & ~filters.COMMAND, menu.private_message))
 
     application.add_handler(CallbackQueryHandler(button_handlers.button_click))
