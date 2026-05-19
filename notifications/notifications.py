@@ -24,7 +24,7 @@ notifications_logger.setLevel(logging.DEBUG)
 
 async def register_notifications(application):
     await register_leetcode_notifications(application)
-    await register_daily_notification_for_active_courses(application)
+    await register_daily_send_zoom_for_active_courses(application)
     await register_daily_patreon_prompt_for_active_courses(application)
     await register_aoc_notifications(application)
 
@@ -65,7 +65,7 @@ async def handle_leetcode_reminder(context: ContextTypes.DEFAULT_TYPE):
                                                       constants.id_to_course[course_id])
 
 
-async def handle_notification(context: ContextTypes.DEFAULT_TYPE):
+async def handle_send_zoom(context: ContextTypes.DEFAULT_TYPE):
     course_id: int = context.job.data["course_id"]
     if "message" not in context.job.data:
         admin_chat_id = int(os.getenv('ADMIN_CHAT_ID'))
@@ -115,7 +115,7 @@ async def handle_aoc_notification(context: ContextTypes.DEFAULT_TYPE):
         notifications_logger.info("AoC notification is turned off, skipping sending notifications")
 
 
-async def handle_notification_for_course(context: ContextTypes.DEFAULT_TYPE):
+async def get_zoom_link_and_send_for_course(context: ContextTypes.DEFAULT_TYPE):
     course_id: int = context.job.data["course_id"]
     current_week: int = datetime.date.today().isocalendar().week
     with (Session(engine) as session):
@@ -144,7 +144,7 @@ async def handle_notification_for_course(context: ContextTypes.DEFAULT_TYPE):
         context.job.data["message"] = f"{constants.before_call_reminders[course_id]}\n\n{call_link}"
     else:
         context.job.data["message"] = constants.before_call_reminders[course_id]
-    await handle_notification(context)
+    await handle_send_zoom(context)
 
 
 async def prompt_to_connect_patreon_notifications(context: ContextTypes.DEFAULT_TYPE):
@@ -215,7 +215,7 @@ async def register_aoc_notifications(app):
     )
 
 
-def get_active_courses_today(hour: int = None) -> list:
+def get_active_courses_today(hour: int = None) -> list[tuple[models.Course, models.CourseNotification]]:
     # in app.job_queue.run_daily 0 = Sunday, so in db 0 = Sunday, 1 = Monday
     # but for datetime 0 = Monday
     today_weekday: int = (datetime.datetime.now().weekday() + 1) % 7
@@ -236,19 +236,20 @@ def get_active_courses_today(hour: int = None) -> list:
     return active_courses_with_notification_today
 
 
-async def get_active_courses_and_handle_notification(context: ContextTypes.DEFAULT_TYPE):
-    notifications_logger.info(f"triggered get_active_courses_and_handle_notification")
+async def get_active_courses_and_send_zoom(context: ContextTypes.DEFAULT_TYPE):
+    notifications_logger.info(f"triggered get_active_courses_and_send_zoom")
 
-    active_courses_today: list = get_active_courses_today(context.job.data["hour"])
-    for course in active_courses_today:
+    active_courses_today: list[tuple[models.Course, models.CourseNotification]] = (
+        get_active_courses_today(context.job.data["hour"]))
+    for course, notification in active_courses_today:
         context.job.data = {"course_id": course.id}
-        await handle_notification_for_course(context)
+        await get_zoom_link_and_send_for_course(context)
 
 
 async def get_active_courses_and_prompt_to_get_pro(context: ContextTypes.DEFAULT_TYPE):
     notifications_logger.info(f"triggered get_active_courses_and_prompt_to_get_pro")
 
-    active_courses_today: list[models.Course] = get_active_courses_today()
+    active_courses_today: list[tuple[models.Course, models.CourseNotification]] = get_active_courses_today()
     for course, notification in active_courses_today:
         if notification.send_patreon_reminder:
             context.job.data = {"course_id": course.id}
@@ -260,19 +261,19 @@ async def get_active_courses_and_prompt_to_get_pro(context: ContextTypes.DEFAULT
 # every day the job checks for active courses with today's day of the week
 # and send a notification at 17:53 Berlin time.
 # No need to restart when changing the set of active courses
-async def register_daily_notification_for_active_courses(app):
+async def register_daily_send_zoom_for_active_courses(app):
     app.job_queue.run_daily(
-        callback=get_active_courses_and_handle_notification,
+        callback=get_active_courses_and_send_zoom,
         time=datetime.time(hour=17, minute=53, tzinfo=berlin_tz),
-        name=f"get_active_course_and_send_notification_1753",
+        name=f"get_active_courses_and_send_zoom_1753",
         data={
             "hour": 18,
         }
     )
     app.job_queue.run_daily(
-        callback=get_active_courses_and_handle_notification,
+        callback=get_active_courses_and_send_zoom,
         time=datetime.time(hour=18, minute=53, tzinfo=berlin_tz),
-        name=f"get_active_course_and_send_notification_1853",
+        name=f"get_active_courses_and_send_zoom_1853",
         data={
             "hour": 19,
         }
