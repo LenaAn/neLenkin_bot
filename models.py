@@ -68,7 +68,9 @@ class Course(Base):
     curator_tg_id = Column(sqlalchemy.Text, nullable=True)
     is_active = Column(sqlalchemy.Boolean, nullable=False)
     is_pro = Column(sqlalchemy.Boolean, nullable=True)
+    # deprecated
     day_of_week = Column(sqlalchemy.Integer, nullable=True)  # 0 = Sunday
+    # deprecated
     hour = Column(sqlalchemy.Integer, nullable=True)
 
     __table_args__ = (
@@ -79,7 +81,28 @@ class Course(Base):
     )
 
     def __repr__(self):
-        return f"Course(id={self.id}, name={self.name}"
+        return f"Course(id={self.id}, name={self.name})"
+
+
+class CourseNotification(Base):
+    __tablename__ = 'CourseNotification'
+
+    id = Column(sqlalchemy.Integer, primary_key=True, autoincrement=True)
+    course_id = Column(sqlalchemy.Integer, nullable=False)
+    is_zoom_link_only_to_pro = Column(sqlalchemy.Boolean, nullable=False)
+    send_patreon_reminder = Column(sqlalchemy.Boolean, nullable=False)
+    day_of_week = Column(sqlalchemy.Integer, nullable=False)  # 0 = Sunday, 1 = Monday
+    hour = Column(sqlalchemy.Integer, nullable=False)
+
+    __table_args__ = (
+        sqlalchemy.UniqueConstraint('course_id', name='Single_notification_per_course'),
+        sqlalchemy.ForeignKeyConstraint(['course_id'], ['Course.id'], name='fk_valid_course_id'),
+        sqlalchemy.CheckConstraint("hour BETWEEN 0 AND 23", name="check_hour_of_day_range"),
+        sqlalchemy.CheckConstraint("day_of_week BETWEEN 0 AND 6", name="check_day_of_week_range"),
+    )
+
+    def __repr__(self):
+        return f"CourseNotification(course_id={self.course_id}, day={self.day_of_week}, hour={self.hour})"
 
 
 # supposed to be short-lived (couple of months data)
@@ -195,5 +218,4 @@ engine = create_engine(DATABASE_URL)
 # todo: these are essentially feature flags, but are not persisted across restarts. Need a nicer way to work with
 #  feature flags.
 leetcode_status_on = True
-pro_courses_on=True
 aoc_notification_on = False

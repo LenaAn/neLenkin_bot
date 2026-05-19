@@ -86,20 +86,10 @@ async def handle_notification(context: ContextTypes.DEFAULT_TYPE):
                                f"got {len(notification_chat_ids)} chat ids that are subscribed to the course")
 
     if course_handlers.is_course_pro(course_id):
-        if models.pro_courses_on:
-            # only PRO subscribers will get a link for a PRO course
-            # Basic subscribers who are subscribed to notifications about this course will get a Patreon link in the morning
-            notification_chat_ids = [tg_id for tg_id in notification_chat_ids
-                                     if
-                                     membership.get_user_membership_info(tg_id).get_overall_level() == membership.pro]
-            notifications_logger.debug(f"handling {constants.id_to_course[course_id]} notification, "
-                                       f"got {len(notification_chat_ids)} PRO subscribers")
-        else:
-            notifications_logger.debug(f"Sending a link to everyone because PRO courses are turned off")
-            await context.bot.send_message(
-                chat_id=settings.ADMIN_CHAT_ID,
-                text=f"Sending a link to everyone because PRO courses are turned off",
-                parse_mode="HTML")
+        notification_chat_ids = [tg_id for tg_id in notification_chat_ids
+                                 if membership.get_user_membership_info(tg_id).get_overall_level() == membership.pro]
+        notifications_logger.debug(f"handling {constants.id_to_course[course_id]} notification, "
+                                   f"got {len(notification_chat_ids)} PRO subscribers")
     else:
         notifications_logger.debug(f"Sending a link to everyone because course {course_id} is NOT Pro")
 
@@ -158,58 +148,20 @@ async def handle_notification_for_course(context: ContextTypes.DEFAULT_TYPE):
 
 
 async def prompt_to_connect_patreon_notifications(context: ContextTypes.DEFAULT_TYPE):
-    # todo: don't hardcode things, move table links and buttons to constants
     course_id: int = context.job.data["course_id"]
+    notifications_logger.info(f"prompt_to_connect_patreon_notifications for {constants.id_to_course[course_id]}")
 
-    if not models.pro_courses_on:
-        notifications_logger.info(f"Skipping a prompt to connect Patreon for course {constants.id_to_course[course_id]}"
-                                  f" because PRO courses are turned off")
-        await context.bot.send_message(
-            chat_id=settings.ADMIN_CHAT_ID,
-            text=f"Skipping {constants.id_to_course[course_id]} prompt to connect Patreon because PRO courses are "
-                 f"turned off",
-            parse_mode="HTML")
-        return
-
-    notifications_logger.debug(f"prompt_to_connect_patreon_notifications for {constants.id_to_course[course_id]}")
-
-    if course_id == constants.ddia_5_course_id:
-            message: str = ("Привет! Сегодня вечером будет звонок с обсуждением Designing Data-Intensive Applications. Тему "
-                    "сегодняшнего звонка можешь посмотреть <a href='https://docs.google.com/spreadsheets/d/1Q1brVbkrS-PDNRrmigOVN_AF8yGGHslLsBzVumkv9-0/edit?usp=sharing'>здесь</a>. "
-                    "\n\n<b>Обсуждение DDIA — это 💜Pro курс, и чтобы сегодня вечером тебе пришла ссылка на звонок, нужна 💜Pro подписка!</b>"
-                    "\n\n1. Чтобы оформить Pro подписку, подпишись на донат в $15 в месяц на моем "
-                    "<a href='https://www.patreon.com/c/LenaAnyusha'>Patreon</a>."
-                    "\n\nНикому не говори почту, которая привязана к твоему Patreon аккаунту! Когда оформишь подписку на Patreon, "
-                    "привяжи почту по кнопке ⬇️"
-                    "\n\n2. Либо оформи подписку на 1500 рублей на мой <a href='https://boosty.to/lenaan'>Boosty</a> и привяжи почту по кнопке ⬇️"                    "\n\n3. Если возникнут какие-то сложности, напиши @lenka_colenka!"
-                    "\n\n4. Ты можешь отписаться от новостей про DDIA, чтобы больше не получать уведомления.")
-    elif course_id == constants.leetcode_grind_3_course_id:
-        message: str = (
-            "Привет! Сегодня вечером будет звонок с обсуждением задач из списка Leetcode-75! Тему "
-            "сегодняшнего звонка можешь посмотреть <a href='https://docs.google.com/spreadsheets/d/1ddCs4c4km3qFeyzyvzuQn6a9lC_V5M2ocyT8w9ShBwg/edit?gid=0'>здесь</a>. "
-            "\n\n<b>Обсуждение Leetcode Grind — это 💜Pro курс, и чтобы сегодня вечером тебе пришла ссылка на звонок, нужна 💜Pro подписка!</b>"
-            "\n\n1. Чтобы оформить Pro подписку, подпишись на донат в $15 в месяц на моем "
-            "<a href='https://www.patreon.com/c/LenaAnyusha'>Patreon</a>."
-            "\n\nНикому не говори почту, которая привязана к твоему Patreon аккаунту! Когда оформишь подписку на Patreon, "
-            "привяжи почту по кнопке ⬇️"
-            "\n\n2. Либо оформи подписку на 1500 рублей на мой <a href='https://boosty.to/lenaan'>Boosty</a> и привяжи почту по кнопке ⬇️"
-            "\n\n3. Если возникнут какие-то сложности, напиши @lenka_colenka!"
-            "\n\n4. Ты можешь отписаться от новостей про Leetcode Grind, чтобы больше не получать уведомления.")
-    elif course_id == constants.dmls_course_id:
-        message: str = (
-            "Привет! Сегодня вечером будет звонок с обсуждением <a href='https://www.oreilly.com/library/view/designing-machine-learning/9781098107956/'>Designing Machine Learning Systems</a>. "
-            "Тему сегодняшнего звонка можешь посмотреть <a href='https://docs.google.com/spreadsheets/d/12ZfAfGceVuPZZoWbmHaSPcwe1mLTl9Jg9YONP7JkmsQ/edit?gid=0#gid=0'>в таблице</a>. "
-            "\n\n<b>Обсуждение DMLS — это 💜Pro курс, и чтобы сегодня вечером тебе пришла ссылка на звонок, нужна 💜Pro подписка!</b>"
-            "\n\n1. Чтобы оформить Pro подписку, подпишись на донат в $15 в месяц на моем "
-            "<a href='https://www.patreon.com/c/LenaAnyusha'>Patreon</a>. "
-            "\n\nНикому не говори почту, которая привязана к твоему Patreon аккаунту! Когда оформишь подписку на Patreon, "
-            "привяжи почту по кнопке ⬇️"
-            "\n\n2. Либо оформи подписку на 1500 рублей на мой <a href='https://boosty.to/lenaan'>Boosty</a> и привяжи почту по кнопке ⬇️"
-            "\n\n3. Если возникнут какие-то сложности, напиши @lenka_colenka!"
-            "\n\n4. Ты можешь отписаться от новостей про DMLS, чтобы больше не получать уведомления.")
-    else:
-        raise Exception("unsupported course id!")
-
+    message: str = (f"Привет! Сегодня вечером будет звонок с обсуждением {constants.id_to_course[course_id]}."
+                    f"\n\n<b>{constants.id_to_course[course_id]} — это 💜Pro курс, и чтобы сегодня вечером тебе пришла"
+                    f" ссылка на звонок, нужна 💜Pro подписка!</b>"
+                    f"\n\n1. Чтобы оформить Pro подписку, подпишись на донат в $15 в месяц на моем "
+                    f"<a href='https://www.patreon.com/c/LenaAnyusha'>Patreon</a>."
+                    f"\nКогда оформишь подписку на Patreon, привяжи почту по кнопке ⬇️"
+                    f"\n\n2. Либо оформи подписку на 1500 рублей на мой <a href='https://boosty.to/lenaan'>Boosty</a> и "
+                    f"привяжи почту по кнопке ⬇️"
+                    f"\n\n3. Если возникнут какие-то сложности, напиши @lenka_colenka!"
+                    f"\n\n4. Ты можешь отписаться от новостей про {constants.id_to_course[course_id]}, чтобы больше не "
+                    f"получать уведомления.")
     menu = InlineKeyboardMarkup([
         [InlineKeyboardButton("Привязать профиль Patreon", callback_data="connect_patreon")],
         [InlineKeyboardButton("Привязать профиль Boosty", callback_data="connect_boosty")],
@@ -220,14 +172,14 @@ async def prompt_to_connect_patreon_notifications(context: ContextTypes.DEFAULT_
     with Session(engine) as session:
         result = session.query(Enrollment.tg_id).filter(Enrollment.course_id == course_id).all()
         notification_chat_ids = [item[0] for item in result]
-    notifications_logger.debug(f"handling Patreon prompt for {constants.id_to_course[course_id]}, got "
-                               f"{len(notification_chat_ids)} chat ids that are subscribed to the course")
+    notifications_logger.info(f"handling Patreon prompt for {constants.id_to_course[course_id]}, got "
+                              f"{len(notification_chat_ids)} chat ids that are subscribed to the course")
 
     # only Basic subscribers will get a prompt to subscribe to Patreon
     notification_chat_ids = [tg_id for tg_id in notification_chat_ids
                              if membership.get_user_membership_info(tg_id).get_overall_level() == membership.basic]
-    notifications_logger.debug(f"handling Patreon prompt for {constants.id_to_course[course_id]}, got "
-                               f"{len(notification_chat_ids)} Basic subscribers to {constants.id_to_course[course_id]}")
+    notifications_logger.info(f"handling Patreon prompt for {constants.id_to_course[course_id]}, got "
+                              f"{len(notification_chat_ids)} Basic subscribers to {constants.id_to_course[course_id]}")
 
     await notifications_helpers.do_send_notifications(context, notification_chat_ids, message, menu,
                                                       f"{constants.id_to_course[course_id]} Patreon prompt")
@@ -269,13 +221,14 @@ def get_active_courses_today(hour: int = None) -> list:
     today_weekday: int = (datetime.datetime.now().weekday() + 1) % 7
 
     with Session(models.engine) as session:
-        query = session.query(models.Course).filter(
-            (models.Course.is_active.is_(True) & (models.Course.day_of_week == today_weekday))
+        query = session.query(models.Course, models.CourseNotification
+                              ).join(models.CourseNotification, models.Course.id == models.CourseNotification.course_id
+                                     ).filter(
+            (models.Course.is_active.is_(True) & (models.CourseNotification.day_of_week == today_weekday))
         )
 
         if hour is not None:
-            query = query.filter(models.Course.hour == hour)
-
+            query = query.filter(models.CourseNotification.hour == hour)
         active_courses_with_notification_today = query.all()
 
     notifications_logger.info(f"active courses for weekday {today_weekday} with hour {hour} are: "
@@ -296,10 +249,12 @@ async def get_active_courses_and_prompt_to_get_pro(context: ContextTypes.DEFAULT
     notifications_logger.info(f"triggered get_active_courses_and_prompt_to_get_pro")
 
     active_courses_today: list[models.Course] = get_active_courses_today()
-    for course in active_courses_today:
-        if course.is_pro:
+    for course, notification in active_courses_today:
+        if notification.send_patreon_reminder:
             context.job.data = {"course_id": course.id}
             await prompt_to_connect_patreon_notifications(context)
+        else:
+            notifications_logger.info(f"skipping patreon prompt for {course} since send_patreon_reminder is False")
 
 
 # every day the job checks for active courses with today's day of the week
