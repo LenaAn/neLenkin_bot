@@ -148,47 +148,20 @@ async def handle_notification_for_course(context: ContextTypes.DEFAULT_TYPE):
 
 
 async def prompt_to_connect_patreon_notifications(context: ContextTypes.DEFAULT_TYPE):
-    # todo: don't hardcode things, move table links and buttons to constants
     course_id: int = context.job.data["course_id"]
     notifications_logger.info(f"prompt_to_connect_patreon_notifications for {constants.id_to_course[course_id]}")
 
-    if course_id == constants.ddia_5_course_id:
-            message: str = ("Привет! Сегодня вечером будет звонок с обсуждением Designing Data-Intensive Applications. Тему "
-                    "сегодняшнего звонка можешь посмотреть <a href='https://docs.google.com/spreadsheets/d/1Q1brVbkrS-PDNRrmigOVN_AF8yGGHslLsBzVumkv9-0/edit?usp=sharing'>здесь</a>. "
-                    "\n\n<b>Обсуждение DDIA — это 💜Pro курс, и чтобы сегодня вечером тебе пришла ссылка на звонок, нужна 💜Pro подписка!</b>"
-                    "\n\n1. Чтобы оформить Pro подписку, подпишись на донат в $15 в месяц на моем "
-                    "<a href='https://www.patreon.com/c/LenaAnyusha'>Patreon</a>."
-                    "\n\nНикому не говори почту, которая привязана к твоему Patreon аккаунту! Когда оформишь подписку на Patreon, "
-                    "привяжи почту по кнопке ⬇️"
-                    "\n\n2. Либо оформи подписку на 1500 рублей на мой <a href='https://boosty.to/lenaan'>Boosty</a> и привяжи почту по кнопке ⬇️"                    "\n\n3. Если возникнут какие-то сложности, напиши @lenka_colenka!"
-                    "\n\n4. Ты можешь отписаться от новостей про DDIA, чтобы больше не получать уведомления.")
-    elif course_id == constants.leetcode_grind_3_course_id:
-        message: str = (
-            "Привет! Сегодня вечером будет звонок с обсуждением задач из списка Leetcode-75! Тему "
-            "сегодняшнего звонка можешь посмотреть <a href='https://docs.google.com/spreadsheets/d/1ddCs4c4km3qFeyzyvzuQn6a9lC_V5M2ocyT8w9ShBwg/edit?gid=0'>здесь</a>. "
-            "\n\n<b>Обсуждение Leetcode Grind — это 💜Pro курс, и чтобы сегодня вечером тебе пришла ссылка на звонок, нужна 💜Pro подписка!</b>"
-            "\n\n1. Чтобы оформить Pro подписку, подпишись на донат в $15 в месяц на моем "
-            "<a href='https://www.patreon.com/c/LenaAnyusha'>Patreon</a>."
-            "\n\nНикому не говори почту, которая привязана к твоему Patreon аккаунту! Когда оформишь подписку на Patreon, "
-            "привяжи почту по кнопке ⬇️"
-            "\n\n2. Либо оформи подписку на 1500 рублей на мой <a href='https://boosty.to/lenaan'>Boosty</a> и привяжи почту по кнопке ⬇️"
-            "\n\n3. Если возникнут какие-то сложности, напиши @lenka_colenka!"
-            "\n\n4. Ты можешь отписаться от новостей про Leetcode Grind, чтобы больше не получать уведомления.")
-    elif course_id == constants.dmls_course_id:
-        message: str = (
-            "Привет! Сегодня вечером будет звонок с обсуждением <a href='https://www.oreilly.com/library/view/designing-machine-learning/9781098107956/'>Designing Machine Learning Systems</a>. "
-            "Тему сегодняшнего звонка можешь посмотреть <a href='https://docs.google.com/spreadsheets/d/12ZfAfGceVuPZZoWbmHaSPcwe1mLTl9Jg9YONP7JkmsQ/edit?gid=0#gid=0'>в таблице</a>. "
-            "\n\n<b>Обсуждение DMLS — это 💜Pro курс, и чтобы сегодня вечером тебе пришла ссылка на звонок, нужна 💜Pro подписка!</b>"
-            "\n\n1. Чтобы оформить Pro подписку, подпишись на донат в $15 в месяц на моем "
-            "<a href='https://www.patreon.com/c/LenaAnyusha'>Patreon</a>. "
-            "\n\nНикому не говори почту, которая привязана к твоему Patreon аккаунту! Когда оформишь подписку на Patreon, "
-            "привяжи почту по кнопке ⬇️"
-            "\n\n2. Либо оформи подписку на 1500 рублей на мой <a href='https://boosty.to/lenaan'>Boosty</a> и привяжи почту по кнопке ⬇️"
-            "\n\n3. Если возникнут какие-то сложности, напиши @lenka_colenka!"
-            "\n\n4. Ты можешь отписаться от новостей про DMLS, чтобы больше не получать уведомления.")
-    else:
-        raise Exception("unsupported course id!")
-
+    message: str = (f"Привет! Сегодня вечером будет звонок с обсуждением {constants.id_to_course[course_id]}."
+                    f"\n\n<b>{constants.id_to_course[course_id]} — это 💜Pro курс, и чтобы сегодня вечером тебе пришла"
+                    f" ссылка на звонок, нужна 💜Pro подписка!</b>"
+                    f"\n\n1. Чтобы оформить Pro подписку, подпишись на донат в $15 в месяц на моем "
+                    f"<a href='https://www.patreon.com/c/LenaAnyusha'>Patreon</a>."
+                    f"\nКогда оформишь подписку на Patreon, привяжи почту по кнопке ⬇️"
+                    f"\n\n2. Либо оформи подписку на 1500 рублей на мой <a href='https://boosty.to/lenaan'>Boosty</a> и "
+                    f"привяжи почту по кнопке ⬇️"
+                    f"\n\n3. Если возникнут какие-то сложности, напиши @lenka_colenka!"
+                    f"\n\n4. Ты можешь отписаться от новостей про {constants.id_to_course[course_id]}, чтобы больше не "
+                    f"получать уведомления.")
     menu = InlineKeyboardMarkup([
         [InlineKeyboardButton("Привязать профиль Patreon", callback_data="connect_patreon")],
         [InlineKeyboardButton("Привязать профиль Boosty", callback_data="connect_boosty")],
