@@ -24,6 +24,9 @@ class MembershipLevel:
     description: str
     price_cents: int  # compare it with sum_of_entitled_tiers_amount_cents returned from Patreon
 
+    def __repr__(self):
+        return f"MembershipLevel({self.number=}, {self.name=})"
+
 
 basic = MembershipLevel(
     number=1,
