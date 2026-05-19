@@ -81,7 +81,7 @@ class Course(Base):
     )
 
     def __repr__(self):
-        return f"Course(id={self.id}, name={self.name}"
+        return f"Course(id={self.id}, name={self.name})"
 
 
 class CourseNotification(Base):
@@ -100,6 +100,9 @@ class CourseNotification(Base):
         sqlalchemy.CheckConstraint("hour BETWEEN 0 AND 23", name="check_hour_of_day_range"),
         sqlalchemy.CheckConstraint("day_of_week BETWEEN 0 AND 6", name="check_day_of_week_range"),
     )
+
+    def __repr__(self):
+        return f"CourseNotification(course_id={self.course_id}, day={self.day_of_week}, hour={self.hour})"
 
 
 # supposed to be short-lived (couple of months data)
