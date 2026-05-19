@@ -86,20 +86,10 @@ async def handle_notification(context: ContextTypes.DEFAULT_TYPE):
                                f"got {len(notification_chat_ids)} chat ids that are subscribed to the course")
 
     if course_handlers.is_course_pro(course_id):
-        if models.pro_courses_on:
-            # only PRO subscribers will get a link for a PRO course
-            # Basic subscribers who are subscribed to notifications about this course will get a Patreon link in the morning
-            notification_chat_ids = [tg_id for tg_id in notification_chat_ids
-                                     if
-                                     membership.get_user_membership_info(tg_id).get_overall_level() == membership.pro]
-            notifications_logger.debug(f"handling {constants.id_to_course[course_id]} notification, "
-                                       f"got {len(notification_chat_ids)} PRO subscribers")
-        else:
-            notifications_logger.debug(f"Sending a link to everyone because PRO courses are turned off")
-            await context.bot.send_message(
-                chat_id=settings.ADMIN_CHAT_ID,
-                text=f"Sending a link to everyone because PRO courses are turned off",
-                parse_mode="HTML")
+        notification_chat_ids = [tg_id for tg_id in notification_chat_ids
+                                 if membership.get_user_membership_info(tg_id).get_overall_level() == membership.pro]
+        notifications_logger.debug(f"handling {constants.id_to_course[course_id]} notification, "
+                                   f"got {len(notification_chat_ids)} PRO subscribers")
     else:
         notifications_logger.debug(f"Sending a link to everyone because course {course_id} is NOT Pro")
 
@@ -160,17 +150,6 @@ async def handle_notification_for_course(context: ContextTypes.DEFAULT_TYPE):
 async def prompt_to_connect_patreon_notifications(context: ContextTypes.DEFAULT_TYPE):
     # todo: don't hardcode things, move table links and buttons to constants
     course_id: int = context.job.data["course_id"]
-
-    if not models.pro_courses_on:
-        notifications_logger.info(f"Skipping a prompt to connect Patreon for course {constants.id_to_course[course_id]}"
-                                  f" because PRO courses are turned off")
-        await context.bot.send_message(
-            chat_id=settings.ADMIN_CHAT_ID,
-            text=f"Skipping {constants.id_to_course[course_id]} prompt to connect Patreon because PRO courses are "
-                 f"turned off",
-            parse_mode="HTML")
-        return
-
     notifications_logger.info(f"prompt_to_connect_patreon_notifications for {constants.id_to_course[course_id]}")
 
     if course_id == constants.ddia_5_course_id:
