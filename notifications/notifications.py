@@ -67,6 +67,8 @@ async def handle_leetcode_reminder(context: ContextTypes.DEFAULT_TYPE):
 
 async def handle_send_zoom(context: ContextTypes.DEFAULT_TYPE):
     course_id: int = context.job.data["course_id"]
+    is_zoom_link_only_to_pro: bool = context.job.data["is_zoom_link_only_to_pro"]
+
     if "message" not in context.job.data:
         admin_chat_id = int(os.getenv('ADMIN_CHAT_ID'))
         notifications_logger.error(
@@ -85,18 +87,18 @@ async def handle_send_zoom(context: ContextTypes.DEFAULT_TYPE):
     notifications_logger.debug(f"handling {constants.id_to_course[course_id]} notification, "
                                f"got {len(notification_chat_ids)} chat ids that are subscribed to the course")
 
-    if course_handlers.is_course_pro(course_id):
+    if is_zoom_link_only_to_pro:
         notification_chat_ids = [tg_id for tg_id in notification_chat_ids
                                  if membership.get_user_membership_info(tg_id).get_overall_level() == membership.pro]
         notifications_logger.debug(f"handling {constants.id_to_course[course_id]} notification, "
                                    f"got {len(notification_chat_ids)} PRO subscribers")
     else:
-        notifications_logger.debug(f"Sending a link to everyone because course {course_id} is NOT Pro")
+        notifications_logger.debug(f"Sending a link to everyone because is_zoom_link_only_to_pro for {course_id} is False")
 
     await notifications_helpers.do_send_notifications(context, notification_chat_ids, message, menu,
                                                       constants.id_to_course[course_id])
     await notifications_helpers.email_notifications(context, notification_chat_ids, message, menu,
-                                                      constants.id_to_course[course_id])
+                                                    constants.id_to_course[course_id])
 
 
 async def handle_aoc_notification(context: ContextTypes.DEFAULT_TYPE):
@@ -242,7 +244,7 @@ async def get_active_courses_and_send_zoom(context: ContextTypes.DEFAULT_TYPE):
     active_courses_today: list[tuple[models.Course, models.CourseNotification]] = (
         get_active_courses_today(context.job.data["hour"]))
     for course, notification in active_courses_today:
-        context.job.data = {"course_id": course.id}
+        context.job.data = {"course_id": course.id, "is_zoom_link_only_to_pro": notification.is_zoom_link_only_to_pro}
         await get_zoom_link_and_send_for_course(context)
 
 
