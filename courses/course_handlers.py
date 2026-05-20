@@ -56,7 +56,7 @@ async def handle_course_info(update: Update, context: ContextTypes.DEFAULT_TYPE)
         ]
         menu = [button_list[i:i + 1] for i in range(0, len(button_list), 1)]
         await update.callback_query.edit_message_text(
-            text=constants.id_to_description[course_id] + "\n\n" + constants.id_to_enroll_description[course_id],
+            text=constants.id_to_description[course_id] + "\n\n" + constants.enroll_description,
             reply_markup=InlineKeyboardMarkup(menu),
             parse_mode="HTML")
     else:
@@ -66,7 +66,7 @@ async def handle_course_info(update: Update, context: ContextTypes.DEFAULT_TYPE)
         ]
         menu = [button_list[i:i + 1] for i in range(0, len(button_list), 1)]
         await update.callback_query.edit_message_text(
-            text=constants.id_to_description[course_id] + "\n\n" + constants.id_to_cta[course_id],
+            text=constants.id_to_description[course_id] + "\n\n" + constants.cta_string,
             reply_markup=InlineKeyboardMarkup(menu),
             parse_mode="HTML")
 
@@ -142,7 +142,7 @@ async def handle_enroll(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
     ]
     menu = [button_list[i:i + 1] for i in range(0, len(button_list), 1)]
     await update.callback_query.edit_message_text(
-        text=constants.id_to_enroll_description[course_id],
+        text=constants.enroll_description,
         reply_markup=InlineKeyboardMarkup(menu),
         parse_mode="HTML"
     )
@@ -171,7 +171,7 @@ async def handle_unenroll(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
     ]
     menu = [button_list[i:i + 1] for i in range(0, len(button_list), 1)]
     await update.callback_query.edit_message_text(
-        text=constants.id_to_unenroll_description[course_id],
+        text=constants.unenroll_description,
         reply_markup=InlineKeyboardMarkup(menu),
         parse_mode="HTML"
     )
