@@ -35,6 +35,7 @@ codecrafters_kafka_course_id: int = 15
 ddia_5_course_id: int = 16
 leetcode_grind_3_course_id: int = 17
 the_swe_guide_course_id: int = 18
+fly_io_gossip_course_id: int = 19
 
 id_to_course = {
     leetcode_course_id: "Leetcode-Mocks",
@@ -47,7 +48,8 @@ id_to_course = {
     codecrafters_kafka_course_id: "CodeCrafters-Kafka",
     ddia_5_course_id: "DDIA-5",
     leetcode_grind_3_course_id: "Leetcode-Grind-3",
-    the_swe_guide_course_id: "The SWE's Guidebook"
+    the_swe_guide_course_id: "The SWE's Guidebook",
+    fly_io_gossip_course_id: "Fly-io-Gossip-Protocol",
 }
 
 id_to_description = {
@@ -114,63 +116,17 @@ id_to_description = {
                              "\n\nТаблица с расписанием и докладчиками"
                              " <a href='https://docs.google.com/spreadsheets/d/1yDqwxZrRYHwL_zp9l64khnQY2Y4IBgl9Pk85b51G0pg/edit?gid=0#gid=0'>"
                              "вот</a>.",
-
+    fly_io_gossip_course_id: "Мы вместе пишем распределенную систему по серии челленджей на https://fly.io/dist-sys/."
+                             "\n\nВ челленджах можно написать свою реализацию Unique ID Generation, Grow-Only Counter и "
+                             "Totally-Available Transactions."
+                             "\n\nРасписание тем и докладчики — "
+                             "<a href='https://docs.google.com/spreadsheets/d/1XJoK3KGMpUklEdDbH4vu3Mug5yTr3xVMrGX9Pd4p2BQ/edit?gid=0#gid=0'>в таблице</a>."
+                             "\n\nЗвонки проходят каждую среду в 19:00 по Берлину, первый звонок — 27 мая 2026.",
 }
 
-id_to_cta = {
-    grind_course_id: "Нажми кнопку \"Хочу участвовать\" чтобы получать тему недели, ссылку на звонок и новости о "
-                     "потоке!",
-    dmls_course_id: "Нажми кнопку \"Хочу участвовать\" чтобы получать ссылку на звонок и рассылку от куратора потока",
-    sre_course_id: "Нажми кнопку \"Хочу участвовать\", и бот будет присылать тебе ссылку на Zoom звонок за пять минут "
-                   "до звонка!",
-    codecrafters_course_id: "Нажми кнопку \"Хочу участвовать\", и бот будет присылать тебе ссылку на Zoom звонок за "
-                            "пять минут до звонка!",
-    codecrafters_kafka_course_id: "Нажми кнопку \"Хочу участвовать\", и бот будет присылать тебе ссылку на Zoom "
-                                  "звонок за пять минут до звонка!",
-    ddia_4_course_id: "Нажми кнопку \"Хочу участвовать\", и бот будет присылать тебе новости о чтении Designing Data "
-                      "Intensive Applications и ссылку на звонок",
-    leetcode_course_id: "Нажми кнопку \"Хочу участвовать\", чтобы бот каждый понедельник присылал тебе тему недели и в "
-                        "каждый четверг напоминал зарегистрироваться, чтобы участвовать в мок-собеседовании в выходные.",
-    ddia_5_course_id: "Нажми кнопку \"Хочу участвовать\", и бот будет присылать тебе новости о чтении Designing Data "
-                      "Intensive Applications и ссылку на звонок",
-    leetcode_grind_3_course_id: "Нажми кнопку \"Хочу участвовать\" чтобы получать тему недели, ссылку на звонок и "
-                                "новости о потоке!",
-    the_swe_guide_course_id: "Нажми кнопку \"Хочу участвовать\", и бот будет присылать тебе новости о чтении The "
-                             "Software Engineer's Guidebook и ссылку на Zoom за 5 минут до звонка",
-}
-
-id_to_enroll_description = {
-    grind_course_id: "Бот будет присылать тебе тему недели и ссылку на Zoom за пять минут до звонка!",
-    dmls_course_id: "Бот будет присылать тебе ссылку на Zoom за пять минут до звонка, если у тебя есть подписка."
-                    "\n\nА если нет — напоминание оформить подписку!",
-    sre_course_id: "Бот будет присылать тебе напоминание с ссылкой на Zoom звонок за пять минут до звонка!",
-    codecrafters_course_id: "Бот будет присылать тебе напоминание с ссылкой на Zoom звонок за пять минут до звонка!",
-    codecrafters_kafka_course_id: "Бот будет присылать тебе напоминание с ссылкой на Zoom звонок за пять минут до "
-                                  "звонка!",
-    ddia_4_course_id: "Бот будет присылать тебе новости о чтении Designing Data Intensive Applications и ссылку на "
-                      "звоноки за пять минут до звонка!",
-    leetcode_course_id: "Бот будет присылать тебе тему недели по понедельникам и напоминание записаться на моки по "
-                        "четвергам!",
-    ddia_5_course_id: "Бот будет присылать тебе новости о чтении Designing Data Intensive Applications и ссылку на "
-                      "звоноки за пять минут до звонка!",
-    leetcode_grind_3_course_id: "Бот будет присылать тебе новости о Leetcode Grind и ссылку на Zoom за пять минут до "
-                                "звонка!",
-    the_swe_guide_course_id: "Бот будет присылать тебе новости о чтении The Software Engineer's Guidebook и ссылку на "
-                             "Zoom за пять минут до звонка!",
-}
-
-id_to_unenroll_description = {
-    grind_course_id: "Бот больше не будет присылать тебе напоминания о Leetcode Grind",
-    dmls_course_id: "Бот больше не будет присылать тебе напоминания о Designing ML Systems",
-    sre_course_id: "Бот больше не будет присылать тебе напоминания о SRE book",
-    codecrafters_course_id: "Бот больше не будет присылать тебе напоминания о Redis CodeCrafters",
-    codecrafters_kafka_course_id: "Бот больше не будет присылать тебе новости о CodeCrafters Kafka",
-    ddia_4_course_id: "Бот больше не будет присылать тебе новости о DDIA",
-    leetcode_course_id: "Бот больше не будет присылать тебе напоминания о Leetcode моках",
-    ddia_5_course_id: "Бот больше не будет присылать тебе новости о DDIA",
-    leetcode_grind_3_course_id: "Бот больше не будет присылать тебе новости о Leetcode Grind",
-    the_swe_guide_course_id: "Бот больше не будет присылать тебе новости о The Software Engineer's Guidebook",
-}
+cta_string = "Нажми кнопку \"Хочу участвовать\" чтобы получать ссылки на Zoom звонок и новости о потоке"
+enroll_description = "Бот будет присылать тебе с ссылку на Zoom звонок за пять минут до звонка!"
+unenroll_description = "Бот больше не будет присылать тебе новости о потоке"
 
 before_call_reminders = {
     ddia_4_course_id: "Обсуждаем Designing Data-Intensive Applications через 5 минут!",
