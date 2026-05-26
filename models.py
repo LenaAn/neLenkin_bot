@@ -108,6 +108,10 @@ class ScheduledPartMessages(Base):
         sqlalchemy.UniqueConstraint('week_number', 'course_id', name='Unique_message_per_week_and_course'),
     )
 
+    def __repr__(self):
+        return f"ScheduledPartMessages({self.week_number=}, {self.course_id=}, {self.text=})"
+
+
 
 class MockSignUp(Base):
     __tablename__ = 'MockSignUp'
