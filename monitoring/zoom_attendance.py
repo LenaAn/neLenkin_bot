@@ -72,6 +72,9 @@ def get_participant_count(zoom_meeting_id: str) -> int | None:
 
     participants_count = response.json()["participants_count"]
     logger.info(f"{participants_count=}")
+    if participants_count <= 1:
+        logger.info(f"Meeting for 1 person, not reporting")
+        return None
     return participants_count
 
 
