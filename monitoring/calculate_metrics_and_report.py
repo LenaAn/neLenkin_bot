@@ -7,6 +7,7 @@ from sqlalchemy import distinct, func
 from sqlalchemy.orm import Session
 from telegram import Bot
 from membership import fetch_boosty_patrons, fetch_patrons, membership
+from monitoring.zoom_attendance import set_zoom_attendance_for_active_courses
 
 import models
 import settings
@@ -184,6 +185,7 @@ async def calculate_metrics_and_report(bot: Bot = None) -> None:
         set_enrolled_users_map()
         set_enrolled_users_paid_map()
         set_enrolled_users_activity_membership_map()
+        set_zoom_attendance_for_active_courses(metrics)
 
         metrics.push()
         logger.info("Metrics successfully pushed")

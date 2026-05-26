@@ -56,6 +56,11 @@ class MetricsPusher:
                 ['course'],
                 registry=self.registry
             ),
+            "zoom_attendance": Gauge(
+                'zoom_attendance',
+                'Users on a Zoom call',
+                ['course'],
+                registry=self.registry),
             "activity_members": Gauge(
                 'activity_members',
                 'Users with membership by activity',
