@@ -143,9 +143,10 @@ async def get_zoom_link_and_send_for_course(context: ContextTypes.DEFAULT_TYPE):
         notifications_logger.info(f'call_link is {call_link}')
 
     if call_link:
-        context.job.data["message"] = f"{constants.before_call_reminders[course_id]}\n\n{call_link}"
+        context.job.data["message"] = \
+            f"{constants.before_call_reminder.format(constants.id_to_course[course_id])}\n\n{call_link}"
     else:
-        context.job.data["message"] = constants.before_call_reminders[course_id]
+        context.job.data["message"] = constants.before_call_reminder.format(constants.id_to_course[course_id])
     await handle_send_zoom(context)
 
 

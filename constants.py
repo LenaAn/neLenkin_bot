@@ -128,23 +128,7 @@ cta_string = "Нажми кнопку \"Хочу участвовать\" что
 enroll_description = "Бот будет присылать тебе с ссылку на Zoom звонок за пять минут до звонка!"
 unenroll_description = "Бот больше не будет присылать тебе новости о потоке"
 
-before_call_reminders = {
-    ddia_4_course_id: "Обсуждаем Designing Data-Intensive Applications через 5 минут!",
-    ddia_5_course_id: "Обсуждаем Designing Data-Intensive Applications через 5 минут!",
-    grind_course_id: "Прорешивание Leetcode через 5 минут!",
-    sre_course_id: "SRE book cозвон через 5 минут! <a "
-                   "href='https://us06web.zoom.us/j/89699825499?pwd=252HFSD6l5TH2GYm7qDlI3QRahZNIZ.1'>Ссылка на "
-                   "зум!</a>",
-    codecrafters_course_id: "Redis CodeCrafters cозвон через 5 минут! <a "
-                   "href='https://us06web.zoom.us/j/84775018227?pwd=PU9bbBO5B29wMjQ7qucvatFZcHr2O7.1'>Ссылка на "
-                   "зум!</a>",
-    dmls_course_id: "Обсуждаем Designing Machine Learning Systems через 5 минут!",
-    codecrafters_kafka_course_id: "Kafka CodeCrafters cозвон через 5 минут! <a "
-                   "href='https://us06web.zoom.us/j/87020105960?pwd=ck7KEnlRjbFTQpf9Cdqea3UBN4vShH.1'>Ссылка на "
-                   "зум!</a>",
-    leetcode_grind_3_course_id: "Прорешивание Leetcode через 5 минут!",
-    the_swe_guide_course_id:  "Обсуждаем The Software Engineer's Guidebook через 5 минут!",
-}
+before_call_reminder = "Обсуждаем {} через 5 минут!"
 
 leetcode_register_ask_timeslots = ("В какое время можешь созвониться? Чем больше слотов отметишь, тем больше "
                                    "вероятность, что я смогу найти тебе парнера! Время указано по Москве. "
