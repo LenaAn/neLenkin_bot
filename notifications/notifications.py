@@ -245,7 +245,8 @@ async def get_active_courses_and_send_zoom(context: ContextTypes.DEFAULT_TYPE):
     active_courses_today: list[tuple[models.Course, models.CourseNotification]] = (
         get_active_courses_today(context.job.data["hour"]))
     for course, notification in active_courses_today:
-        context.job.data = {"course_id": course.id, "is_zoom_link_only_to_pro": notification.is_zoom_link_only_to_pro}
+        context.job.data["course_id"] = course.id
+        context.job.data["is_zoom_link_only_to_pro"] = notification.is_zoom_link_only_to_pro
         await get_zoom_link_and_send_for_course(context)
 
 
