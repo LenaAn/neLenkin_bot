@@ -68,6 +68,11 @@ class Course(Base):
     curator_tg_id = Column(sqlalchemy.Text, nullable=True)
     is_active = Column(sqlalchemy.Boolean, nullable=False)
     is_pro = Column(sqlalchemy.Boolean, nullable=True)
+    discussion_thread_id = Column(sqlalchemy.Integer, nullable=True)
+
+    __table_args__ = (
+        sqlalchemy.UniqueConstraint('discussion_thread_id', name='unique_discussion_thread_id'),
+    )
 
     def __repr__(self):
         return f"Course(id={self.id}, name={self.name})"
@@ -110,7 +115,6 @@ class ScheduledPartMessages(Base):
 
     def __repr__(self):
         return f"ScheduledPartMessages({self.week_number=}, {self.course_id=}, {self.text=})"
-
 
 
 class MockSignUp(Base):
