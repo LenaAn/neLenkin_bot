@@ -14,6 +14,7 @@ from telegram.ext import CallbackQueryHandler, CommandHandler, ContextTypes, Con
 import constants
 import helpers
 import models
+import settings
 from monitoring import push_monitoring, update_users_in_db
 from membership import fetch_patrons, fetch_boosty_patrons, membership
 
@@ -397,6 +398,41 @@ broadcast_no_active_course_conv_handler = ConversationHandler(
 )
 
 
+async def send_to_discussion_thread(update: Update, context: ContextTypes.DEFAULT_TYPE, course_id: int) -> None:
+
+    with (Session(models.engine) as session):
+        result = session.query(models.Course.discussion_thread_id
+                                                    ).filter(models.Course.id == course_id).one_or_none()
+
+    if not result or not result[0]:
+        logging.info(f"Could not find discussion thread id for course {constants.id_to_course[course_id]}, "
+                     f"skipping sending to discussion thread")
+        await context.bot.send_message(
+            chat_id=settings.ADMIN_CHAT_ID,
+            text=f"Could not find discussion thread id for course {course_id}, skipping sending to discussion thread",
+            parse_mode="HTML")
+        return
+
+    discussion_thread_id = result[0]
+    msg = update.message
+    signature = f"\n\n---\n@{helpers.get_user(update).username} для курса {constants.id_to_course[course_id]}"
+    if msg.photo:
+        await context.bot.send_photo(
+            chat_id=settings.CLUB_GROUP_CHAT_ID,
+            message_thread_id=discussion_thread_id,
+            photo=msg.photo[-1].file_id,
+            caption=(msg.caption or "") + signature,
+            caption_entities=msg.caption_entities
+        )
+    else:
+        await context.bot.send_message(
+            chat_id=settings.CLUB_GROUP_CHAT_ID,
+            message_thread_id=discussion_thread_id,
+            text=(msg.text or "") + signature,
+            entities=msg.entities
+        )
+
+
 async def do_broadcast_course(update: Update, context: ContextTypes.DEFAULT_TYPE, course_id: int,
                               reply_markup: InlineKeyboardMarkup = None,
                               membership_filter: membership.MembershipLevel = None) -> int:
@@ -544,6 +580,7 @@ async def select_course(update: Update, context: ContextTypes.DEFAULT_TYPE) -> i
 @is_curator_for_course_in_context
 async def course_broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     await do_broadcast_course(update, context, context.user_data["broadcast_to_course"])
+    await send_to_discussion_thread(update, context, context.user_data["broadcast_to_course"])
     clear_state(context)
     return ConversationHandler.END
 
