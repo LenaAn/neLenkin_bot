@@ -900,6 +900,8 @@ async def add_days_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
                                     f"{new_expiry}")
 
 
+# admin can get status by username or by tg_id. Getting info by tg_id is more reliable since the user can change the
+# username or even not have a username. tg_id uniquely identifies a user and does not change
 @is_admin
 async def get_status_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     logging.info(f"get_status_handler handler triggered by {helpers.repr_user_from_update(update)}")
@@ -907,24 +909,42 @@ async def get_status_handler(update: Update, context: ContextTypes.DEFAULT_TYPE)
     args = context.args
 
     if len(args) != 1:
-        await update.message.reply_text("Usage: /get_status <username>")
+        await update.message.reply_text("Usage: /get_status <username> | /get_status <tg_id>")
         return
 
-    username = args[0]
+    # in tg client the tg_id displayed as '111,111,111', so pasting tg_id like that is easier
+    arg_without_commas = ''.join(args[0].split(','))
 
-    # get tg_id from Users
-    with (Session(models.engine) as session):
-        try:
-            tg_id = session.query(models.User.tg_id).filter(models.User.tg_username == username).first()[0]
-            logging.info(f"got member from Users table: {tg_id}")
-        except Exception as e:
-            logging.info(f"There's no user with username {username}, not returning status for the user.")
-            await update.message.reply_text(f"There's no user with username {username}, not returning status for the "
-                                            f"user: {e}")
-            return
+    if arg_without_commas.isnumeric():
+        tg_id = arg_without_commas
+        with (Session(models.engine) as session):
+            try:
+                username = session.query(models.User.tg_username).filter(models.User.tg_id == tg_id).first()[0]
+                logging.info(f"got member from Users table with tg_id={tg_id}: {username}")
+            except Exception as e:
+                logging.info(f"There's no user with tg_id {tg_id}, not returning status for the user.")
+                await update.message.reply_text(f"There's no user with tg_id {tg_id}, not returning status for the "
+                                                f"user: {e}")
+                return
+    else:
+        username = arg_without_commas
+        if arg_without_commas[0] == '@':
+            username = arg_without_commas[1:]
+
+        # get tg_id from Users table
+        # note: if user has changed their username, getting tg_id by new username will not work
+        with (Session(models.engine) as session):
+            try:
+                tg_id = session.query(models.User.tg_id).filter(models.User.tg_username == username).first()[0]
+                logging.info(f"got member from Users table: {tg_id}")
+            except Exception as e:
+                logging.info(f"There's no user with username {username}, not returning status for the user.")
+                await update.message.reply_text(f"There's no user with username {username}, not returning status for "
+                                                f"the user: {e}")
+                return
 
     membership_info = membership.get_user_membership_info(tg_id, username)
-    logging.info(f"{username} has {membership_info.get_overall_level().name} subscription")
+    logging.info(f"{username if username else tg_id} has {membership_info.get_overall_level().name} subscription")
 
     with (Session(models.engine) as session):
         result = session \
