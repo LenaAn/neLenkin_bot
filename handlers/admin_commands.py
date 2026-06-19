@@ -12,6 +12,7 @@ from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.ext import CallbackQueryHandler, CommandHandler, ContextTypes, ConversationHandler, MessageHandler, filters
 
 import constants
+from courses import course_helpers
 import helpers
 import models
 import settings
@@ -61,39 +62,6 @@ def is_any_curator(callback):
         return None
 
     return wrapper
-
-
-def is_curator(course_id: int):
-    def is_curator_for_course(callback):
-        async def wrapper(update: Update, context: ContextTypes.DEFAULT_TYPE, *args, **kwargs):
-            logging.info(f"is_curator_for_course triggered by {helpers.repr_user_from_update(update)} for "
-                         f"{constants.id_to_course[course_id]}")
-
-            if is_admin_id(update.effective_chat.id):
-                logging.info(f"{helpers.repr_user_from_update(update)} is admin so has power of curator")
-                return await callback(update, context, *args, **kwargs)
-
-            with Session(models.engine) as session:
-                course_curator_tg_id = session.query(models.Course.curator_tg_id).filter(
-                    models.Course.id == course_id).all()
-            if len(course_curator_tg_id) == 0 or len(course_curator_tg_id[0]) == 0:
-                logging.info(f"{constants.id_to_course[course_id]} doesn't have a curator")
-                await update.effective_chat.send_message("❌ Для этого действия нужно быть куратором потока")
-                return None
-
-            if str(update.effective_chat.id) in course_curator_tg_id[0]:
-                logging.info(f"{helpers.repr_user_from_update(update)} IS a curator for "
-                             f"{constants.id_to_course[course_id]}")
-                return await callback(update, context, *args, **kwargs)
-
-            logging.info(f"{helpers.repr_user_from_update(update)} IS NOT a curator for "
-                         f"{constants.id_to_course[course_id]}")
-            await update.effective_chat.send_message("❌ Для этого действия нужно быть куратором потока")
-            return None
-
-        return wrapper
-
-    return is_curator_for_course
 
 
 def is_curator_for_course_in_context(callback):
