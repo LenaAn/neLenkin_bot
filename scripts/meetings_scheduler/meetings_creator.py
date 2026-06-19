@@ -9,7 +9,7 @@ from googleapiclient.discovery import build
 
 from zoom_meetings_creator import create_meeting
 from meeting_saver import insert_scheduled_part_message
-import constants
+from courses import course_helpers
 
 load_dotenv()
 CLIENT_EMAIL = os.getenv("ZOOM_CLIENT_EMAIL")
@@ -88,7 +88,7 @@ if __name__ == "__main__":
 
     for i in range(number_of_events):
         start_time = first_meeeting_day + (i * timedelta(7))
-        zoom_meeting, calendar_event = schedule_zoom_and_calendar(f"Zoom for {constants.id_to_course[course_id]}",
+        zoom_meeting, calendar_event = schedule_zoom_and_calendar(f"Zoom for {course_helpers.get_course_name(course_id)}",
                                                                   start_time.isoformat())
 
         insert_scheduled_part_message(

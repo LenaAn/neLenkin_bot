@@ -12,6 +12,7 @@ from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.ext import CallbackQueryHandler, CommandHandler, ContextTypes, ConversationHandler, MessageHandler, filters
 
 import constants
+from courses import course_helpers
 import helpers
 import models
 import settings
@@ -63,45 +64,13 @@ def is_any_curator(callback):
     return wrapper
 
 
-def is_curator(course_id: int):
-    def is_curator_for_course(callback):
-        async def wrapper(update: Update, context: ContextTypes.DEFAULT_TYPE, *args, **kwargs):
-            logging.info(f"is_curator_for_course triggered by {helpers.repr_user_from_update(update)} for "
-                         f"{constants.id_to_course[course_id]}")
-
-            if is_admin_id(update.effective_chat.id):
-                logging.info(f"{helpers.repr_user_from_update(update)} is admin so has power of curator")
-                return await callback(update, context, *args, **kwargs)
-
-            with Session(models.engine) as session:
-                course_curator_tg_id = session.query(models.Course.curator_tg_id).filter(
-                    models.Course.id == course_id).all()
-            if len(course_curator_tg_id) == 0 or len(course_curator_tg_id[0]) == 0:
-                logging.info(f"{constants.id_to_course[course_id]} doesn't have a curator")
-                await update.effective_chat.send_message("❌ Для этого действия нужно быть куратором потока")
-                return None
-
-            if str(update.effective_chat.id) in course_curator_tg_id[0]:
-                logging.info(f"{helpers.repr_user_from_update(update)} IS a curator for "
-                             f"{constants.id_to_course[course_id]}")
-                return await callback(update, context, *args, **kwargs)
-
-            logging.info(f"{helpers.repr_user_from_update(update)} IS NOT a curator for "
-                         f"{constants.id_to_course[course_id]}")
-            await update.effective_chat.send_message("❌ Для этого действия нужно быть куратором потока")
-            return None
-
-        return wrapper
-
-    return is_curator_for_course
-
-
 def is_curator_for_course_in_context(callback):
     async def wrapper(update: Update, context: ContextTypes.DEFAULT_TYPE):
         course_id = context.user_data["broadcast_to_course"] if "broadcast_to_course" in context.user_data \
             else context.user_data["broadcast_to_course_basic"]
+        course_name = course_helpers.get_course_name(course_id)
         logging.info(f"is_curator_for_course_in_context triggered by {helpers.repr_user_from_update(update)} for "
-                     f"{constants.id_to_course[course_id]}")
+                     f"{course_name}")
 
         if is_admin_id(update.effective_chat.id):
             logging.info(f"{helpers.repr_user_from_update(update)} is admin so has power of curator")
@@ -111,17 +80,15 @@ def is_curator_for_course_in_context(callback):
             course_curator_tg_id = session.query(models.Course.curator_tg_id).filter(
                 models.Course.id == course_id).all()
         if len(course_curator_tg_id) == 0 or len(course_curator_tg_id[0]) == 0:
-            logging.info(f"{constants.id_to_course[course_id]} doesn't have a curator")
+            logging.info(f"{course_name} doesn't have a curator")
             await update.effective_chat.send_message("❌ Для этого действия нужно быть куратором потока")
             return None
 
         if str(update.effective_chat.id) in course_curator_tg_id[0]:
-            logging.info(f"{helpers.repr_user_from_update(update)} IS a curator for "
-                         f"{constants.id_to_course[course_id]}")
+            logging.info(f"{helpers.repr_user_from_update(update)} IS a curator for {course_name}")
             return await callback(update, context)
 
-        logging.info(f"{helpers.repr_user_from_update(update)} IS NOT a curator for "
-                     f"{constants.id_to_course[course_id]}")
+        logging.info(f"{helpers.repr_user_from_update(update)} IS NOT a curator for {course_name}")
         await update.effective_chat.send_message("❌ Для этого действия нужно быть куратором потока")
         return None
 
@@ -399,13 +366,13 @@ broadcast_no_active_course_conv_handler = ConversationHandler(
 
 
 async def send_to_discussion_thread(update: Update, context: ContextTypes.DEFAULT_TYPE, course_id: int) -> None:
-
+    course_name = course_helpers.get_course_name(course_id)
     with (Session(models.engine) as session):
         result = session.query(models.Course.discussion_thread_id
                                                     ).filter(models.Course.id == course_id).one_or_none()
 
     if not result or not result[0]:
-        logging.info(f"Could not find discussion thread id for course {constants.id_to_course[course_id]}, "
+        logging.info(f"Could not find discussion thread id for course {course_name}, "
                      f"skipping sending to discussion thread")
         await context.bot.send_message(
             chat_id=settings.ADMIN_CHAT_ID,
@@ -415,7 +382,7 @@ async def send_to_discussion_thread(update: Update, context: ContextTypes.DEFAUL
 
     discussion_thread_id = result[0]
     msg = update.message
-    signature = f"\n\n---\n@{helpers.get_user(update).username} для курса {constants.id_to_course[course_id]}"
+    signature = f"\n\n---\n@{helpers.get_user(update).username} для курса {course_name}"
     if msg.photo:
         await context.bot.send_photo(
             chat_id=settings.CLUB_GROUP_CHAT_ID,
@@ -436,13 +403,13 @@ async def send_to_discussion_thread(update: Update, context: ContextTypes.DEFAUL
 async def do_broadcast_course(update: Update, context: ContextTypes.DEFAULT_TYPE, course_id: int,
                               reply_markup: InlineKeyboardMarkup = None,
                               membership_filter: membership.MembershipLevel = None) -> int:
-    logging.info(f"do_broadcast_course for {constants.id_to_course[course_id]} triggered by "
-                 f"{helpers.repr_user_from_update(update)}")
+    course_name = course_helpers.get_course_name(course_id)
+    logging.info(f"do_broadcast_course for {course_name} triggered by {helpers.repr_user_from_update(update)}")
     with Session(models.engine) as session:
         course_enrollments = session.query(models.Enrollment.tg_id).filter(
             models.Enrollment.course_id == course_id).all()
         tg_ids = [tg_id for (tg_id,) in course_enrollments]
-        logging.info(f"got {len(tg_ids)} users from db for {constants.id_to_course[course_id]} broadcast")
+        logging.info(f"got {len(tg_ids)} users from db for {course_name} broadcast")
 
         if membership_filter:
             tg_ids = [tg_id for tg_id in tg_ids if
@@ -452,7 +419,7 @@ async def do_broadcast_course(update: Update, context: ContextTypes.DEFAULT_TYPE
     successful_count = 0
     failed_ids = []
     msg = update.message
-    signature = f"\n\n---\n@{helpers.get_user(update).username} для курса {constants.id_to_course[course_id]}"
+    signature = f"\n\n---\n@{helpers.get_user(update).username} для курса {course_name}"
 
     for tg_id in tg_ids:
         if (successful_count + len(failed_ids)) % 50 == 0:
@@ -478,16 +445,14 @@ async def do_broadcast_course(update: Update, context: ContextTypes.DEFAULT_TYPE
         except Exception as e:
             failed_ids.append(tg_id)
 
-    logging.info(f"Successfully {constants.id_to_course[course_id]} broadcast to {successful_count} users, "
-                 f"failed {len(failed_ids)} users.")
+    logging.info(f"Successfully {course_name} broadcast to {successful_count} users, failed {len(failed_ids)} users.")
 
     success_ids = list(set(tg_ids) - set(failed_ids))
     await update_users_in_db.update_users_after_broadcast(success_ids, failed_ids)
 
     await context.bot.send_message(
         chat_id=update.effective_chat.id,
-        text=f"Successfully {constants.id_to_course[course_id]} broadcast to {successful_count} users, "
-             f"failed {len(failed_ids)} users."
+        text=f"Successfully {course_name} broadcast to {successful_count} users, failed {len(failed_ids)} users."
     )
     return ConversationHandler.END
 
@@ -572,7 +537,7 @@ async def select_course(update: Update, context: ContextTypes.DEFAULT_TYPE) -> i
     context.user_data["broadcast_to_course"] = course_id
 
     await update.callback_query.edit_message_text(
-        text=f"Пришли сообщение, чтобы отправить всем пользователям в потоке {constants.id_to_course[course_id]}"
+        text=f"Пришли сообщение, чтобы отправить всем пользователям в потоке {course_helpers.get_course_name(course_id)}"
     )
     return COURSE_BROADCAST
 
@@ -638,7 +603,7 @@ async def select_course_to_broadcast_basic(update: Update, context: ContextTypes
     context.user_data["broadcast_to_course_basic"] = course_id
 
     await update.callback_query.edit_message_text(
-        text=f"Пришли сообщение, чтобы отправить BASIC пользователям в потоке {constants.id_to_course[course_id]}"
+        text=f"Пришли сообщение, чтобы отправить BASIC пользователям в потоке {course_helpers.get_course_name(course_id)}"
     )
     return COURSE_BROADCAST_BASIC
 
@@ -714,7 +679,7 @@ async def course_get_users(update: Update, context: ContextTypes.DEFAULT_TYPE) -
         course_users_count = session.query(models.Enrollment).filter(models.Enrollment.course_id == course_id).count()
 
     await update.callback_query.edit_message_text(
-        text=f"{course_users_count} пользователей подписались на {constants.id_to_course[course_id]}"
+        text=f"{course_users_count} пользователей подписались на {course_helpers.get_course_name(course_id)}"
     )
     return ConversationHandler.END
 
