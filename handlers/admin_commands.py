@@ -68,8 +68,9 @@ def is_curator_for_course_in_context(callback):
     async def wrapper(update: Update, context: ContextTypes.DEFAULT_TYPE):
         course_id = context.user_data["broadcast_to_course"] if "broadcast_to_course" in context.user_data \
             else context.user_data["broadcast_to_course_basic"]
+        course_name = course_helpers.get_course_name()
         logging.info(f"is_curator_for_course_in_context triggered by {helpers.repr_user_from_update(update)} for "
-                     f"{constants.id_to_course[course_id]}")
+                     f"{course_name}")
 
         if is_admin_id(update.effective_chat.id):
             logging.info(f"{helpers.repr_user_from_update(update)} is admin so has power of curator")
@@ -79,17 +80,15 @@ def is_curator_for_course_in_context(callback):
             course_curator_tg_id = session.query(models.Course.curator_tg_id).filter(
                 models.Course.id == course_id).all()
         if len(course_curator_tg_id) == 0 or len(course_curator_tg_id[0]) == 0:
-            logging.info(f"{constants.id_to_course[course_id]} doesn't have a curator")
+            logging.info(f"{course_name} doesn't have a curator")
             await update.effective_chat.send_message("❌ Для этого действия нужно быть куратором потока")
             return None
 
         if str(update.effective_chat.id) in course_curator_tg_id[0]:
-            logging.info(f"{helpers.repr_user_from_update(update)} IS a curator for "
-                         f"{constants.id_to_course[course_id]}")
+            logging.info(f"{helpers.repr_user_from_update(update)} IS a curator for {course_name}")
             return await callback(update, context)
 
-        logging.info(f"{helpers.repr_user_from_update(update)} IS NOT a curator for "
-                     f"{constants.id_to_course[course_id]}")
+        logging.info(f"{helpers.repr_user_from_update(update)} IS NOT a curator for {course_name}")
         await update.effective_chat.send_message("❌ Для этого действия нужно быть куратором потока")
         return None
 
