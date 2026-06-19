@@ -11,7 +11,7 @@ from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ContextTypes
 
 import constants
-from courses import course_handlers
+from courses import course_helpers
 import models
 from models import Enrollment, ScheduledPartMessages, engine
 from membership import membership
@@ -57,12 +57,12 @@ async def handle_leetcode_reminder(context: ContextTypes.DEFAULT_TYPE):
         )
 
     notification_chat_ids = [item[0] for item in result]
-    notifications_logger.debug(f"handling {constants.id_to_course[course_id]} notification, "
+    notifications_logger.debug(f"handling {course_helpers.get_course_name(course_id)} notification, "
                                f"got {len(notification_chat_ids)} chat ids that are enrolled to Leetcode and not signed "
                                f"for this week")
 
     await notifications_helpers.do_send_notifications(context, notification_chat_ids, message, menu,
-                                                      constants.id_to_course[course_id])
+                                                      course_helpers.get_course_name(course_id))
 
 
 async def handle_send_zoom(context: ContextTypes.DEFAULT_TYPE):
@@ -84,21 +84,21 @@ async def handle_send_zoom(context: ContextTypes.DEFAULT_TYPE):
     with Session(engine) as session:
         result = session.query(Enrollment.tg_id).filter(Enrollment.course_id == course_id).all()
         notification_chat_ids = [item[0] for item in result]
-    notifications_logger.debug(f"handling {constants.id_to_course[course_id]} notification, "
-                               f"got {len(notification_chat_ids)} chat ids that are subscribed to the course")
+    course_name = course_helpers.get_course_name(course_id)
+    notifications_logger.debug(f"handling {course_name} notification, got {len(notification_chat_ids)} chat ids that "
+                               f"are subscribed to the course")
 
     if is_zoom_link_only_to_pro:
         notification_chat_ids = [tg_id for tg_id in notification_chat_ids
                                  if membership.get_user_membership_info(tg_id).get_overall_level() == membership.pro]
-        notifications_logger.debug(f"handling {constants.id_to_course[course_id]} notification, "
-                                   f"got {len(notification_chat_ids)} PRO subscribers")
+        notifications_logger.debug(f"handling {course_name} notification, got {len(notification_chat_ids)} PRO "
+                                   f"subscribers")
     else:
-        notifications_logger.debug(f"Sending a link to everyone because is_zoom_link_only_to_pro for {course_id} is False")
+        notifications_logger.debug(f"Sending a link to everyone because is_zoom_link_only_to_pro for {course_id} is "
+                                   f"False")
 
-    await notifications_helpers.do_send_notifications(context, notification_chat_ids, message, menu,
-                                                      constants.id_to_course[course_id])
-    await notifications_helpers.email_notifications(context, notification_chat_ids, message, menu,
-                                                    constants.id_to_course[course_id])
+    await notifications_helpers.do_send_notifications(context, notification_chat_ids, message, menu, course_name)
+    await notifications_helpers.email_notifications(context, notification_chat_ids, message, menu, course_name)
 
 
 async def handle_aoc_notification(context: ContextTypes.DEFAULT_TYPE):
@@ -119,6 +119,7 @@ async def handle_aoc_notification(context: ContextTypes.DEFAULT_TYPE):
 
 async def get_zoom_link_and_send_for_course(context: ContextTypes.DEFAULT_TYPE):
     course_id: int = context.job.data["course_id"]
+    course_name: str = course_helpers.get_course_name(course_id)
     current_week: int = datetime.date.today().isocalendar().week
     with (Session(engine) as session):
         try:
@@ -134,28 +135,28 @@ async def get_zoom_link_and_send_for_course(context: ContextTypes.DEFAULT_TYPE):
 
             await context.bot.send_message(
                 chat_id=admin_chat_id,
-                text=f"Zoom link for {constants.id_to_course[course_id]} not found for today!"
+                text=f"Zoom link for {course_name} not found for today!"
             )
-            notifications_logger.error('Zoom link for {constants.id_to_course[course_id]} not found for today!',
-                                       exc_info=e)
+            notifications_logger.error(f'Zoom link for {course_name} not found for today!', exc_info=e)
             return
 
         notifications_logger.info(f'call_link is {call_link}')
 
     if call_link:
         context.job.data["message"] = \
-            f"{constants.before_call_reminder.format(constants.id_to_course[course_id])}\n\n{call_link}"
+            f"{constants.before_call_reminder.format(course_name)}\n\n{call_link}"
     else:
-        context.job.data["message"] = constants.before_call_reminder.format(constants.id_to_course[course_id])
+        context.job.data["message"] = constants.before_call_reminder.format(course_name)
     await handle_send_zoom(context)
 
 
 async def prompt_to_connect_patreon_notifications(context: ContextTypes.DEFAULT_TYPE):
     course_id: int = context.job.data["course_id"]
-    notifications_logger.info(f"prompt_to_connect_patreon_notifications for {constants.id_to_course[course_id]}")
+    course_name: str = course_helpers.get_course_name(course_id)
+    notifications_logger.info(f"prompt_to_connect_patreon_notifications for {course_name}")
 
-    message: str = (f"Привет! Сегодня вечером будет звонок с обсуждением {constants.id_to_course[course_id]}."
-                    f"\n\n<b>{constants.id_to_course[course_id]} — это 💜Pro курс, и чтобы сегодня вечером тебе пришла"
+    message: str = (f"Привет! Сегодня вечером будет звонок с обсуждением {course_name}."
+                    f"\n\n<b>{course_name} — это 💜Pro курс, и чтобы сегодня вечером тебе пришла"
                     f" ссылка на звонок, нужна 💜Pro подписка!</b>"
                     f"\n\n1. Чтобы оформить Pro подписку, подпишись на донат в $15 в месяц на моем "
                     f"<a href='https://www.patreon.com/c/LenaAnyusha'>Patreon</a>."
@@ -163,29 +164,29 @@ async def prompt_to_connect_patreon_notifications(context: ContextTypes.DEFAULT_
                     f"\n\n2. Либо оформи подписку на 1500 рублей на мой <a href='https://boosty.to/lenaan'>Boosty</a> и "
                     f"привяжи почту по кнопке ⬇️"
                     f"\n\n3. Если возникнут какие-то сложности, напиши @lenka_colenka!"
-                    f"\n\n4. Ты можешь отписаться от новостей про {constants.id_to_course[course_id]}, чтобы больше не "
+                    f"\n\n4. Ты можешь отписаться от новостей про {course_name}, чтобы больше не "
                     f"получать уведомления.")
     menu = InlineKeyboardMarkup([
         [InlineKeyboardButton("Привязать профиль Patreon", callback_data="connect_patreon")],
         [InlineKeyboardButton("Привязать профиль Boosty", callback_data="connect_boosty")],
-        [InlineKeyboardButton(f"Перестать получать уведомления о {constants.id_to_course[course_id]}",
+        [InlineKeyboardButton(f"Перестать получать уведомления о {course_name}",
                               callback_data=f"unenroll:{course_id}")],
     ])
 
     with Session(engine) as session:
         result = session.query(Enrollment.tg_id).filter(Enrollment.course_id == course_id).all()
         notification_chat_ids = [item[0] for item in result]
-    notifications_logger.info(f"handling Patreon prompt for {constants.id_to_course[course_id]}, got "
+    notifications_logger.info(f"handling Patreon prompt for {course_name}, got "
                               f"{len(notification_chat_ids)} chat ids that are subscribed to the course")
 
     # only Basic subscribers will get a prompt to subscribe to Patreon
     notification_chat_ids = [tg_id for tg_id in notification_chat_ids
                              if membership.get_user_membership_info(tg_id).get_overall_level() == membership.basic]
-    notifications_logger.info(f"handling Patreon prompt for {constants.id_to_course[course_id]}, got "
-                              f"{len(notification_chat_ids)} Basic subscribers to {constants.id_to_course[course_id]}")
+    notifications_logger.info(f"handling Patreon prompt for {course_name}, got "
+                              f"{len(notification_chat_ids)} Basic subscribers to {course_name}")
 
     await notifications_helpers.do_send_notifications(context, notification_chat_ids, message, menu,
-                                                      f"{constants.id_to_course[course_id]} Patreon prompt")
+                                                      f"{course_name} Patreon prompt")
 
 # no matter winter or summer time in Europe.
 # In theory should work without restart when the time changes
