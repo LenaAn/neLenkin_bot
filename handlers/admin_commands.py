@@ -537,7 +537,7 @@ async def select_course(update: Update, context: ContextTypes.DEFAULT_TYPE) -> i
     context.user_data["broadcast_to_course"] = course_id
 
     await update.callback_query.edit_message_text(
-        text=f"Пришли сообщение, чтобы отправить всем пользователям в потоке {constants.id_to_course[course_id]}"
+        text=f"Пришли сообщение, чтобы отправить всем пользователям в потоке {course_helpers.get_course_name(course_id)}"
     )
     return COURSE_BROADCAST
 
@@ -603,7 +603,7 @@ async def select_course_to_broadcast_basic(update: Update, context: ContextTypes
     context.user_data["broadcast_to_course_basic"] = course_id
 
     await update.callback_query.edit_message_text(
-        text=f"Пришли сообщение, чтобы отправить BASIC пользователям в потоке {constants.id_to_course[course_id]}"
+        text=f"Пришли сообщение, чтобы отправить BASIC пользователям в потоке {course_helpers.get_course_name(course_id)}"
     )
     return COURSE_BROADCAST_BASIC
 
@@ -679,7 +679,7 @@ async def course_get_users(update: Update, context: ContextTypes.DEFAULT_TYPE) -
         course_users_count = session.query(models.Enrollment).filter(models.Enrollment.course_id == course_id).count()
 
     await update.callback_query.edit_message_text(
-        text=f"{course_users_count} пользователей подписались на {constants.id_to_course[course_id]}"
+        text=f"{course_users_count} пользователей подписались на {course_helpers.get_course_name(course_id)}"
     )
     return ConversationHandler.END
 
