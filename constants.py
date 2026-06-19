@@ -37,21 +37,6 @@ leetcode_grind_3_course_id: int = 17
 the_swe_guide_course_id: int = 18
 fly_io_gossip_course_id: int = 19
 
-id_to_course = {
-    leetcode_course_id: "Leetcode-Mocks",
-    sre_course_id: "SRE-Book",
-    ddia_4_course_id: "DDIA-4",
-    grind_course_id: "Leetcode-Grind-2",
-    codecrafters_course_id: "CodeCrafters-Redis",
-    aoc_course_id: "AdventOfCode-2025",
-    dmls_course_id: "Designing-ML-Systems",
-    codecrafters_kafka_course_id: "CodeCrafters-Kafka",
-    ddia_5_course_id: "DDIA-5",
-    leetcode_grind_3_course_id: "Leetcode-Grind-3",
-    the_swe_guide_course_id: "The SWE's Guidebook",
-    fly_io_gossip_course_id: "Fly-io-Gossip-Protocol",
-}
-
 id_to_description = {
     grind_course_id: "Мы собираемся вместе чтобы прорешать Blind-75 — список из 75 задач на самые популярные темы на "
                      "собеседованиях. Каждую неделю участвующие прорешивают задачи на определенную тему до звонка в "
