@@ -36,6 +36,7 @@ ddia_5_course_id: int = 16
 leetcode_grind_3_course_id: int = 17
 the_swe_guide_course_id: int = 18
 fly_io_gossip_course_id: int = 19
+building_llm_from_scratch: int = 20
 
 id_to_description = {
     grind_course_id: "Мы собираемся вместе чтобы прорешать Blind-75 — список из 75 задач на самые популярные темы на "
@@ -107,6 +108,10 @@ id_to_description = {
                              "\n\nРасписание тем и докладчики — "
                              "<a href='https://docs.google.com/spreadsheets/d/1XJoK3KGMpUklEdDbH4vu3Mug5yTr3xVMrGX9Pd4p2BQ/edit?gid=0#gid=0'>в таблице</a>."
                              "\n\nЗвонки проходят каждую среду в 19:00 по Берлину, первый звонок — 27 мая 2026.",
+    building_llm_from_scratch: "Мы будем писать свою LLM c нуля! Идем по материалам из https://sebastianraschka.com/llms-from-scratch/."
+                               "\n\nЗвонки проходят по пятницам в 18:00 по Берлину. Первый созвон — 26 июня 2026."
+                               "\n\nТаблица с расписанием и "
+                                "докладчиками <a href='https://docs.google.com/spreadsheets/d/1gRVc6WTcDxq-FLSwSfclxTC1CV6Ieitz72zDHZ4WebQ/edit?usp=sharing'>вот</a>.",
 }
 
 cta_string = "Нажми кнопку \"Хочу участвовать\" чтобы получать ссылки на Zoom звонок и новости о потоке"
