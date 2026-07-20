@@ -6,7 +6,7 @@ from courses import course_handlers
 from handlers import admin_commands, button_handlers, menu, leetcode_mock_handlers
 from users import intro_handler, email_contact_handler, location_handler
 from notifications import notifications
-from membership import boosty_handlers, fetch_patrons, fetch_boosty_patrons, membership, patreon_handlers
+from membership import boosty_handlers, fetch_patrons, fetch_boosty_patrons, club_points, membership, patreon_handlers
 from monitoring import calculate_metrics_and_report
 import settings
 from leetcode_pairs import leetcode_notifications
@@ -59,6 +59,8 @@ if __name__ == '__main__':
         CommandHandler('help', menu.command_help, filters.ChatType.PRIVATE))
     application.add_handler(
         CommandHandler('membership', membership.handle_membership, filters.ChatType.PRIVATE))
+    application.add_handler(
+        CommandHandler('points', club_points.handle_club_points, filters.ChatType.PRIVATE))
     application.add_handler(
         CommandHandler('courses', course_handlers.handle_active_courses, filters.ChatType.PRIVATE))
     application.add_handler(
