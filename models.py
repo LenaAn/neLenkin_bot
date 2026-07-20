@@ -182,6 +182,18 @@ class MembershipByActivity(Base):
     expires_at = Column(sqlalchemy.Date, nullable=True)
 
 
+class ClubPoints(Base):
+    __tablename__ = 'ClubPoints'
+
+    id = Column(sqlalchemy.Integer, primary_key=True, autoincrement=True)
+    tg_id = Column(sqlalchemy.Text, nullable=False, unique=True)
+    balance = Column(sqlalchemy.Integer, nullable=False)
+
+    __table_args__ = (
+        sqlalchemy.CheckConstraint('balance >= 0', name='ck_club_points_balance_non_negative'),
+    )
+
+
 class Location(Base):
     __tablename__ = 'Location'
     id = Column(sqlalchemy.Integer, primary_key=True, autoincrement=True)
