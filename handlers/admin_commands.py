@@ -911,6 +911,15 @@ async def get_status_handler(update: Update, context: ContextTypes.DEFAULT_TYPE)
     membership_info = membership.get_user_membership_info(tg_id, username)
     logging.info(f"{username if username else tg_id} has {membership_info.get_overall_level().name} subscription")
 
+    club_points = 0
+    with (Session(models.engine) as session):
+        result = session \
+            .query(models.ClubPoints.balance)\
+            .filter(models.ClubPoints.tg_id == tg_id).one_or_none()
+        if result:
+            club_points = result[0]
+            logging.info(f"{username} has {club_points} 🌟ClubPoints")
+
     with (Session(models.engine) as session):
         result = session \
             .query(models.Course)\
@@ -925,5 +934,6 @@ async def get_status_handler(update: Update, context: ContextTypes.DEFAULT_TYPE)
     courses_str = "\n - ".join(courses)
     await update.message.reply_text(
         f"<b>{username} has {membership_info.get_overall_level().name} subscription:</b>\n\n{membership_info}\n\n"
+        f"<b>{username} has {club_points} 🌟ClubPoints</b>\n\n"
         f"<b>{username} is subscribed to</b>\n - {courses_str}",
         parse_mode="HTML")
