@@ -1,12 +1,14 @@
 import datetime
 import os
 import logging
+import math
 from typing import Callable
 
 from dotenv import load_dotenv
 
 import sqlalchemy
 from sqlalchemy.orm import Session
+from sqlalchemy.dialects.postgresql import insert
 
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.ext import CallbackQueryHandler, CommandHandler, ContextTypes, ConversationHandler, MessageHandler, filters
@@ -755,6 +757,55 @@ async def aoc_notification_off(update: Update, context: ContextTypes.DEFAULT_TYP
     )
 
 
+def do_add_days(tg_id: int, username: str, days_count: int) -> tuple[int, datetime.date | None]:
+    with (Session(models.engine) as session):
+        existing = session.query(models.MembershipByActivity).filter(models.MembershipByActivity.tg_id == tg_id).first()
+        if existing and not existing.expires_at:
+            logging.info(f"User {username} has infinite membership by activity, no days added")
+            return 0, None
+
+        if existing and existing.expires_at > datetime.date.today():
+            current_expiry = existing.expires_at
+        else:
+            current_expiry = datetime.date.today()
+
+        # todo: will break with concurrent updates in the following scenario:
+        # both clients read the old value, update it in their process and write a new value
+        new_expiry = current_expiry + datetime.timedelta(days=days_count)
+
+        if existing:
+            stmt = (sqlalchemy.update(models.MembershipByActivity)
+                    .where(models.MembershipByActivity.tg_id == tg_id)
+                    .values(expires_at=new_expiry))
+        else:
+            stmt = (
+                sqlalchemy.insert(models.MembershipByActivity)
+                .values(
+                    tg_id=tg_id,
+                    tg_username=username,
+                    expires_at=new_expiry,
+                )
+            )
+
+        session.execute(stmt)
+        session.commit()
+        logging.info(f"new membership expiry for {username}: {new_expiry}")
+
+
+def do_add_points(tg_id: int, username: str, point_count: int) -> tuple[int, int]:
+    with (Session(models.engine) as session):
+        stmt = insert(models.ClubPoints).values(tg_id=tg_id, balance=point_count)
+        stmt = stmt.on_conflict_do_update(
+            index_elements=[models.ClubPoints.tg_id],
+            set_={"balance": models.ClubPoints.balance + point_count}
+        ).returning(models.ClubPoints.balance)
+
+        new_balance = session.execute(stmt).scalar_one()
+        session.commit()
+        logging.info(f"new Club Points balance for {username}: {new_balance}")
+    return point_count, new_balance
+
+
 # This method is of limited functionality because not every telegram user has a username.
 # Currently, in order to present, one has to sign up to a spreadsheet with their tg_id, so I guess this should be good
 # enough. If it's impossible to track down user by tg username, admin manual operation is required.
@@ -765,7 +816,7 @@ async def aoc_notification_off(update: Update, context: ContextTypes.DEFAULT_TYP
 #    if already in MembershipByActivity and expiry = NULL, don't do anything
 #    if already in MembershipByActivity and expiry != NULL, add days
 @is_admin
-async def add_days_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def add_days_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     args = context.args
     silent = False
 
@@ -791,78 +842,56 @@ async def add_days_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text(f"Invalid number of days: {e}")
         return
 
-    tg_id = None
+    tg_id: int
     with (Session(models.engine) as session):
         try:
             tg_id = session.query(models.User.tg_id).filter(models.User.tg_username == username).first()[0]
             logging.info(f"got member from Users table: {tg_id}")
         except Exception as e:
-            logging.info(f"Adding days to {username}, but there's no such User. Will add to MembershipByActivity "
-                         f"without tg_id: {e}")
-            await update.message.reply_text(f"Adding days to {username}, but there's no such User. Will add to "
-                                            f"MembershipByActivity without tg_id: {e}")
-
-    with (Session(models.engine) as session):
-        if tg_id is not None:
-            existing = session.query(models.MembershipByActivity
-                                     ).filter(models.MembershipByActivity.tg_id == tg_id).first()
-        else:
-            existing = session.query(models.MembershipByActivity
-                                     ).filter(models.MembershipByActivity.tg_username == username).first()
-
-        if existing and not existing.expires_at:
-            logging.info(f"User {username} has infinite membership by activity, no days added")
-            await update.message.reply_text(f"User {username} has infinite membership by activity, no days added")
+            # if the username is not present in the bot, there are two options:
+            # 1. (very unlikely) User didn't start the bot. Very unlikely because the bot is currently the only way to
+            # get the Zoom link
+            # 2. (likely) User has changed the username or there's a typo in the username. In this case report the error
+            # and don't add anything.
+            logging.info(f"Could not add days or points to {username}, there's no such User {e}")
+            await update.message.reply_text(f"Could not add days or points to {username}, there's no such User {e}")
             return
 
-        if existing and existing.expires_at > datetime.date.today():
-            current_expiry = existing.expires_at
-        else:
-            current_expiry = datetime.date.today()
+    membership_info = membership.get_user_membership_info(tg_id, username)
+    logging.info(f"{username if username else tg_id} has {membership_info.get_overall_level().name} subscription")
 
-        new_expiry = current_expiry + datetime.timedelta(days=days)
-
-        if existing:
-            if tg_id is not None:
-                stmt = (sqlalchemy.update(models.MembershipByActivity)
-                        .where(models.MembershipByActivity.tg_id == tg_id)
-                        .values(expires_at=new_expiry))
-            else:
-                stmt = (sqlalchemy.update(models.MembershipByActivity)
-                        .where(models.MembershipByActivity.tg_username == username)
-                        .values(expires_at=new_expiry))
-        else:
-            stmt = (
-                sqlalchemy.insert(models.MembershipByActivity)
-                .values(
-                    tg_id=tg_id,
-                    tg_username=username,
-                    expires_at=new_expiry,
-                )
-            )
-
-        session.execute(stmt)
-        session.commit()
-        logging.info(f"new membership expiry for {username}: {new_expiry}")
-
-    if not silent:
-        try:
+    if membership_info.get_overall_level() == membership.basic:
+        days_added, new_expiry = do_add_days(tg_id, username, days)
+        if not silent and days_added > 0:
             await context.bot.send_message(
                 chat_id=tg_id,
-                text=f"Тебе добавили {days} дней 💜Pro подписки за активное участие в клубе!\n\n"
+                text=f"Тебе добавили {days_added} дней 💜Pro подписки за активное участие в клубе!\n\n"
                      f"Твоя Pro подписка за активность истекает {new_expiry}.\n\n"
-                     f"💜Pro подписка дает доступ ко всем возможностям клуба: неограниченные звонки с обсуждениями книг, "
-                     f"leetcode моки, Random Coffee встречи и другое!\n\n"
+                     f"💜Pro подписка дает доступ ко всем возможностям клуба: неограниченные звонки с обсуждениями "
+                     f"книг, leetcode моки, Random Coffee встречи и другое!\n\n"
                      f"Чтобы сохранить 💜Pro подписку, сделай презентацию либо подпишись на "
                      f"<a href='https://www.patreon.com/c/LenaAnyusha'>Patreon</a> хотя бы на $15 в месяц.\n\n"
                      f" Спасибо и keep being amazing!",
                 parse_mode="HTML"
             )
-        except Exception as e:
-            await update.message.reply_text(f"Couldn't send an update to {username}: {e}")
-
-    await update.message.reply_text(f"Added {days} days to {username}'s membership, new membership expiration is "
-                                    f"{new_expiry}")
+        await update.message.reply_text(f"Added {days_added} days to {username}'s membership, new membership expiration is "
+                                        f"{new_expiry}")
+    else:
+        # todo: forbid me for hardcoding
+        point_count = math.ceil(days * 1000 / 31)
+        added_points, total_points = do_add_points(tg_id, username, point_count)
+        if not silent and added_points > 0:
+            await context.bot.send_message(
+                chat_id=tg_id,
+                text=f"Тебе добавили {added_points} 🌟ClubPoints!"
+                     f"\n\n Текущий баланс: {total_points} поинтов"
+                     f"\n\n • Если у тебя закончится 💜Pro подписка, 1000 ClubPoints автоматически конвертируются в "
+                     f"месяц Pro подписки."
+                     f"\n\nСпасибо и keep being amazing!",
+                parse_mode="HTML"
+            )
+        await update.message.reply_text(f"Added {added_points} points to {username}, {username} has {total_points} "
+                                        f"club points")
 
 
 # admin can get status by username or by tg_id. Getting info by tg_id is more reliable since the user can change the
