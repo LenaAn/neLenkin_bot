@@ -6,7 +6,8 @@ from courses import course_handlers
 from handlers import admin_commands, button_handlers, menu, leetcode_mock_handlers
 from users import intro_handler, email_contact_handler, location_handler
 from notifications import notifications
-from membership import boosty_handlers, fetch_patrons, fetch_boosty_patrons, club_points, membership, patreon_handlers
+from membership import (boosty_handlers, fetch_patrons, fetch_boosty_patrons, club_points, membership,
+                        patreon_handlers, convert_points_to_membership)
 from monitoring import calculate_metrics_and_report
 import settings
 from leetcode_pairs import leetcode_notifications
@@ -19,6 +20,7 @@ logging.getLogger("httpx").setLevel(logging.WARNING)
 
 
 async def post_init(app):
+    await convert_points_to_membership.register_convert_points_to_membership(app)
     await notifications.register_notifications(app)
     await leetcode_notifications.register_leetcode_pairs_notification(application)
     await fetch_patrons.load_patrons(app.bot)
