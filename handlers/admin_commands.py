@@ -1,4 +1,3 @@
-import datetime
 import os
 import logging
 import math
@@ -6,9 +5,7 @@ from typing import Callable
 
 from dotenv import load_dotenv
 
-import sqlalchemy
 from sqlalchemy.orm import Session
-from sqlalchemy.dialects.postgresql import insert
 
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.ext import CallbackQueryHandler, CommandHandler, ContextTypes, ConversationHandler, MessageHandler, filters
@@ -19,7 +16,7 @@ import helpers
 import models
 import settings
 from monitoring import push_monitoring, update_users_in_db
-from membership import fetch_patrons, fetch_boosty_patrons, membership
+from membership import fetch_patrons, fetch_boosty_patrons, membership, update_membership
 
 
 def is_admin_id(tg_id: int) -> bool:
@@ -757,55 +754,6 @@ async def aoc_notification_off(update: Update, context: ContextTypes.DEFAULT_TYP
     )
 
 
-def do_add_days(tg_id: str, days_count: int) -> tuple[int, datetime.date | None]:
-    with (Session(models.engine) as session):
-        existing = session.query(models.MembershipByActivity).filter(models.MembershipByActivity.tg_id == tg_id).first()
-        if existing and not existing.expires_at:
-            logging.info(f"User {tg_id} has infinite membership by activity, no days added")
-            return 0, None
-
-        if existing and existing.expires_at > datetime.date.today():
-            current_expiry = existing.expires_at
-        else:
-            current_expiry = datetime.date.today()
-
-        # todo: will break with concurrent updates in the following scenario:
-        # both clients read the old value, update it in their process and write a new value
-        new_expiry = current_expiry + datetime.timedelta(days=days_count)
-
-        if existing:
-            stmt = (sqlalchemy.update(models.MembershipByActivity)
-                    .where(models.MembershipByActivity.tg_id == tg_id)
-                    .values(expires_at=new_expiry))
-        else:
-            stmt = (
-                sqlalchemy.insert(models.MembershipByActivity)
-                .values(
-                    tg_id=tg_id,
-                    expires_at=new_expiry,
-                )
-            )
-
-        session.execute(stmt)
-        session.commit()
-        logging.info(f"new membership expiry for {tg_id}: {new_expiry}")
-        return days_count, new_expiry
-
-
-def do_add_points(tg_id: int, point_count: int) -> tuple[int, int]:
-    with (Session(models.engine) as session):
-        stmt = insert(models.ClubPoints).values(tg_id=tg_id, balance=point_count)
-        stmt = stmt.on_conflict_do_update(
-            index_elements=[models.ClubPoints.tg_id],
-            set_={"balance": models.ClubPoints.balance + point_count}
-        ).returning(models.ClubPoints.balance)
-
-        new_balance = session.execute(stmt).scalar_one()
-        session.commit()
-        logging.info(f"new Club Points balance for {tg_id}: {new_balance}")
-    return point_count, new_balance
-
-
 @is_admin
 async def add_days_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     args = context.args
@@ -837,7 +785,7 @@ async def add_days_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -
     logging.info(f"{tg_id} has {membership_info.get_overall_level().name} subscription")
 
     if membership_info.get_overall_level() == membership.basic:
-        days_added, new_expiry = do_add_days(str(tg_id), days)
+        days_added, new_expiry = update_membership.do_add_days(str(tg_id), days)
         if not silent and days_added > 0:
             await context.bot.send_message(
                 chat_id=tg_id,
@@ -855,7 +803,7 @@ async def add_days_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -
     else:
         # todo: forbid me for hardcoding
         point_count = math.ceil(days * 1000 / 31)
-        added_points, total_points = do_add_points(tg_id, point_count)
+        added_points, total_points = update_membership.do_add_points(tg_id, point_count)
         if not silent and added_points > 0:
             await context.bot.send_message(
                 chat_id=tg_id,
