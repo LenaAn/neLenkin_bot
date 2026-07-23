@@ -790,6 +790,7 @@ def do_add_days(tg_id: int, username: str, days_count: int) -> tuple[int, dateti
         session.execute(stmt)
         session.commit()
         logging.info(f"new membership expiry for {username}: {new_expiry}")
+        return days_count, new_expiry
 
 
 def do_add_points(tg_id: int, username: str, point_count: int) -> tuple[int, int]:
