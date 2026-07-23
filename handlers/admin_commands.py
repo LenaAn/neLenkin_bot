@@ -783,6 +783,7 @@ async def add_days_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -
 
     membership_info = membership.get_user_membership_info(tg_id)
     logging.info(f"{tg_id} has {membership_info.get_overall_level().name} subscription")
+    tg_username: str | None = helpers.get_username(str(tg_id))
 
     if membership_info.get_overall_level() == membership.basic:
         days_added, new_expiry = update_membership.do_add_days(str(tg_id), days)
@@ -798,8 +799,8 @@ async def add_days_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -
                      f" Спасибо и keep being amazing!",
                 parse_mode="HTML"
             )
-        await update.message.reply_text(f"Added {days_added} days to {tg_id}'s membership, new membership expiration is "
-                                        f"{new_expiry}")
+        await update.message.reply_text(f"Added {days_added} days to {tg_username}'s membership, new membership "
+                                        f"expiration is {new_expiry}")
     else:
         # todo: forbid me for hardcoding
         point_count = math.ceil(days * 1000 / 31)
@@ -814,8 +815,8 @@ async def add_days_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -
                      f"\n\nСпасибо и keep being amazing!",
                 parse_mode="HTML"
             )
-        await update.message.reply_text(f"Added {added_points} points to {tg_id}, {tg_id} has {total_points} "
-                                        f"club points")
+        await update.message.reply_text(f"Added {added_points} points to {tg_username}, {tg_username} has "
+                                        f"{total_points} club points")
 
 
 # admin can get status by username or by tg_id. Getting info by tg_id is more reliable since the user can change the
