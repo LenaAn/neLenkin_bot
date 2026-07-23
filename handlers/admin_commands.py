@@ -835,15 +835,11 @@ async def get_status_handler(update: Update, context: ContextTypes.DEFAULT_TYPE)
 
     if arg_without_commas.isnumeric():
         tg_id = arg_without_commas
-        with (Session(models.engine) as session):
-            try:
-                username = session.query(models.User.tg_username).filter(models.User.tg_id == tg_id).first()[0]
-                logging.info(f"got member from Users table with tg_id={tg_id}: {username}")
-            except Exception as e:
-                logging.info(f"There's no user with tg_id {tg_id}, not returning status for the user.")
-                await update.message.reply_text(f"There's no user with tg_id {tg_id}, not returning status for the "
-                                                f"user: {e}")
-                return
+        username: str | None = helpers.get_username(tg_id)
+        if not username:
+            logging.info(f"There's no user with tg_id {tg_id}, not returning status for the user.")
+            await update.message.reply_text(f"There's no user with tg_id {tg_id}, not returning status for the user")
+            return
     else:
         username = arg_without_commas
         if arg_without_commas[0] == '@':

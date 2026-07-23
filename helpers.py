@@ -1,9 +1,21 @@
 import random
-
-from telegram import User, Update
 from typing import Optional
 
+from telegram import Update, User
+from sqlalchemy.orm import Session
+
 import models
+
+
+# returns None if there's no User with this tg_id
+# return string 'None' if there's a user without username
+def get_username(tg_id: str) -> str | None:
+    with (Session(models.engine) as session):
+        result = session.query(models.User).filter(models.User.tg_id == tg_id).one_or_none()
+        if result:
+            return str(result.tg_username)
+        else:
+            return None
 
 
 def get_user(update: Update) -> Optional[User]:
