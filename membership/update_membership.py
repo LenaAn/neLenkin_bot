@@ -72,9 +72,8 @@ def do_substract_points(tg_id: int, point_count: int) -> tuple[int, int | None]:
             if new_balance is None:
                 logging.error(f"not substracting Club Points because user {tg_id} didn't have Club Points")
                 return 0, None
-            else:
-                logging.info(f"new Club Points balance for {tg_id}: {new_balance}")
         except Exception as e:
             logging.error(f"Could not subtract Club Points for user {tg_id}: {e}")
             return 0, None
+    logging.info(f"subtracted {point_count}, new Club Points balance for {tg_id}: {new_balance}")
     return point_count, new_balance

@@ -27,7 +27,7 @@ async def do_convert_points_to_membership(context: ContextTypes.DEFAULT_TYPE):
         membership_info = membership.get_user_membership_info(tg_id)
         if membership_info.get_overall_level() == membership.basic:
             point_count, new_balance = update_membership.do_substract_points(tg_id, 1000)
-            if new_balance:
+            if new_balance is not None:
                 days_count, new_expiry = update_membership.do_add_days(tg_id, 31)
                 await context.bot.send_message(
                     chat_id=settings.ADMIN_CHAT_ID,
