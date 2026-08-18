@@ -1,0 +1,126 @@
+\documentclass[12pt]{article}
+
+\usepackage[a4paper,landscape,margin=0pt]{geometry}
+\usepackage{tikz}
+\usepackage[utf8]{inputenc}
+\usepackage[T2A]{fontenc}
+\usepackage[russian]{babel}
+\usepackage{xcolor}
+\usepackage{graphicx}
+\usepackage{microtype}
+
+\pagestyle{empty}
+
+% Colors
+\definecolor{navy}{RGB}{35,54,67}
+\definecolor{gold}{RGB}{190,140,65}
+
+% Recipient is missing! The Recipient should be inserted for the template to work!
+%\newcommand{\Recipient}{Участик @участник}
+
+%DateDay and DateYear also are filled in a wrapper
+%\newcommand{\DateDay}{12 АВГУСТА}
+%\newcommand{\DateYear}{2026}
+
+\newcommand{\Course}{Designing Data-Intensive Applications-5}
+%\newcommand{\Curator}{Куратор @Куратор}
+%\newcommand{\CuratorCourse}{DDIA-5}
+\newcommand{\Author}{Лена Анюшева}
+\newcommand{\AuthorHandle}{T.ME/LENKA\_NE\_CLUB}
+% --------------------------------------
+
+\begin{document}
+
+\begin{tikzpicture}[remember picture,overlay]
+
+% Outer gold frame
+\draw[gold,line width=0.8mm]
+  ([xshift=1.27cm,yshift=-1.42cm]current page.north west)
+  rectangle
+  ([xshift=-1.27cm,yshift=1.42cm]current page.south east);
+
+% Outer gold frame
+\draw[gold,line width=0.8mm]
+  ([xshift=1.52cm,yshift=-1.7cm]current page.north west)
+  rectangle
+  ([xshift=-1.52cm,yshift=1.7cm]current page.south east);
+
+
+% Main title
+\node[
+  anchor=north,
+  font=\sffamily\fontsize{49}{54}\selectfont
+] at ([xshift=14.85cm,yshift=-4.35cm]current page.north west)
+{БЛАГОДАРНОСТЬ};
+
+% Subtitle
+\node[
+  anchor=north,
+  font=\sffamily\fontsize{18}{22}\selectfont
+] at ([xshift=14.85cm,yshift=-6.85cm]current page.north west)
+{объявляется};
+
+% Recipient
+% Uses a large italic serif font so this works with pdfLaTeX.
+\node[
+  anchor=north,
+  font=\rmfamily\itshape\fontsize{38}{43}\selectfont
+] at ([xshift=14.85cm,yshift=-8.05cm]current page.north west)
+{\Recipient};
+
+% Description
+\node[
+  anchor=north,
+  font=\sffamily\fontsize{17}{21}\selectfont
+] at ([xshift=14.85cm,yshift=-10.65cm]current page.north west)
+{за презентацию для потока};
+
+% Course
+\node[
+  anchor=north,
+  font=\sffamily\fontsize{25}{29}\selectfont
+] at ([xshift=14.85cm,yshift=-11.48cm]current page.north west)
+{\Course};
+
+% Author
+\node[
+  anchor=north,
+  font=\sffamily\fontsize{17}{20}\selectfont
+] at ([xshift=5.50cm,yshift=-15.88cm]current page.north west)
+{\Author};
+
+% Signature
+\node[
+  anchor=north,
+  inner sep=0pt
+] at ([xshift=5.70cm,yshift=-14.55cm]current page.north west)
+{\includegraphics[width=3.5cm]{/latex/images/lena_signature.png}};
+
+% Author handle
+\node[
+  anchor=north,
+  font=\sffamily\fontsize{15}{18}\selectfont
+] at ([xshift=5.50cm,yshift=-16.68cm]current page.north west)
+{\AuthorHandle};
+
+% Date
+\node[
+  anchor=north,
+  align=center,
+  font=\rmfamily\fontsize{13}{16}\selectfont
+] at ([xshift=14.85cm,yshift=-16cm]current page.north west)
+{\DateDay\\[1mm]\DateYear};
+
+%% Curator
+%\node[
+%  anchor=north,
+%  align=center,
+%  font=\sffamily\fontsize{15}{18}\selectfont
+%] at ([xshift=23.25cm,yshift=-15.88cm]current page.north west)
+%{\Curator\\
+% КУРАТОР ПОТОКА\\
+% \CuratorCourse};
+
+\end{tikzpicture}
+
+\end{document}
