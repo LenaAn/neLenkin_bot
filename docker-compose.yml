@@ -38,5 +38,15 @@ services:
     depends_on:
       - redis
 
+  latex:
+    image: texlive/texlive@sha256:ee8ecc627897eabeb42d862d8187546483455e66ce94aa5c2bce1b45a977ab27
+    container_name: latex
+    working_dir: /latex
+    volumes:
+      - ./latex:/latex
+      - /tmp/latex:/tmp/latex
+    command: sleep infinity
+    restart: unless-stopped
+
 volumes:
   pgdata:
