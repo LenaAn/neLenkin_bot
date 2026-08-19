@@ -15,6 +15,7 @@ from courses import course_helpers
 import helpers
 import models
 import settings
+from certificates import create_certificates
 from monitoring import push_monitoring, update_users_in_db
 from membership import fetch_patrons, fetch_boosty_patrons, membership, update_membership
 
@@ -706,6 +707,26 @@ course_get_users_conv_handler = ConversationHandler(
         CommandHandler("cancel", cancel_get_users),
     ],
 )
+
+
+@is_admin
+async def create_certificate(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    logging.info(f"create_certificate handler triggered by {helpers.repr_user_from_update(update)}")
+
+    args = context.args
+    if len(args) != 2:
+        await update.message.reply_text("Usage: /create_certificate <name> <tag>")
+        return
+
+    name: str = args[0]
+    tag: str = args[1]
+
+    output_file: str = await create_certificates.create_certificates(name, tag)
+    with open(f"/tmp/latex/{output_file}", "rb") as thank_you_file:
+        await context.bot.send_document(
+            chat_id=settings.ADMIN_CHAT_ID,
+            document=thank_you_file,
+        )
 
 
 @is_admin

@@ -46,6 +46,9 @@ if __name__ == '__main__':
     application.add_handler(admin_commands.course_broadcast_basic_conv_handler)
     application.add_handler(admin_commands.course_get_users_conv_handler)
     application.add_handler(admin_commands.leetcode_new_topic_broadcast)
+    application.add_handler(
+        CommandHandler('create_certificate', admin_commands.create_certificate,
+                       filters.ChatType.PRIVATE))
     application.add_handler(leetcode_mock_handlers.leetcode_register_handler)
     application.add_handler(intro_handler.intro_conv_handler)
     application.add_handler(patreon_handlers.connect_patreon_handler)

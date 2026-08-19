@@ -4,6 +4,7 @@
 auth.json
 google_calendar.auth.json
 data
+latex/images
 
 #pickle persistance for conversation handlers
 nelenkin_bot_pickle
