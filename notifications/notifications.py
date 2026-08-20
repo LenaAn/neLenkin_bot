@@ -23,7 +23,7 @@ notifications_logger.setLevel(logging.DEBUG)
 
 
 async def register_notifications(application):
-    await register_leetcode_notifications(application)
+    # await register_leetcode_notifications(application)
     await register_daily_send_zoom_for_active_courses(application)
     await register_daily_patreon_prompt_for_active_courses(application)
     await register_aoc_notifications(application)
