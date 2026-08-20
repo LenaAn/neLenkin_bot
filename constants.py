@@ -37,6 +37,7 @@ leetcode_grind_3_course_id: int = 17
 the_swe_guide_course_id: int = 18
 fly_io_gossip_course_id: int = 19
 building_llm_from_scratch: int = 20
+ddia_6_course_id: int = 21
 
 id_to_description = {
     grind_course_id: "Мы собираемся вместе чтобы прорешать Blind-75 — список из 75 задач на самые популярные темы на "
@@ -112,6 +113,12 @@ id_to_description = {
                                "\n\nЗвонки проходят по пятницам в 18:00 по Берлину. Первый созвон — 26 июня 2026."
                                "\n\nТаблица с расписанием и "
                                 "докладчиками <a href='https://docs.google.com/spreadsheets/d/1gRVc6WTcDxq-FLSwSfclxTC1CV6Ieitz72zDHZ4WebQ/edit?usp=sharing'>вот</a>.",
+    ddia_6_course_id: "Мы читаем <a href='https://www.oreilly.com/library/view/designing-data-intensive-applications"
+                      "/9781098119058/'>Designing Data-Intensive Applications, второе издание</a>. Звонки проходят "
+                      "каждый четверг в 18:00 по Берлину. Первый звонок — 27 августа 2026 года."
+                      "\n\nТаблица с расписанием и докладчиками "
+                      "<a href='https://docs.google.com/spreadsheets/d/1Qj7BoFW_kdtVlxH26C1GTu1Lswgfa2wDE28hOXy_aCo/edit?usp=sharing'>"
+                      "вот</a>.",
 }
 
 cta_string = "Нажми кнопку \"Хочу участвовать\" чтобы получать ссылки на Zoom звонок и новости о потоке"
