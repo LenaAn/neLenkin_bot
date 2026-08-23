@@ -168,6 +168,7 @@ async def leetcode_english(update: Update, context: ContextTypes.DEFAULT_TYPE) -
     with Session(models.engine) as session:
         mock_signup = {
             "week_number": datetime.date.today().isocalendar().week,
+            "year": datetime.date.today().isocalendar().year,
             "tg_username": helpers.get_user(update).username,
             "tg_id": helpers.get_user(update).id,
             "first_problem": context.user_data['first_problem'],
@@ -235,7 +236,8 @@ async def cancel_leetcode_register(update: Update, context: ContextTypes.DEFAULT
             delete(models.MockSignUp)
             .where(
                 models.MockSignUp.tg_id == str(helpers.get_user(update).id),
-                models.MockSignUp.week_number == datetime.date.today().isocalendar().week
+                models.MockSignUp.week_number == datetime.date.today().isocalendar().week,
+                models.MockSignUp.year == datetime.date.today().isocalendar().year,
             )
         )
         session.execute(stmt)
