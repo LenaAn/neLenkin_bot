@@ -98,7 +98,7 @@ async def leetcode_notifications(context: ContextTypes.DEFAULT_TYPE):
         return
 
     generate_graph_obj = generate_graph.GenerateLeetcodeMocks.build(
-        week_number=datetime.date.today().isocalendar().week)
+        week_number=datetime.date.today().isocalendar().week, year=datetime.datetime.today().isocalendar().year)
 
     await send_leetcode_pairs_to_group(context, generate_graph_obj)
     await unicast_leetcode_partner(context, generate_graph_obj)
