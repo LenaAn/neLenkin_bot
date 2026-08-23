@@ -19,8 +19,9 @@ class Pair:
 
 
 class GenerateLeetcodeMocks:
-    def __init__(self, week_number):
+    def __init__(self, week_number, year):
         self.week_number = datetime.date.today().isocalendar().week if week_number is None else week_number
+        self.year = datetime.date.today().isocalendar().year if year is None else year
         self.sign_ups: list[models.MockSignUp] = []  # load only for this week
         self.users: list[models.User] = []  # load only those who enrolled this week
         self.pairs: list[Pair] = []
@@ -40,10 +41,11 @@ class GenerateLeetcodeMocks:
     def load_sign_ups(self):
         with (Session(models.engine) as session):
             mocks_signups = session.query(models.MockSignUp) \
-                .filter(models.MockSignUp.week_number == self.week_number).all()
-            leetcode_pairs_logger.info(f"got mock signups for week {self.week_number}: {mocks_signups}")
+                .filter((models.MockSignUp.week_number == self.week_number) &
+                        (models.MockSignUp.year == self.year)).all()
+            leetcode_pairs_logger.info(f"got mock signups for week {self.week_number} {self.year}: {mocks_signups}")
             self.sign_ups = mocks_signups
-            leetcode_pairs_logger.info(f"self.sign_ups for week {self.week_number}: {self.sign_ups}")
+            leetcode_pairs_logger.info(f"self.sign_ups for week {self.week_number} {self.year}: {self.sign_ups}")
 
     def load_users_for_signed_up_users(self):
         tg_ids = [signup.tg_id for signup in self.sign_ups]
@@ -52,7 +54,7 @@ class GenerateLeetcodeMocks:
                 .filter(models.User.tg_id.in_(tg_ids)).all()
             leetcode_pairs_logger.info(f"got Users for signed up users: {users}")
             self.users = users
-            leetcode_pairs_logger.info(f"self.users for week {self.week_number}: {self.users}")
+            leetcode_pairs_logger.info(f"self.users for week {self.week_number} {self.year}: {self.users}")
 
     def generate_input(self) -> tuple[int, set]:
         users_to_timeslots = {}
@@ -110,7 +112,8 @@ class GenerateLeetcodeMocks:
 
     def calculate_pairs(self):
         if len(self.sign_ups) == 0:
-            leetcode_pairs_logger.info(f"no signups this week number {self.week_number}, skipping calculating pairs")
+            leetcode_pairs_logger.info(f"no signups this week number {self.week_number} {self.year}, "
+                                       f"skipping calculating pairs")
             return
         hypothetical_number_of_users, graph = self.generate_input()
 
@@ -130,8 +133,8 @@ class GenerateLeetcodeMocks:
                 f.write(f"{pair.first.id} {pair.second.id}\n")
 
     @classmethod
-    def build(cls, week_number=None):
-        obj = cls(week_number)
+    def build(cls, week_number=None, year=None):
+        obj = cls(week_number, year)
         obj.load_sign_ups()
         obj.load_users_for_signed_up_users()
         obj.calculate_pairs()

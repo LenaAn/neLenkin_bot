@@ -131,9 +131,10 @@ class MockSignUp(Base):
     selected_timeslots = Column(sqlalchemy.JSON, nullable=False)
     programming_language = Column(sqlalchemy.Text, nullable=False)
     english_choice = Column(sqlalchemy.Boolean, nullable=False)
+    year = Column(sqlalchemy.Integer, nullable=True)
 
     __table_args__ = (
-        sqlalchemy.UniqueConstraint('week_number', 'tg_id', name='One_record_per_user_per_week'),
+        sqlalchemy.UniqueConstraint('week_number', 'tg_id', 'year', name='One_record_per_user_per_week'),
     )
 
     def __repr__(self):
