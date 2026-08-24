@@ -132,39 +132,76 @@ async def leetcode_timeslot_handler(update: Update, context: ContextTypes.DEFAUL
             return LEETCODE_PROGRAMMING_LANGUAGE
 
 
+def create_english_options(_: Update, context: ContextTypes.DEFAULT_TYPE):
+    button_list = []
+    for i, option in enumerate(constants.leetcode_language_options):
+        checked = "✅ " if i in context.user_data["language_options"] else ""
+        button_list.append([
+            InlineKeyboardButton(f"{checked}{option}", callback_data=f"language_options_{i}")
+        ])
+
+    if len(context.user_data["language_options"]) > 0:
+        button_list.append([InlineKeyboardButton("➡️ Продолжить", callback_data="language_options_continue")])
+    return button_list
+
+
 @is_leetcode_on
 async def leetcode_programming_language(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     logging.info(f"leetcode_programming_language handler triggered by {helpers.repr_user_from_update(update)}, "
                  f"user data = {context.user_data}, programming language = {update.message.text}")
     context.user_data["leetcode_programming_language"] = update.message.text
 
-    button_list = [
-        [InlineKeyboardButton(f"Да", callback_data=f"leetcode_english_yes")],
-        [InlineKeyboardButton(f"Нет", callback_data=f"leetcode_english_no")]
-    ]
+    if "language_options" not in context.user_data:
+        context.user_data["language_options"] = set()
 
     await context.bot.send_message(
         chat_id=update.effective_chat.id,
-        text=f"Готов проходить мок-собеседование на английском?",
-        reply_markup=InlineKeyboardMarkup(button_list),
-        parse_mode="HTML"
-    )
+        text=f"На каких языках хочешь мок? Выбери все подходящие варианты",
+        reply_markup=InlineKeyboardMarkup(create_english_options(update, context)),
+        parse_mode="HTML")
     return LEETCODE_ENGLISH
+
+
+async def edit_language_options(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    logging.info(f"edit_language_options handler triggered by {helpers.repr_user_from_update(update)}, "
+                 f"user data = {context.user_data}, update = {update.callback_query.data}")
+
+    await update.callback_query.edit_message_text(
+        text=f"На каких языках хочешь мок? Выбери все подходящие варианты",
+        reply_markup=InlineKeyboardMarkup(create_english_options(update, context)),
+        parse_mode="HTML")
+    return LEETCODE_TIMESLOTS
 
 
 @is_leetcode_on
 async def leetcode_english(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    await update.callback_query.answer()  # Acknowledge the callback
     logging.info(f"leetcode_english handler triggered by {helpers.repr_user_from_update(update)}, "
                  f"user data = {context.user_data}, english_choice = {update.callback_query.data}")
-    if update.callback_query.data == "leetcode_english_yes":
-        context.user_data["leetcode_english"] = True
-    elif update.callback_query.data == "leetcode_english_no":
-        context.user_data["leetcode_english"] = False
-    else:
-        raise ValueError(f"Unexpected callback_data = {update.callback_query.data} "
-                         f"by {helpers.repr_user_from_update(update)}")
+    query = update.callback_query
+    await query.answer()  # Acknowledge the callback
 
+    if not query.data.startswith("language_options_"):
+        raise ValueError(f"Unexpected callback, data={query.data}, user={helpers.repr_user_from_update(update)}")
+
+    arg = query.data.split("_")[-1]
+    if arg.isnumeric():
+        idx = int(arg)
+        if idx in context.user_data["language_options"]:
+            context.user_data["language_options"].remove(idx)
+        else:
+            context.user_data["language_options"].add(idx)
+        await edit_language_options(update, context)
+    else:
+        logging.info(f"user continued in language options, language_options = "
+                     f"{context.user_data['language_options']}, arg={arg}")
+        if arg != "continue":
+            raise ValueError(f"Unexpected callback, data={query.data}, user={helpers.repr_user_from_update(update)}")
+        else:
+            return await save_choice(update, context)
+
+
+@is_leetcode_on
+async def save_choice(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     with Session(models.engine) as session:
         mock_signup = {
             "week_number": datetime.date.today().isocalendar().week,
@@ -175,7 +212,7 @@ async def leetcode_english(update: Update, context: ContextTypes.DEFAULT_TYPE) -
             "second_problem": context.user_data['second_problem'],
             "selected_timeslots": list(context.user_data['selected_timeslots']),
             "programming_language": context.user_data['leetcode_programming_language'],
-            "english_choice": context.user_data['leetcode_english'],
+            "language_options": list(context.user_data['language_options']),
         }
         insert_stmt = insert(models.MockSignUp).values(**mock_signup)
         do_update_stmt = insert_stmt.on_conflict_do_update(
@@ -196,8 +233,8 @@ async def leetcode_english(update: Update, context: ContextTypes.DEFAULT_TYPE) -
             )
             return ConversationHandler.END
 
-    english_string = 'Мок будет на английском, если партнер тоже может на англиском, иначе на русском' \
-        if context.user_data['leetcode_english'] else 'Мок будет на русском языке'
+    english_string = ", ".join(
+        [constants.leetcode_language_options[i] for i in context.user_data['language_options']])
     timeslots_string = ", ".join(
         [constants.leetcode_register_timeslots[i] for i in context.user_data['selected_timeslots']])
 
@@ -206,9 +243,9 @@ async def leetcode_english(update: Update, context: ContextTypes.DEFAULT_TYPE) -
         text=f"<b>Sign up to leetcode mocks: {helpers.repr_user_from_update(update)}</b>\n\n"
              f"Основная задача: {context.user_data['first_problem']}\n"
              f"Запасная задача: {context.user_data['second_problem']}\n"
+             f"Выбранные языки: {english_string}\n"
              f"Выбранные таймслоты: {timeslots_string + ' по Московскому времени'}\n"
-             f"Язык программирования: {context.user_data['leetcode_programming_language']}\n"
-             f"{english_string}",
+             f"Язык программирования: {context.user_data['leetcode_programming_language']}",
         parse_mode="HTML")
 
     await context.bot.send_message(
@@ -218,7 +255,7 @@ async def leetcode_english(update: Update, context: ContextTypes.DEFAULT_TYPE) -
              f"Запасная задача: {context.user_data['second_problem']}\n"
              f"Выбранные таймслоты: {timeslots_string + ' по Московскому времени'}\n"
              f"Язык программирования: {context.user_data['leetcode_programming_language']}\n"
-             f"{english_string}\n\n"
+             f"Выбранные языки: {english_string}\n\n"
              f"В пятницу утром я объявлю твоего партнера на эту неделю\n\n"
              f"Если хочешь изменить свой выбор, используй команду /leetcode_register. Если не хочешь участвовать в "
              f"мок-собеседовании на этой неделе, используй команду /cancel_leetcode_register. Если есть вопросы, напиши"
@@ -276,8 +313,8 @@ def clear_state(context: ContextTypes.DEFAULT_TYPE) -> None:
         del context.user_data["selected_timeslots"]
     if "leetcode_programming_language" in context.user_data:
         del context.user_data["leetcode_programming_language"]
-    if "leetcode_english" in context.user_data:
-        del context.user_data["leetcode_english"]
+    if "language_options" in context.user_data:
+        del context.user_data["language_options"]
 
 
 leetcode_register_handler = ConversationHandler(
@@ -290,7 +327,7 @@ leetcode_register_handler = ConversationHandler(
         LEETCODE_SECOND_PROBLEM: [MessageHandler(filters.TEXT & ~filters.COMMAND, leetcode_second_problem)],
         LEETCODE_TIMESLOTS: [CallbackQueryHandler(leetcode_timeslot_handler, "^leetcode_timeslot")],
         LEETCODE_PROGRAMMING_LANGUAGE: [MessageHandler(filters.TEXT & ~filters.COMMAND, leetcode_programming_language)],
-        LEETCODE_ENGLISH: [CallbackQueryHandler(leetcode_english, "^leetcode_english")]
+        LEETCODE_ENGLISH: [CallbackQueryHandler(leetcode_english, "^language_options")]
     },
     fallbacks=[
         CommandHandler('leetcode_register', start_leetcode_register),
