@@ -65,10 +65,16 @@ class GenerateLeetcodeMocks:
         user_ids = list(users_to_timeslots.keys())
         hypothetical_number_of_users = max(user_ids) + 1
 
+        users_to_languages = {}
+        for sign_up in self.sign_ups:
+            sign_up_user: models.User = list(filter(lambda x: x.tg_id == sign_up.tg_id, self.users))[0]
+            users_to_languages[sign_up_user.id] = set(sign_up.language_options) if sign_up.language_options else set()
+
         graph = set()
         for i in range(len(user_ids)):
             for j in range(i + 1, len(user_ids)):
-                if len(users_to_timeslots[user_ids[i]].intersection(users_to_timeslots[user_ids[j]])) > 0:
+                if ((len(users_to_timeslots[user_ids[i]].intersection(users_to_timeslots[user_ids[j]])) > 0) and
+                        (len(users_to_languages[user_ids[i]].intersection(users_to_languages[user_ids[j]])) > 0)):
                     graph.add((user_ids[i], user_ids[j]))
         leetcode_pairs_logger.info(f"len(graph) = {len(graph)}")
 

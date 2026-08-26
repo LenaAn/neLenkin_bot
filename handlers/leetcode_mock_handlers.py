@@ -176,7 +176,7 @@ async def edit_language_options(update: Update, context: ContextTypes.DEFAULT_TY
 @is_leetcode_on
 async def leetcode_english(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     logging.info(f"leetcode_english handler triggered by {helpers.repr_user_from_update(update)}, "
-                 f"user data = {context.user_data}, english_choice = {update.callback_query.data}")
+                 f"user data = {context.user_data}, language_options = {update.callback_query.data}")
     query = update.callback_query
     await query.answer()  # Acknowledge the callback
 

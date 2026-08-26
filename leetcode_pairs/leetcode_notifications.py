@@ -44,18 +44,15 @@ async def send_leetcode_pairs_to_group(context: ContextTypes.DEFAULT_TYPE,
     )
 
 
-def format_info_about_partner(user: models.User, signup: models.MockSignUp, my_english: bool) -> str:
+def format_info_about_partner(user: models.User, signup: models.MockSignUp) -> str:
     msg: str = f"Твоя пара на Leetcode мок: {print_user(user)}."
 
     timeslots_string = "\n - ".join([constants.leetcode_register_timeslots[i] for i in signup.selected_timeslots])
+    languages_string = ", ".join([constants.leetcode_language_options[i] for i in signup.language_options])
     msg += f"\n\nПартнеру удобны слоты (по Московскому времени):\n - {timeslots_string}"
 
-    if my_english and signup.english_choice:
-        msg += f"\n\nМок будет на английском языке."
-    else:
-        msg += f"\n\nМок будет на русском языке."
-
     msg += f"\n\nПартнер будет решать задачу на языке {signup.programming_language}."
+    msg += f"\n\nА разговаривать хочет на {languages_string}."
     msg += "\n\nНапиши партнеру и договорись о времени!"
     return msg
 
@@ -71,13 +68,11 @@ async def unicast_leetcode_partner(context: ContextTypes.DEFAULT_TYPE,
     for pair in generate_graph_obj.pairs:
         await context.bot.send_message(
             chat_id=pair.first.tg_id,
-            text=format_info_about_partner(pair.second, tg_id_to_signup[pair.second.tg_id],
-                                           tg_id_to_signup[pair.first.tg_id].english_choice),
+            text=format_info_about_partner(pair.second, tg_id_to_signup[pair.second.tg_id]),
             parse_mode="HTML")
         await context.bot.send_message(
             chat_id=pair.second.tg_id,
-            text=format_info_about_partner(pair.first, tg_id_to_signup[pair.first.tg_id],
-                                           tg_id_to_signup[pair.second.tg_id].english_choice),
+            text=format_info_about_partner(pair.first, tg_id_to_signup[pair.first.tg_id]),
             parse_mode="HTML")
 
     if len(generate_graph_obj.without_pairs) > 0:
