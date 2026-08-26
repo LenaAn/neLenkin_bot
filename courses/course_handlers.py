@@ -56,10 +56,16 @@ async def handle_course_info(update: Update, context: ContextTypes.DEFAULT_TYPE)
             InlineKeyboardButton("Назад", callback_data="back_to_courses"),
         ]
         menu = [button_list[i:i + 1] for i in range(0, len(button_list), 1)]
-        await update.callback_query.edit_message_text(
-            text=constants.id_to_description[course_id] + "\n\n" + constants.enroll_description,
-            reply_markup=InlineKeyboardMarkup(menu),
-            parse_mode="HTML")
+        if course_id == constants.leetcode_course_id:
+            await update.callback_query.edit_message_text(
+                text=constants.id_to_description[course_id] + "\n\n" + constants.mocks_enroll_description,
+                reply_markup=InlineKeyboardMarkup(menu),
+                parse_mode="HTML")
+        else:
+            await update.callback_query.edit_message_text(
+                text=constants.id_to_description[course_id] + "\n\n" + constants.enroll_description,
+                reply_markup=InlineKeyboardMarkup(menu),
+                parse_mode="HTML")
     else:
         button_list = [
             InlineKeyboardButton("Хочу участвовать!", callback_data=f"enroll:{course_id}"),
@@ -141,11 +147,18 @@ async def handle_enroll(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
         InlineKeyboardButton("Назад", callback_data="back_to_courses"),
     ]
     menu = [button_list[i:i + 1] for i in range(0, len(button_list), 1)]
-    await update.callback_query.edit_message_text(
-        text=constants.enroll_description,
-        reply_markup=InlineKeyboardMarkup(menu),
-        parse_mode="HTML"
-    )
+    if course_id == constants.leetcode_course_id:
+        await update.callback_query.edit_message_text(
+            text=constants.mocks_enroll_description,
+            reply_markup=InlineKeyboardMarkup(menu),
+            parse_mode="HTML"
+        )
+    else:
+        await update.callback_query.edit_message_text(
+            text=constants.enroll_description,
+            reply_markup=InlineKeyboardMarkup(menu),
+            parse_mode="HTML"
+        )
 
 
 async def handle_unenroll(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -170,8 +183,15 @@ async def handle_unenroll(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
         InlineKeyboardButton("Назад", callback_data="back_to_courses"),
     ]
     menu = [button_list[i:i + 1] for i in range(0, len(button_list), 1)]
-    await update.callback_query.edit_message_text(
-        text=constants.unenroll_description,
-        reply_markup=InlineKeyboardMarkup(menu),
-        parse_mode="HTML"
-    )
+    if course_id == constants.leetcode_course_id:
+        await update.callback_query.edit_message_text(
+            text=constants.mocks_unenroll_description,
+            reply_markup=InlineKeyboardMarkup(menu),
+            parse_mode="HTML"
+        )
+    else:
+        await update.callback_query.edit_message_text(
+            text=constants.unenroll_description,
+            reply_markup=InlineKeyboardMarkup(menu),
+            parse_mode="HTML"
+        )
