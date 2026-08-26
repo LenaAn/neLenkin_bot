@@ -1,10 +1,26 @@
 import random
 from typing import Optional
+import logging
 
-from telegram import Update, User
+from telegram import Bot, Update, User
 from sqlalchemy.orm import Session
 
 import models
+import settings
+
+
+async def is_user_in_group(bot: Bot, tg_id: int) -> bool:
+    member = await bot.get_chat_member(
+        chat_id=settings.CLUB_GROUP_CHAT_ID ,
+        user_id=tg_id,
+    )
+
+    if member.status in ("member", "administrator", "creator"):
+        logging.info(f"User {tg_id} is in group")
+        return True
+    else:
+        logging.info(f"User {tg_id} is NOT in group")
+        return False
 
 
 # returns None if there's no User with this tg_id

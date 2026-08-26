@@ -130,6 +130,7 @@ class MockSignUp(Base):
     second_problem = Column(sqlalchemy.Text, nullable=False)
     selected_timeslots = Column(sqlalchemy.JSON, nullable=False)
     programming_language = Column(sqlalchemy.Text, nullable=False)
+    # deprecated
     english_choice = Column(sqlalchemy.Boolean, nullable=True)
     year = Column(sqlalchemy.Integer, nullable=True)
     language_options = Column(sqlalchemy.JSON, nullable=True)

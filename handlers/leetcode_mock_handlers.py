@@ -36,12 +36,20 @@ async def start_leetcode_register(update: Update, context: ContextTypes.DEFAULT_
     if update.callback_query:
         await update.callback_query.answer()
     logging.info(f"start_leetcode_register handler triggered by {helpers.repr_user_from_update(update)}")
-    await context.bot.send_message(
-        chat_id=update.effective_chat.id,
-        text=f"Пришли ссылку на задачу, которую ты будешь спрашивать как интервьюер.\n\n"
-             f"Пример: https://leetcode.com/problems/two-sum/description/"
-    )
-    return LEETCODE_FIRST_PROBLEM
+    if not await helpers.is_user_in_group(context.bot, update.effective_chat.id):
+        await context.bot.send_message(
+            chat_id=update.effective_chat.id,
+            text=f"Leetcode моки доступны только для участников клуба."
+                 f"\n\nЧтобы вступить в группу, надо представиться. Вызови команду /join и напиши свое интро."
+        )
+        return ConversationHandler.END
+    else:
+        await context.bot.send_message(
+            chat_id=update.effective_chat.id,
+            text=f"Пришли ссылку на задачу, которую ты будешь спрашивать как интервьюер.\n\n"
+                 f"Пример: https://leetcode.com/problems/two-sum/description/"
+        )
+        return LEETCODE_FIRST_PROBLEM
 
 
 @is_leetcode_on
@@ -176,7 +184,7 @@ async def edit_language_options(update: Update, context: ContextTypes.DEFAULT_TY
 @is_leetcode_on
 async def leetcode_english(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     logging.info(f"leetcode_english handler triggered by {helpers.repr_user_from_update(update)}, "
-                 f"user data = {context.user_data}, english_choice = {update.callback_query.data}")
+                 f"user data = {context.user_data}, language_options = {update.callback_query.data}")
     query = update.callback_query
     await query.answer()  # Acknowledge the callback
 
