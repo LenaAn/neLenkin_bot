@@ -23,29 +23,36 @@ notifications_logger.setLevel(logging.DEBUG)
 
 
 async def register_notifications(application):
-    await register_leetcode_notifications(application)
+    await register_leetcode_thursday_reminder(application)
     await register_daily_send_zoom_for_active_courses(application)
     await register_daily_patreon_prompt_for_active_courses(application)
     await register_aoc_notifications(application)
 
 
-async def handle_leetcode_reminder(context: ContextTypes.DEFAULT_TYPE):
-    current_week: int = datetime.date.today().isocalendar().week
+def get_leetcode_topic(week_number: int) -> str | None:
     with (Session(engine) as session):
         try:
             weeks_topic = session.query(ScheduledPartMessages.text) \
                 .filter(
                 (ScheduledPartMessages.course_id == constants.leetcode_course_id) &
-                (ScheduledPartMessages.week_number == current_week)) \
+                (ScheduledPartMessages.week_number == week_number)) \
                 .one()[0]
         except NoResultFound as e:
-            await context.bot.send_message(
-                chat_id=settings.ADMIN_CHAT_ID,
-                text=f"No leetcode topic found for today!"
-            )
-            notifications_logger.error(f'No leetcode topic found for today!"', exc_info=e)
-            return
-        notifications_logger.info(f'leetcode topic is {weeks_topic}')
+            return None
+    notifications_logger.info(f'leetcode topic is {weeks_topic}')
+    return weeks_topic
+
+
+async def handle_leetcode_reminder(context: ContextTypes.DEFAULT_TYPE):
+    current_week: int = datetime.date.today().isocalendar().week
+    weeks_topic = get_leetcode_topic(current_week)
+    if weeks_topic is None:
+        await context.bot.send_message(
+            chat_id=settings.ADMIN_CHAT_ID,
+            text=f"No leetcode topic found for today!"
+        )
+        notifications_logger.error(f'No leetcode topic found for today!"')
+        return
 
     message = constants.mock_leetcode_reminder.format(weeks_topic)
     menu = InlineKeyboardMarkup(
@@ -201,7 +208,7 @@ async def prompt_to_connect_patreon_notifications(context: ContextTypes.DEFAULT_
 berlin_tz = ZoneInfo("Europe/Berlin")
 
 
-async def register_leetcode_notifications(app):
+async def register_leetcode_thursday_reminder(app):
     app.job_queue.run_daily(
         callback=handle_leetcode_reminder,
         time=datetime.time(hour=17, minute=6, tzinfo=berlin_tz),
