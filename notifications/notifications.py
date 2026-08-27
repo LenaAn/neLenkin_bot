@@ -108,9 +108,28 @@ async def handle_leetcode_topic_announcement(context: ContextTypes.DEFAULT_TYPE)
         f"handling {course_helpers.get_course_name(constants.leetcode_course_id)} notification, "
         f"got {len(notification_chat_ids)} chat ids")
 
-    # todo: also send to discussion thread
     await notifications_helpers.do_send_notifications(context, notification_chat_ids, message, menu,
                                                       course_helpers.get_course_name(constants.leetcode_course_id))
+    with (Session(models.engine) as session):
+        result = session.query(models.Course.discussion_thread_id
+                               ).filter(models.Course.id == constants.leetcode_course_id).one_or_none()
+
+    if not result or not result[0]:
+        logging.info(f"Could not find discussion thread id for Leetcode Mocks, "
+                     f"skipping sending to discussion thread")
+        await context.bot.send_message(
+            chat_id=settings.ADMIN_CHAT_ID,
+            text=f"Could not find discussion thread id for course Leetcode Mocks, "
+                 f"skipping sending to discussion thread",
+            parse_mode="HTML")
+        return
+
+    discussion_thread_id = result[0]
+    await context.bot.send_message(
+        chat_id=settings.CLUB_GROUP_CHAT_ID,
+        message_thread_id=discussion_thread_id,
+        text=message,
+        parse_mode="HTML")
 
 
 async def handle_send_zoom(context: ContextTypes.DEFAULT_TYPE):
