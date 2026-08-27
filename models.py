@@ -229,5 +229,5 @@ engine = create_engine(DATABASE_URL)
 
 # todo: these are essentially feature flags, but are not persisted across restarts. Need a nicer way to work with
 #  feature flags.
-leetcode_status_on = True
+leetcode_allow_sign_up = True
 aoc_notification_on = False

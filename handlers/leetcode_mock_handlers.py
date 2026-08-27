@@ -20,7 +20,7 @@ LEETCODE_FIRST_PROBLEM, LEETCODE_SECOND_PROBLEM, LEETCODE_TIMESLOTS, LEETCODE_PR
 
 def is_leetcode_on(callback):
     async def wrapper(update: Update, context: ContextTypes.DEFAULT_TYPE, *args, **kwargs):
-        if not models.leetcode_status_on:
+        if not models.leetcode_allow_sign_up:
             logging.info(f"is_leetcode_on check triggered by {helpers.repr_user_from_update(update)}, leetcode is OFF")
             await update.effective_chat.send_message(
                 "❌ Запись на эти выходные уже закрыта. Подожди понедельника, когда объявят тему новой недели")

@@ -130,6 +130,7 @@ async def handle_leetcode_topic_announcement(context: ContextTypes.DEFAULT_TYPE)
         message_thread_id=discussion_thread_id,
         text=message,
         parse_mode="HTML")
+    models.leetcode_allow_sign_up = True
 
 
 async def handle_send_zoom(context: ContextTypes.DEFAULT_TYPE):
