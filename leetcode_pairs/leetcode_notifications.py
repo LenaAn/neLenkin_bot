@@ -89,6 +89,7 @@ async def leetcode_notifications(context: ContextTypes.DEFAULT_TYPE):
 
     await send_leetcode_pairs_to_group(context, generate_graph_obj)
     await unicast_leetcode_partner(context, generate_graph_obj)
+    models.leetcode_allow_sign_up = False
 
 
 async def register_leetcode_pairs_notification(app):
