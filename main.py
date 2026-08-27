@@ -81,10 +81,6 @@ if __name__ == '__main__':
     application.add_handler(
         CommandHandler('get_status', admin_commands.get_status_handler, filters.ChatType.PRIVATE))
     application.add_handler(
-        CommandHandler('leetcode_on', admin_commands.leetcode_on, filters.ChatType.PRIVATE))
-    application.add_handler(
-        CommandHandler('leetcode_off', admin_commands.leetcode_off, filters.ChatType.PRIVATE))
-    application.add_handler(
         CommandHandler('aoc_notification_on', admin_commands.aoc_notification_on,
                        filters.ChatType.PRIVATE))
     application.add_handler(
