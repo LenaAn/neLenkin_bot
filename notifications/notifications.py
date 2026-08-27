@@ -23,26 +23,34 @@ notifications_logger.setLevel(logging.DEBUG)
 
 
 async def register_notifications(application):
-    # await register_leetcode_notifications(application)
+    await register_leetcode_notifications(application)
     await register_daily_send_zoom_for_active_courses(application)
     await register_daily_patreon_prompt_for_active_courses(application)
     await register_aoc_notifications(application)
 
 
 async def handle_leetcode_reminder(context: ContextTypes.DEFAULT_TYPE):
-    course_id: int = context.job.data["course_id"]
-    if "message" not in context.job.data:
-        admin_chat_id = int(os.getenv('ADMIN_CHAT_ID'))
-        notifications_logger.error(
-            f"Can't handle notification, there's no message in context.job.data: {context.job.data}")
-        await context.bot.send_message(
-            chat_id=admin_chat_id,
-            text=f"Can't handle notification, there's no message in context.job.data: {context.job.data}"
-        )
-        return
+    current_week: int = datetime.date.today().isocalendar().week
+    with (Session(engine) as session):
+        try:
+            weeks_topic = session.query(ScheduledPartMessages.text) \
+                .filter(
+                (ScheduledPartMessages.course_id == constants.leetcode_course_id) &
+                (ScheduledPartMessages.week_number == current_week)) \
+                .one()[0]
+        except NoResultFound as e:
+            await context.bot.send_message(
+                chat_id=settings.ADMIN_CHAT_ID,
+                text=f"No leetcode topic found for today!"
+            )
+            notifications_logger.error(f'No leetcode topic found for today!"', exc_info=e)
+            return
+        notifications_logger.info(f'leetcode topic is {weeks_topic}')
 
-    message: str = context.job.data["message"]
-    menu: InlineKeyboardMarkup = context.job.data["menu"] if "menu" in context.job.data else None
+    message = constants.mock_leetcode_reminder.format(weeks_topic)
+    menu = InlineKeyboardMarkup(
+        [[InlineKeyboardButton("Записаться на моки!", callback_data="leetcode_register")]])
+
     with Session(engine) as session:
         subquery = (
             select(models.MockSignUp.tg_id)
@@ -51,18 +59,18 @@ async def handle_leetcode_reminder(context: ContextTypes.DEFAULT_TYPE):
 
         result = (
             session.query(Enrollment.tg_id)
-            .filter(Enrollment.course_id == course_id)
+            .filter(Enrollment.course_id == constants.leetcode_course_id)
             .filter(~Enrollment.tg_id.in_(subquery))
             .all()
         )
 
     notification_chat_ids = [item[0] for item in result]
-    notifications_logger.debug(f"handling {course_helpers.get_course_name(course_id)} notification, "
+    notifications_logger.debug(f"handling {course_helpers.get_course_name(constants.leetcode_course_id)} notification, "
                                f"got {len(notification_chat_ids)} chat ids that are enrolled to Leetcode and not signed "
                                f"for this week")
 
     await notifications_helpers.do_send_notifications(context, notification_chat_ids, message, menu,
-                                                      course_helpers.get_course_name(course_id))
+                                                      course_helpers.get_course_name(constants.leetcode_course_id))
 
 
 async def handle_send_zoom(context: ContextTypes.DEFAULT_TYPE):
@@ -199,12 +207,6 @@ async def register_leetcode_notifications(app):
         time=datetime.time(hour=17, minute=6, tzinfo=berlin_tz),
         days=(4,),  # 0 = Sunday, ..., 4 = Thursday
         name=f"leetcode_mocks_reminder",
-        data={
-            "course_id": constants.leetcode_course_id,
-            "message": constants.mock_leetcode_reminder,
-            "menu": InlineKeyboardMarkup(
-                [[InlineKeyboardButton("Записаться на моки!", callback_data="leetcode_register")]])
-        }
     )
 
 
