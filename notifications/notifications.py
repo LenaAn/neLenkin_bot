@@ -23,29 +23,37 @@ notifications_logger.setLevel(logging.DEBUG)
 
 
 async def register_notifications(application):
-    await register_leetcode_notifications(application)
+    await register_leetcode_topic_announcement(application)
+    await register_leetcode_thursday_reminder(application)
     await register_daily_send_zoom_for_active_courses(application)
     await register_daily_patreon_prompt_for_active_courses(application)
     await register_aoc_notifications(application)
 
 
-async def handle_leetcode_reminder(context: ContextTypes.DEFAULT_TYPE):
-    current_week: int = datetime.date.today().isocalendar().week
+def get_leetcode_topic(week_number: int) -> str | None:
     with (Session(engine) as session):
         try:
             weeks_topic = session.query(ScheduledPartMessages.text) \
                 .filter(
                 (ScheduledPartMessages.course_id == constants.leetcode_course_id) &
-                (ScheduledPartMessages.week_number == current_week)) \
+                (ScheduledPartMessages.week_number == week_number)) \
                 .one()[0]
         except NoResultFound as e:
-            await context.bot.send_message(
-                chat_id=settings.ADMIN_CHAT_ID,
-                text=f"No leetcode topic found for today!"
-            )
-            notifications_logger.error(f'No leetcode topic found for today!"', exc_info=e)
-            return
-        notifications_logger.info(f'leetcode topic is {weeks_topic}')
+            return None
+    notifications_logger.info(f'leetcode topic is {weeks_topic}')
+    return weeks_topic
+
+
+async def handle_leetcode_reminder(context: ContextTypes.DEFAULT_TYPE):
+    current_week: int = datetime.date.today().isocalendar().week
+    weeks_topic = get_leetcode_topic(current_week)
+    if weeks_topic is None:
+        await context.bot.send_message(
+            chat_id=settings.ADMIN_CHAT_ID,
+            text=f"No leetcode topic found for today!"
+        )
+        notifications_logger.error(f'No leetcode topic found for today!"')
+        return
 
     message = constants.mock_leetcode_reminder.format(weeks_topic)
     menu = InlineKeyboardMarkup(
@@ -71,6 +79,57 @@ async def handle_leetcode_reminder(context: ContextTypes.DEFAULT_TYPE):
 
     await notifications_helpers.do_send_notifications(context, notification_chat_ids, message, menu,
                                                       course_helpers.get_course_name(constants.leetcode_course_id))
+
+
+async def handle_leetcode_topic_announcement(context: ContextTypes.DEFAULT_TYPE):
+    current_week: int = datetime.date.today().isocalendar().week
+    weeks_topic = get_leetcode_topic(current_week)
+    if weeks_topic is None:
+        await context.bot.send_message(
+            chat_id=settings.ADMIN_CHAT_ID,
+            text=f"No leetcode topic found for today!"
+        )
+        notifications_logger.error(f'No leetcode topic found for today!"')
+        return
+
+    message = constants.mock_leetcode_topic_announcement.format(weeks_topic)
+    menu = InlineKeyboardMarkup(
+        [[InlineKeyboardButton("Записаться на моки!", callback_data="leetcode_register")]])
+
+    with Session(engine) as session:
+        result = (
+            session.query(Enrollment.tg_id)
+            .filter(Enrollment.course_id == constants.leetcode_course_id)
+            .all()
+        )
+
+    notification_chat_ids = [item[0] for item in result]
+    notifications_logger.debug(
+        f"handling {course_helpers.get_course_name(constants.leetcode_course_id)} notification, "
+        f"got {len(notification_chat_ids)} chat ids")
+
+    await notifications_helpers.do_send_notifications(context, notification_chat_ids, message, menu,
+                                                      course_helpers.get_course_name(constants.leetcode_course_id))
+    with (Session(models.engine) as session):
+        result = session.query(models.Course.discussion_thread_id
+                               ).filter(models.Course.id == constants.leetcode_course_id).one_or_none()
+
+    if not result or not result[0]:
+        logging.info(f"Could not find discussion thread id for Leetcode Mocks, "
+                     f"skipping sending to discussion thread")
+        await context.bot.send_message(
+            chat_id=settings.ADMIN_CHAT_ID,
+            text=f"Could not find discussion thread id for course Leetcode Mocks, "
+                 f"skipping sending to discussion thread",
+            parse_mode="HTML")
+        return
+
+    discussion_thread_id = result[0]
+    await context.bot.send_message(
+        chat_id=settings.CLUB_GROUP_CHAT_ID,
+        message_thread_id=discussion_thread_id,
+        text=message,
+        parse_mode="HTML")
 
 
 async def handle_send_zoom(context: ContextTypes.DEFAULT_TYPE):
@@ -201,12 +260,21 @@ async def prompt_to_connect_patreon_notifications(context: ContextTypes.DEFAULT_
 berlin_tz = ZoneInfo("Europe/Berlin")
 
 
-async def register_leetcode_notifications(app):
+async def register_leetcode_thursday_reminder(app):
     app.job_queue.run_daily(
         callback=handle_leetcode_reminder,
         time=datetime.time(hour=17, minute=6, tzinfo=berlin_tz),
         days=(4,),  # 0 = Sunday, ..., 4 = Thursday
         name=f"leetcode_mocks_reminder",
+    )
+
+
+async def register_leetcode_topic_announcement(app):
+    app.job_queue.run_daily(
+        callback=handle_leetcode_topic_announcement,
+        time=datetime.time(hour=9, minute=30, tzinfo=berlin_tz),
+        days=(1,),  # 0 = Sunday, 1 = Monday
+        name=f"leetcode_topic_announcement",
     )
 
 
