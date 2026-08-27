@@ -880,6 +880,7 @@ async def get_status_handler(update: Update, context: ContextTypes.DEFAULT_TYPE)
 
     courses_str = "\n - ".join(courses)
     await update.message.reply_text(
+        f"{username} has id {tg_id}\n\n"
         f"<b>{username} has {membership_info.get_overall_level().name} subscription:</b>\n\n{membership_info}\n\n"
         f"<b>{username} has {club_points} 🌟ClubPoints</b>\n\n"
         f"<b>{username} is subscribed to</b>\n - {courses_str}",
