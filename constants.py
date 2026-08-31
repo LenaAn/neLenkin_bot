@@ -46,6 +46,7 @@ the_swe_guide_course_id: int = 18
 fly_io_gossip_course_id: int = 19
 building_llm_from_scratch: int = 20
 ddia_6_course_id: int = 21
+build_llm_from_scratch_2: int = 22
 
 id_to_description = {
     grind_course_id: "Мы собираемся вместе чтобы прорешать Blind-75 — список из 75 задач на самые популярные темы на "
@@ -127,6 +128,10 @@ id_to_description = {
                       "\n\nТаблица с расписанием и докладчиками "
                       "<a href='https://docs.google.com/spreadsheets/d/1Qj7BoFW_kdtVlxH26C1GTu1Lswgfa2wDE28hOXy_aCo/edit?usp=sharing'>"
                       "вот</a>.",
+    build_llm_from_scratch_2: "Мы будем писать свою LLM c нуля! Идем по материалам из https://sebastianraschka.com/llms-from-scratch/."
+                               "\n\nЗвонки проходят по средам в 18:00 по Берлину. Первый созвон — 2 сентября 2026."
+                               "\n\nТаблица с расписанием и "
+                               "докладчиками <a href='https://docs.google.com/spreadsheets/d/1k0uj0MWUcSZanPlEQ7P6on_YmxLrNq4CS69mozRzGSo/edit?usp=sharing'>вот</a>.",
 }
 
 cta_string = "Нажми кнопку \"Хочу участвовать\" чтобы получать уведомления о потоке"
