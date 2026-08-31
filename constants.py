@@ -47,6 +47,7 @@ fly_io_gossip_course_id: int = 19
 building_llm_from_scratch: int = 20
 ddia_6_course_id: int = 21
 build_llm_from_scratch_2: int = 22
+leetcode_grind_4_course_id: int = 23
 
 id_to_description = {
     grind_course_id: "Мы собираемся вместе чтобы прорешать Blind-75 — список из 75 задач на самые популярные темы на "
@@ -132,6 +133,13 @@ id_to_description = {
                                "\n\nЗвонки проходят по средам в 18:00 по Берлину. Первый созвон — 2 сентября 2026."
                                "\n\nТаблица с расписанием и "
                                "докладчиками <a href='https://docs.google.com/spreadsheets/d/1k0uj0MWUcSZanPlEQ7P6on_YmxLrNq4CS69mozRzGSo/edit?usp=sharing'>вот</a>.",
+    leetcode_grind_4_course_id: "Мы прорешиваем <a href='https://neetcode.io/practice/practice/blind75'>Blind-75</a> "
+                                "— список из 75 задач на самые популярные темы на собеседованиях. Каждую неделю участники "
+                                "прорешивают задачи на определенную тему до звонка в своем темпе, на звонке докладчик "
+                                "показывает свои решения и отвечает на вопросы."
+                                "\n\nЗвонки проходят по вторникам в 19:00 по Берлину. Первый созвон — 8 сентября 2026."
+                                "\n\nТаблица с расписанием и докладчиками <a "
+                                "href='https://docs.google.com/spreadsheets/d/1iLCt6j89aLiekSE5aP2CGe11lSwBrZ6XRFTiSHASq2E/edit?usp=sharing'>вот</a>.",
 }
 
 cta_string = "Нажми кнопку \"Хочу участвовать\" чтобы получать уведомления о потоке"
