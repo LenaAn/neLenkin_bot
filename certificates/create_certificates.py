@@ -22,8 +22,9 @@ async def create_certificates(name: str, tag: str) -> str:
     date_str, year_str = get_today_date_str()
 
     with open(f"/tmp/latex/thank_you_{tag}.tex", "w", encoding="utf-8") as f:
+        print_tag = tag.replace("_", r"\_")
         f.write(
-            rf"\newcommand{{\Recipient}}{{{name} @{tag}}}" "\n"
+            rf"\newcommand{{\Recipient}}{{{name} @{print_tag}}}" "\n"
             rf"\newcommand{{\DateDay}}{{{date_str}}}" "\n"
             rf"\newcommand{{\DateYear}}{{{year_str}}}" "\n"
             r"\input{./thank_you.tex}"
