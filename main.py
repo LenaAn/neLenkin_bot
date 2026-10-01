@@ -1,6 +1,6 @@
 import logging
 from telegram.ext import (filters, ApplicationBuilder, CommandHandler, MessageHandler, CallbackQueryHandler,
-                          PicklePersistence)
+                          PicklePersistence, PollAnswerHandler)
 
 from courses import course_handlers
 from handlers import admin_commands, button_handlers, menu, leetcode_mock_handlers
@@ -9,6 +9,7 @@ from notifications import notifications
 from membership import (boosty_handlers, fetch_patrons, fetch_boosty_patrons, club_points, membership,
                         patreon_handlers, convert_points_to_membership)
 from monitoring import calculate_metrics_and_report
+from random_coffee import random_coffee_notifications
 import settings
 from leetcode_pairs import leetcode_notifications
 
@@ -90,6 +91,7 @@ if __name__ == '__main__':
         MessageHandler(filters.ChatType.PRIVATE & ~filters.COMMAND, menu.private_message))
 
     application.add_handler(CallbackQueryHandler(button_handlers.button_click))
+    application.add_handler(PollAnswerHandler(random_coffee_notifications.handle_poll_answer))
 
     application.add_error_handler(button_handlers.error_handler)
 

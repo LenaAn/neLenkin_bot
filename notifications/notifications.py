@@ -13,6 +13,7 @@ from telegram.ext import ContextTypes
 import constants
 from courses import course_helpers
 import models
+from random_coffee import random_coffee_notifications
 from models import Enrollment, ScheduledPartMessages, engine
 from membership import membership
 import settings
@@ -23,6 +24,7 @@ notifications_logger.setLevel(logging.DEBUG)
 
 
 async def register_notifications(application):
+    await random_coffee_notifications.register_random_coffee_poll(application)
     await register_leetcode_topic_announcement(application)
     await register_leetcode_thursday_reminder(application)
     await register_daily_send_zoom_for_active_courses(application)
