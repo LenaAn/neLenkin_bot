@@ -11,14 +11,6 @@ import settings
 from zoneinfo import ZoneInfo
 
 
-def print_user(user: models.User):
-    if user.tg_username:
-        return f"@{user.tg_username}"
-
-    safe_name: str = user.first_name if user.first_name else user.tg_id
-    return f'<a href="tg://user?id={user.tg_id}">{safe_name}</a>'
-
-
 async def send_leetcode_pairs_to_group(context: ContextTypes.DEFAULT_TYPE,
                                        generate_graph_obj: generate_graph.GenerateLeetcodeMocks):
     emoji = helpers.random_neutral_emoji()
@@ -26,14 +18,14 @@ async def send_leetcode_pairs_to_group(context: ContextTypes.DEFAULT_TYPE,
     if len(generate_graph_obj.pairs) > 0:
         notification_str += f"Пары на эту неделю:\n\n"
         for pair in generate_graph_obj.pairs:
-            notification_str += f"{emoji} {print_user(pair.first)} — {print_user(pair.second)}\n"
+            notification_str += f"{emoji} {helpers.print_user(pair.first)} — {helpers.print_user(pair.second)}\n"
         notification_str += f"Напиши партнеру и договорись о времени!\n\n"
     else:
         notification_str += "Пар на этой неделе нет 😢\n\n"
 
     if len(generate_graph_obj.without_pairs) > 0:
         notification_str += "Без пары на этой неделе "
-        notification_str += ", ".join([f"{print_user(user)}" for user in generate_graph_obj.without_pairs])
+        notification_str += ", ".join([f"{helpers.print_user(user)}" for user in generate_graph_obj.without_pairs])
         notification_str += ". Можно написать в личку и договориться о моке!\n"
 
     await context.bot.send_message(
@@ -45,7 +37,7 @@ async def send_leetcode_pairs_to_group(context: ContextTypes.DEFAULT_TYPE,
 
 
 def format_info_about_partner(user: models.User, signup: models.MockSignUp) -> str:
-    msg: str = f"Твоя пара на Leetcode мок: {print_user(user)}."
+    msg: str = f"Твоя пара на Leetcode мок: {helpers.print_user(user)}."
 
     timeslots_string = "\n - ".join([constants.leetcode_register_timeslots[i] for i in signup.selected_timeslots])
     languages_string = ", ".join([constants.leetcode_language_options[i] for i in signup.language_options])
