@@ -166,6 +166,25 @@ class RandomCoffeeSignUp(Base):
                 f"week_number={self.week_number})")
 
 
+class PairsMatched(Base):
+    __tablename__ = 'PairsMatched'
+
+    id = Column(sqlalchemy.Integer, primary_key=True, autoincrement=True)
+    course_id = Column(sqlalchemy.BigInteger, nullable=False)
+    first_tg_id = Column(sqlalchemy.Text, nullable=False)
+    second_tg_id = Column(sqlalchemy.Text, nullable=False)
+    # week when user signs up
+    week_number = Column(sqlalchemy.Integer, nullable=False)
+    year = Column(sqlalchemy.Integer, nullable=False)
+
+    def __repr__(self):
+        return (f"PairsMatched("
+                f"course_id={self.course_id},"
+                f"week_number={self.week_number},"
+                f"first_tg_id={self.first_tg_id}, "
+                f"second_tg_id={self.second_tg_id})")
+
+
 class PatreonLink(Base):
     __tablename__ = 'PatreonLink'
 
