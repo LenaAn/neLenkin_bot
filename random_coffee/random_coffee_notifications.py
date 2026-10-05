@@ -3,6 +3,9 @@ import logging
 from zoneinfo import ZoneInfo
 
 from telegram.ext import ContextTypes
+from telegram import Update
+from sqlalchemy.orm import Session
+from sqlalchemy.dialects.postgresql import insert
 
 import models
 from random_coffee import generate_random_coffee_graph
@@ -31,9 +34,29 @@ async def handle_poll_answer(update: Update, _: ContextTypes.DEFAULT_TYPE):
     poll_id = answer.poll_id
     user_id = answer.user.id
     option_ids = answer.option_ids
-
     random_coffee_logger.info(f"Got a poll vote: {user_id=}, {poll_id=}, {option_ids=}")
 
+    today = datetime.date.today().isocalendar()
+    with Session(models.engine) as session:
+        if option_ids == (0,):
+            # Yes — create/update signup
+            stmt = insert(models.RandomCoffeeSignUp).values(
+                tg_id=str(user_id),
+                week_number=today.week,
+                year=today.year,
+            ).on_conflict_do_nothing(
+                constraint="random_coffee_one_record_per_user_per_week",
+            )
+            session.execute(stmt)
+        elif option_ids == (1,) or len(option_ids) == 0:
+            # No / vote retracted — remove signup
+            # it's important to close the poll the same week it was posted!
+            session.query(models.RandomCoffeeSignUp).filter(
+                models.RandomCoffeeSignUp.tg_id == str(user_id),
+                models.RandomCoffeeSignUp.week_number == today.week,
+                models.RandomCoffeeSignUp.year == today.year,
+            ).delete()
+        session.commit()
 
 # no matter winter or summer time in Europe.
 # In theory should work without restart when the time changes
