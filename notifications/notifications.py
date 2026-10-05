@@ -25,6 +25,7 @@ notifications_logger.setLevel(logging.DEBUG)
 
 async def register_notifications(application):
     await random_coffee_notifications.register_random_coffee_poll(application)
+    await random_coffee_notifications.register_random_coffee_pairs_announce(application)
     await register_leetcode_topic_announcement(application)
     await register_leetcode_thursday_reminder(application)
     await register_daily_send_zoom_for_active_courses(application)

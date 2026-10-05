@@ -9,6 +9,14 @@ import models
 import settings
 
 
+def print_user(user: models.User):
+    if user.tg_username:
+        return f"@{user.tg_username}"
+
+    safe_name: str = user.first_name if user.first_name else user.tg_id
+    return f'<a href="tg://user?id={user.tg_id}">{safe_name}</a>'
+
+
 async def is_user_in_group(bot: Bot, tg_id: int) -> bool:
     member = await bot.get_chat_member(
         chat_id=settings.CLUB_GROUP_CHAT_ID ,

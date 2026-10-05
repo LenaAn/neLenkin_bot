@@ -48,6 +48,7 @@ building_llm_from_scratch: int = 20
 ddia_6_course_id: int = 21
 build_llm_from_scratch_2: int = 22
 leetcode_grind_4_course_id: int = 23
+random_coffee_course_id: int = 24
 
 id_to_description = {
     grind_course_id: "Мы собираемся вместе чтобы прорешать Blind-75 — список из 75 задач на самые популярные темы на "
