@@ -156,8 +156,8 @@ class GenerateRandomCoffeePairs:
             session.commit()
 
     @classmethod
-    def build(cls, week_number=None, year=None):
-        obj = cls(week_number, year)
+    def build(cls):
+        obj = cls()
         obj.load_sign_ups()
         obj.load_users_for_signed_up_users()
         obj.calculate_pairs()
