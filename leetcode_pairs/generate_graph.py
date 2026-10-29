@@ -77,6 +77,7 @@ class GenerateLeetcodeMocks:
                         (len(users_to_languages[user_ids[i]].intersection(users_to_languages[user_ids[j]])) > 0)):
                     graph.add((user_ids[i], user_ids[j]))
         leetcode_pairs_logger.info(f"len(graph) = {len(graph)}")
+        leetcode_pairs_logger.debug(f"{graph=}")
 
         with open('leetcode_pairs/edges_to_delete.txt', 'r') as f:
             for line in f.readlines():
@@ -84,8 +85,11 @@ class GenerateLeetcodeMocks:
                 leetcode_pairs_logger.info(f"to remove: ({first}, {second})")
                 if (first, second) in graph:
                     graph.remove((first, second))
+                if (second, first) in graph:
+                    graph.remove((second, first))
 
         leetcode_pairs_logger.info(f"after deletion len(graph) = {len(graph)}")
+        leetcode_pairs_logger.debug(f"len(graph) = {len(graph)}")
         return hypothetical_number_of_users, graph
 
     def parse_output(self, ans: str):
