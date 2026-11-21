@@ -17,16 +17,29 @@ The project uses `uv` and requires Python 3.14 or newer.
 uv sync
 docker compose up -d
 alembic upgrade head
+uv run pytest
 uv run main.py
 ```
 
 `README.md` has the local setup steps and required environment variables. There
-is no configured automated test or lint command in the repository; use focused
-manual checks when appropriate and report what was verified.
+is no configured lint command. Tests use pytest; run them with `uv run pytest`.
+PostgreSQL integration tests require `TEST_DATABASE_URL` to point to the
+dedicated `nelenkin_bot_test` database and apply the project Alembic migrations
+there. Never point it at a development or production database.
+
+Create the dedicated database once in the local Docker PostgreSQL instance, then
+run integration tests with:
+
+```sh
+docker compose up -d db
+docker compose exec db createdb -U postgres nelenkin_bot_test
+TEST_DATABASE_URL=postgresql://postgres:postgres@localhost:5432/nelenkin_bot_test uv run pytest
+```
 
 ## Working conventions
 
 - Keep changes focused and follow the surrounding Python style. Avoid unrelated refactors.
+- Run the full test suite with `uv run pytest` after every change. Set `TEST_DATABASE_URL` as documented above to include PostgreSQL integration tests.
 - When a change affects guidance documented in this file, update the relevant instructions to keep them current.
 - Preserve existing Telegram handler behavior and scheduled job registration when changing bot flows.
 - When changing the database schema, generate an Alembic migration with `uv run alembic revision --autogenerate -m <message>` and keep it consistent with `models.py`. Do not modify generated files by hand or rewrite already-applied migrations.
