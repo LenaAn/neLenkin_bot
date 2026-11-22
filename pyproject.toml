@@ -18,3 +18,10 @@ dependencies = [
     "requests>=2.33.1",
     "sqlalchemy>=2.0.49",
 ]
+
+[dependency-groups]
+dev = [
+    "pytest>=9.2.0",
+    "pytest-asyncio>=1.5.0",
+    "ruff>=0.17.6",
+]
