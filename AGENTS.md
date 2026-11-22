@@ -11,30 +11,14 @@ background jobs.
 
 ## Development commands
 
-The project uses `uv` and requires Python 3.14 or newer.
+- Install dependencies (Python 3.14 or newer): `uv sync`
+- Start local services: `docker compose up -d`
+- Apply database migrations: `uv run alembic upgrade head`
+- Run the bot: `uv run main.py`
+- Run tests: `TEST_DATABASE_URL=postgresql://postgres:postgres@localhost:5432/nelenkin_bot_test uv run pytest`
+- Run Ruff on changed files: `uv run ruff check <changed files>`
 
-```sh
-uv sync
-docker compose up -d
-alembic upgrade head
-uv run pytest
-uv run main.py
-```
-
-`README.md` has the local setup steps and required environment variables. There
-is no configured lint command. Tests use pytest; run them with `uv run pytest`.
-PostgreSQL integration tests require `TEST_DATABASE_URL` to point to the
-dedicated `nelenkin_bot_test` database and apply the project Alembic migrations
-there. Never point it at a development or production database.
-
-Create the dedicated database once in the local Docker PostgreSQL instance, then
-run integration tests with:
-
-```sh
-docker compose up -d db
-docker compose exec db createdb -U postgres nelenkin_bot_test
-TEST_DATABASE_URL=postgresql://postgres:postgres@localhost:5432/nelenkin_bot_test uv run pytest
-```
+`README.md` documents local setup and required environment variables.
 
 ## Working conventions
 
@@ -46,3 +30,14 @@ TEST_DATABASE_URL=postgresql://postgres:postgres@localhost:5432/nelenkin_bot_tes
 - Treat membership/payment integrations and bulk messaging as production-sensitive; avoid triggering external actions while developing or checking changes.
 - Do not overwrite unrelated working-tree changes. In particular, inspect existing changes before editing files they touch.
 - Never commit unless asked. Make git commits, merges, and pushes only when the user explicitly requests them. Otherwise leave changes in the working tree — staging and committing are user-initiated.
+
+## Verification
+
+Before calling work finished, run:
+
+1. The full test suite with `TEST_DATABASE_URL` set to the dedicated local
+   `nelenkin_bot_test` database, as shown above.
+2. Ruff on files changed for the task. Fix findings introduced by the changes;
+   leave pre-existing Ruff findings untouched.
+
+If a command fails, fix issues introduced by the task and rerun it.
